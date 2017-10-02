@@ -431,6 +431,88 @@ void UsartSend_LEG1(uint8_t ch)
 while(USART_GetFlagStatus(UART5, USART_FLAG_TXE) == RESET);
 USART_SendData(UART5, ch); 
 }
+
+static void Send_Data_GOL_LINK(u8 *dataToSend , u8 length)
+{
+u16 i;
+  for(i=0;i<length;i++)
+     UsartSend_LEG4(dataToSend[i]);
+}
+
+void Send_IMU_TO_FLOW(void)
+{u8 i;	u8 sum = 0;
+	u8 data_to_send[50];
+	u8 _cnt=0;
+	vs16 _temp;
+  data_to_send[_cnt++]=0xAA;
+	data_to_send[_cnt++]=0xAF;
+	data_to_send[_cnt++]=0x01;//???
+	data_to_send[_cnt++]=0;//???
+	
+	_temp = (vs16)(0*10);//ultra_distance;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+
+	data_to_send[3] = _cnt-4;
+
+	for( i=0;i<_cnt;i++)
+		sum += data_to_send[i];
+	data_to_send[_cnt++] = sum;
+	
+	Send_Data_GOL_LINK(data_to_send, _cnt);
+}
+
+
+u8 feed_imu_dog=1;
+void Send_IMU_PARM(void)
+{u8 i;	u8 sum = 0;
+	u8 data_to_send[50];
+	u8 _cnt=0;
+	vs16 _temp;
+	data_to_send[_cnt++]=0xAA;
+	data_to_send[_cnt++]=0xAF;
+	data_to_send[_cnt++]=0x83;//???
+	data_to_send[_cnt++]=0;//???
+	
+	_temp = 0;//imu_board.k_flow_sel*1000;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	_temp = 0;//imu_board.flow_module_offset_x*1000;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	_temp = 0;//imu_board.flow_module_offset_y*1000;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+ 	_temp = 0;//imu_board.flow_set_yaw*10;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	_temp = 0;//mode_oldx.px4_map;
+	data_to_send[_cnt++]=BYTE0(_temp);
+	_temp = feed_imu_dog;
+	data_to_send[_cnt++]=BYTE0(_temp);
+	
+	data_to_send[3] = _cnt-4;
+
+	for( i=0;i<_cnt;i++)
+		sum += data_to_send[i];
+	data_to_send[_cnt++] = sum;
+	
+	Send_Data_GOL_LINK(data_to_send, _cnt);
+}  
+
+//send to imu board
+void GOL_LINK_TASK(void)
+{
+static u8 cnt[4];
+
+Send_IMU_TO_FLOW();
+if(cnt[2]++>20)
+{cnt[2]=0;	
+Send_IMU_PARM();
+}
+}
+
+
 static void UsartSend_LEG_BUF(u8 *dataToSend , u8 length,u8 sel)
 {
 u16 i;
@@ -702,7 +784,7 @@ void Data_LEG_CMD(u8 *data_buf,u8 num,u8 sel)
 	if(!(*(data_buf)==0xAA && *(data_buf+1)==0xAF))		return;		//ÅÐ¶ÏÖ¡Í·
   if(*(data_buf+2)>=1&&*(data_buf+2)<=4)//FLOW_MINE_frame
   { id=*(data_buf+2);
-	  brain.leg_connect=1;
+	  brain.sys.leg_connect=1;
 		brain.sys.leg_loss_cnt=0;
 	  leg[id].pos_tar[0].x=(float)((int16_t)(*(data_buf+4)<<8)|*(data_buf+5))/10;
 		leg[id].pos_tar[0].y=(float)((int16_t)(*(data_buf+6)<<8)|*(data_buf+7))/10;
@@ -826,6 +908,83 @@ void USART1_IRQHandler(void)
 }
 
 //leg1
+ void Data_Receive_Anl(u8 *data_buf,u8 num)
+{ double zen,xiao;
+	vs16 rc_value_temp;
+	float temp_pos[2];
+	u8 sum = 0;
+	u8 i;
+	for( i=0;i<(num-1);i++)
+		sum += *(data_buf+i);
+	if(!(sum==*(data_buf+num-1)))		return;		//??sum
+	if(!(*(data_buf)==0xAA && *(data_buf+1)==0xAF))		return;		//????
+	if(*(data_buf+2)==0x88)//ALL
+  {
+		//imu_loss_cnt=0;
+    //NAV_BOARD_CONNECT=1;
+		
+		brain.att[0]=(float)((int16_t)(*(data_buf+4)<<8)|*(data_buf+5))/10.;
+    brain.att[1]=(float)((int16_t)(*(data_buf+6)<<8)|*(data_buf+7))/10.;
+		brain.att[2]=(float)((int16_t)(*(data_buf+8)<<8)|*(data_buf+9))/10.;
+		
+		brain.now_spd[2]=(float)(int16_t)((*(data_buf+10)<<8)|*(data_buf+11))/1000.;//m
+		float temp=(float)(int16_t)((*(data_buf+12)<<8)|*(data_buf+13))/1000.;//m
+			if(temp<3)
+			brain.now_pos[2] = temp;
+		//ALT_VEL_BMP_EKF=Moving_Median(0,0,(float)(int16_t)((*(data_buf+14)<<8)|*(data_buf+15))/1000.);//m
+		//ALT_POS_BMP_EKF=(float)(int32_t)((*(data_buf+16)<<24)|(*(data_buf+17)<<16)|(*(data_buf+18)<<8)|*(data_buf+19))/1000.;//m
+
+		brain.now_pos[0]=(float)(int16_t)((*(data_buf+20)<<8)|*(data_buf+21))/1000.;//m  ->0
+		brain.now_pos[1]=(float)(int16_t)((*(data_buf+22)<<8)|*(data_buf+23))/1000.;//m  ->1
+		
+		brain.now_spd[0]=(float)(int16_t)((*(data_buf+24)<<8)|*(data_buf+25))/1000.;//m
+		brain.now_spd[1]=(float)(int16_t)((*(data_buf+26)<<8)|*(data_buf+27))/1000.;//m			
+	
+//  	zen=(*(data_buf+28)<<8)|*(data_buf+29);
+//		xiao=(double)((u32)(*(data_buf+30)<<24)|(*(data_buf+31)<<16)|(*(data_buf+32)<<8)|*(data_buf+33))/1000000000.;
+//		m100.Init_Lon=zen+xiao;
+//		zen=(*(data_buf+34)<<8)|*(data_buf+35);
+//		xiao=(double)((u32)(*(data_buf+36)<<24)|(*(data_buf+37)<<16)|(*(data_buf+38)<<8)|*(data_buf+39))/1000000000.;
+//		m100.Init_Lat=zen+xiao;
+//		
+//		r1=((u32)(*(data_buf+40)<<24)|(*(data_buf+41)<<16)|(*(data_buf+42)<<8)|*(data_buf+43));
+//		r2=((u32)(*(data_buf+44)<<24)|(*(data_buf+45)<<16)|(*(data_buf+46)<<8)|*(data_buf+47));
+
+//		m100.STATUS=*(data_buf+48);
+//		m100.GPS_STATUS=*(data_buf+49);				
+	}
+	else if(*(data_buf+2)==0x10)//Mems
+  { 
+		float temp=0;
+		//uart_time[1]=Get_Cycle_T(GET_T_IMU)/1000000.0f;
+//	  mpu6050.Acc.x=(int16_t)(*(data_buf+4)<<8)|*(data_buf+5);
+//    mpu6050.Acc.y=(int16_t)(*(data_buf+6)<<8)|*(data_buf+7);
+//		mpu6050.Acc.z=(int16_t)(*(data_buf+8)<<8)|*(data_buf+9);
+//		mpu6050.Gyro.x=(int16_t)(*(data_buf+10)<<8)|*(data_buf+11);
+//		mpu6050.Gyro.y=(int16_t)(*(data_buf+12)<<8)|*(data_buf+13);
+//		mpu6050.Gyro.z=(int16_t)(*(data_buf+14)<<8)|*(data_buf+15);
+//		mpu6050.Gyro_deg.x = mpu6050.Gyro.x *TO_ANGLE;
+//		mpu6050.Gyro_deg.y = mpu6050.Gyro.y *TO_ANGLE;
+//		mpu6050.Gyro_deg.z = mpu6050.Gyro.z *TO_ANGLE;
+//		ak8975.Mag_Val.x=(int16_t)(*(data_buf+16)<<8)|*(data_buf+17);
+//		ak8975.Mag_Val.y=(int16_t)(*(data_buf+18)<<8)|*(data_buf+19);
+//		ak8975.Mag_Val.z=(int16_t)(*(data_buf+20)<<8)|*(data_buf+21);
+//		int temp=(int16_t)(*(data_buf+22)<<8)|*(data_buf+23);
+//		if(temp<5000)
+//	  ultra_distance = temp;
+//	  baro_matlab_data[0]=baroAlt=(int32_t)((*(data_buf+24)<<24)|(*(data_buf+25)<<16)|(*(data_buf+26)<<8)|*(data_buf+27));
+//		
+//		flow_matlab_data[0]=(float)((int16_t)(*(data_buf+28)<<8)|*(data_buf+29))/1000.;
+//		flow_matlab_data[1]=(float)((int16_t)(*(data_buf+30)<<8)|*(data_buf+31))/1000.;
+//		flow_matlab_data[2]=(float)((int16_t)(*(data_buf+32)<<8)|*(data_buf+33))/1000.;
+//		flow_matlab_data[3]=(float)((int16_t)(*(data_buf+34)<<8)|*(data_buf+35))/1000.;
+//		baro_matlab_data[1]=((int16_t)(*(data_buf+36)<<8)|*(data_buf+37));
+//		#if USE_M100_IMU
+//		m100.STATUS=m100.m100_connect=*(data_buf+38);
+//	  #endif
+	}		
+}
+
 u8 set1=0;
  void Data_LEG(u8 *data_buf,u8 num,u8 sel)
 { static u8 cnt[4];
@@ -868,6 +1027,8 @@ u8 set1=0;
 	  leg[sel].pos_tar_trig[2].z=(float)((int16_t)(*(data_buf+36)<<8)|*(data_buf+37))/10;
 	}		
 }
+
+
 
 u8 TxBuffer2[256];
 u8 TxCounter2=0;
@@ -928,7 +1089,11 @@ void USART2_IRQHandler(void)
 		{
 			RxState2 = 0;
 			RxBuffer2[4+_data_cnt2]=com_data;
+			#if !USE_DJ_CONTROL_BOARD
 			Data_LEG(RxBuffer2,_data_cnt2+5,1);
+			#else
+			Data_Receive_Anl(RxBuffer2,_data_cnt2+5);
+			#endif
 		}
 		else
 			RxState2 = 0;

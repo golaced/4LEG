@@ -159,25 +159,12 @@ void uart_task(void *pdata)
 {	static u8 cnt[4];	
   static u8 sd_sel;	
  	while(1)
-	{
-			
-				
-				//UPLOAD			
-					
-//					if(DMA_GetFlagStatus(DMA2_Stream7,DMA_FLAG_TCIF7)!=RESET)//等待DMA2_Steam7传输完成
-//							{ 	
-//							DMA_ClearFlag(DMA2_Stream7,DMA_FLAG_TCIF7);//清除DMA2_Steam7传输完成标志
-//							clear_leg_uart();		
-//							//GOL_LINK_TASK_DMA();	
-//							USART_DMACmd(USART1,USART_DMAReq_Tx,ENABLE);  //使能串口1的DMA发送     
-//							MYDMA_Enable(DMA2_Stream7,leg_uart_cnt+2);     //开始一次DMA传输！	  
-//							}	
-						
+	{			
 		Send_LEG(1);
 		Send_LEG(2);
 		Send_LEG(3);
 		Send_LEG(4);
-											
+		GOL_LINK_TASK();									
 		delay_ms(20);  
 	}
 }	
@@ -213,7 +200,7 @@ static u16 cnt_1,cnt_2;
 static u8 cnt;
   for(i=0;i<5;i++)
 	 if(leg[i].sys.leg_loss_cnt++>2/0.05)leg[i].leg_connect=0;
-	 if(brain.sys.leg_loss_cnt++>2/0.05)brain.leg_connect=0;
+	 if(brain.sys.leg_loss_cnt++>2/0.05)brain.sys.leg_connect=0;
 	
 	
 }

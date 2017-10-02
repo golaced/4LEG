@@ -15,7 +15,7 @@ void READ_LEG_ID(LEG_STRUCT *in)
 {
 in->sys.id=0;
 }
-float off_local[2]={1.68,0};	
+float off_local[2]={2,0};	
 float k_z=0.93;
 u16 SET_PWM3_OFF=0;
 void leg_init( LEG_STRUCT *in,u8 id)
@@ -33,7 +33,7 @@ switch(in->sys.id){
 case 1:	
 in->sys.leg_set_invert=1;
 in->sys.PWM_OFF[0]=1850;//570;	
-in->sys.PWM_OFF[1]=620;//1870;	
+in->sys.PWM_OFF[1]=870;//1870;	
 in->sys.PWM_OFF[2]=1400+SET_PWM3_OFF;//1600		
 in->sys.PWM_OFF[3]=1380;
 in->sys.sita_flag[0]=-1;
@@ -61,7 +61,7 @@ break;
 case 3:	
 in->sys.leg_set_invert=1;	
 in->sys.PWM_OFF[0]=1060;	
-in->sys.PWM_OFF[1]=1870;//1540;	
+in->sys.PWM_OFF[1]=1880;//1540;	
 in->sys.PWM_OFF[2]=1480-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1416;
 in->sys.sita_flag[0]=1;
@@ -75,7 +75,7 @@ break;
 case 4:	
 in->sys.leg_set_invert=0;	
 in->sys.PWM_OFF[0]=1530;	
-in->sys.PWM_OFF[1]=660;	
+in->sys.PWM_OFF[1]=720;	
 in->sys.PWM_OFF[2]=1350-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1360;
 in->sys.sita_flag[0]=-1;
@@ -117,8 +117,24 @@ in->sys.PWM_MAX[0]=2500-DL;
 in->sys.PWM_MAX[1]=2500-DL;	
 in->sys.PWM_MAX[2]=2500-DL;	
 
-in->sys.PWM_PER_DEGREE=9.34;//7.8;//9.1;		
+switch(in->sys.id){
+case 1:
+in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
+in->sys.PWM_PER_DEGREE[1]=12.64;
+in->sys.PWM_PER_DEGREE[2]=9.34;
+break;
+case 4:
+in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
+in->sys.PWM_PER_DEGREE[1]=12.64;
+in->sys.PWM_PER_DEGREE[2]=9.34;
+break;
+default:
+in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
+in->sys.PWM_PER_DEGREE[1]=9.34;
+in->sys.PWM_PER_DEGREE[2]=9.34;	
 
+break;
+}
 in->sys.en_pwm_out=1;
 
 in->sys.leg_up_high=3;
@@ -226,10 +242,10 @@ in->pos_now[2].x=(l1+h1+h2)*sin(sita3*AtR);in->pos_now[2].y=-cos(sita1*AtR)*d1+c
 //从关节角度计算舵机PWM
 void cal_pwm_from_sita(LEG_STRUCT * in)
 { u8 i=0;
-	in->sys.PWM_OUT[i]=LIMIT(in->sys.PWM_OFF[i]+0*in->sys.sita_flag[i]*in->sys.PWM_PER_DEGREE
-	+in->sys.sita_flag[i]*in->sita[i]*in->sys.PWM_PER_DEGREE,in->sys.PWM_MIN[i],in->sys.PWM_MAX[i]);
+	in->sys.PWM_OUT[i]=LIMIT(in->sys.PWM_OFF[i]+0*in->sys.sita_flag[i]*in->sys.PWM_PER_DEGREE[i]
+	+in->sys.sita_flag[i]*in->sita[i]*in->sys.PWM_PER_DEGREE[i],in->sys.PWM_MIN[i],in->sys.PWM_MAX[i]);
 	for(i=1;i<3;i++)
-	in->sys.PWM_OUT[i]=LIMIT(in->sys.PWM_OFF[i]+in->sys.sita_flag[i]*in->sita[i]*in->sys.PWM_PER_DEGREE,in->sys.PWM_MIN[i],in->sys.PWM_MAX[i]);
+	in->sys.PWM_OUT[i]=LIMIT(in->sys.PWM_OFF[i]+in->sys.sita_flag[i]*in->sita[i]*in->sys.PWM_PER_DEGREE[i],in->sys.PWM_MIN[i],in->sys.PWM_MAX[i]);
 	in->sys.PWM_OUT[3]=LIMIT(in->sys.PWM_OFF[3],500,2500);
 }	
 
@@ -405,8 +421,14 @@ static float time;
 	 }
 	in->pos_tar[2].x=LIMIT(in->pos_tar[2].x,-in->sys.limit.x,in->sys.limit.x);
 	in->pos_tar[2].y=LIMIT(in->pos_tar[2].y,-in->sys.limit.y,in->sys.limit.y);
+ // if(brain.spd==0||fabs(brain.att[0])>36||fabs(brain.att[1])>36)
+	in->pos_tar[2].z=LIMIT(in->pos_tar_trig[2].z+att_control_out[id],-in->sys.limit.z,in->sys.limit.z);	 
+//  else	
+//  in->pos_tar[2].z+=LIMIT(att_control_out[id],-1.6,1.6)*dt;	 
+	
+	in->pos_tar[2].z=LIMIT(in->pos_tar[2].z,-in->sys.limit.z,in->sys.limit.z);
+	
 	}
-//in->pos_tar[2].z=cal_curve[Zs];
 }	
 
 //着地检测
@@ -561,7 +583,7 @@ void leg_drive(LEG_STRUCT * in,float dt)
 		//着地
 		leg_ground_check(in);
 		//蹬
-		if(!in->curve_trig&&(fabs(in->deng[1])>0||fabs(in->deng[0])>0))
+		if(!in->curve_trig&&(fabs(in->deng[1])>0||fabs(in->deng[0])>0||(att_control_out[0]!=0)))
 		cal_pos_tar_for_deng(in,in->deng[0],in->deng[1],dt);	
 		//输出	
 	  leg_publish(in);

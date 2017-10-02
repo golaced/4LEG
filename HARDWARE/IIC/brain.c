@@ -1,12 +1,19 @@
 #include "include.h" 
-
+#define TEST_MODE1 1
 void get_leg_tar_trig(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
 
+static void swap(float *a, float *b)  
+{  
+    int     c;  
+     c = *a;  
+    *a = *b;  
+    *b =  c;  
+}  
 
 float cal_area_trig(float x1,float y1,float x2,float y2,float x3,float y3)
 {
 float S;	
-S=(1/2)*(x1*y2+x2*y3+x3*y1-x1*y3-x2*y1-x3*y2);
+S=1/2*(x1*y2+y1*x3+y1*x2*y3-x3*y2-x1*y3-x2*y1);
 return S;
 }	
 
@@ -29,6 +36,48 @@ u8 inTrig(float x, float y,float x1,float y1,float x2,float y2,float x3,float y3
 
   return d1 && d2 && d3;
 }
+
+float cal_steady_s(float cx,float cy,float x1,float y1,float x2,float y2,float x3, float y3 )
+{
+ float ST;
+ float k[3];
+ float a[3],b[3],c[3],D[3],temp;
+ u8 i,intrig;
+	intrig=inTrig(cx,cy,x1,y1,x2,y2,x3,y3);
+	if(intrig){
+	if(x2==x1)
+		x2+=0.00001;
+	if(x3==x1)
+		x3+=0.00001;
+
+	a[0]=k[0]=(y2-y1)/(x2-x1);
+	a[1]=k[1]=(y3-y1)/(x3-x1);
+	a[2]=k[2]=(y3-y2)/(x3-x2);
+	
+	b[0]=b[1]=b[2]=-1;
+	
+  c[0]=-k[0]*x2+y2;
+	c[1]=-k[1]*x3+y3;
+	c[2]=-k[2]*x3+y3;
+	
+	temp=sqrt(pow(a[i],2)+pow(b[i],2));
+  if(temp==0)
+		temp+=0.000001;
+	for(i=0;i<3;i++)
+	 D[i]=fabs( (a[i]*cx+b[i]*cy+c[i])/temp);
+	
+	ST=D[0];
+	for(i=1;i<3;i++)
+	  if(D[i]<ST)
+			 ST=D[i];
+		
+  if(ST>0)
+   return ST;
+  else 
+   return 0;	
+  }else
+  return 0;	
+}	
 //一个点在四边形内部
 //			  y
 //	d----------b          /\
@@ -88,13 +137,6 @@ u8 inTrig2(float x, float y,float x1,float y1,float x2,float y2,float x3,float y
   return in_tri1||in_tri2||in_tri3||in_tri4||in_line_t12;
 }
 
-static void swap(float *a, float *b)  
-{  
-    int     c;  
-     c = *a;  
-    *a = *b;  
-    *b =  c;  
-}  
 //找到离xy最近的点
 void find_closet_point(u8*min_id,float x, float y,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4,u8 num) {
 	u8 i,j;
@@ -140,7 +182,7 @@ void find_closet_point(u8*min_id,float x, float y,float x1,float y1,float x2,flo
  
 void barin_init(BRAIN_STRUCT *in)
 {
-float W=5.7*2;//cm	
+float W=5.7  *2;//cm	
 float L=18.5;
 in->sys.leg_local[1].x=W/2;
 in->sys.leg_local[1].y=L/2;
@@ -167,33 +209,45 @@ in->sys.leg_local[2].x,in->sys.leg_local[2].y,
 in->sys.leg_local[3].x,in->sys.leg_local[3].y)/2;
 	
 
-in->leg_move_range[Yr]=leg[1].sys.limit.y*0.98;//cm		
-in->leg_move_range[Xr]=in->leg_move_range[Yr]*0.78;//cm	
+in->sys.leg_move_range[Yr]=leg[1].sys.limit.y*0.98;//cm		
+in->sys.leg_move_range[Xr]=in->sys.leg_move_range[Yr]*0.78;//cm	
 
-in->sys.k_spd_to_range=2.0;//0.88;
-in->sys.kp_center=0.765;
+in->sys.k_spd_to_range=2;
+in->sys.kp_center[0]=0.6;
+in->sys.kp_center[1]=0.6;
 in->sys.k_center_fp=0.0;
 
-in->sys.move_range_k=0.66;//0.8;
+in->sys.move_range_k=0.66;
+
 in->sys.k_center_c[0]=66;
 in->sys.k_center_c[1]=66;
+
+in->sys.att_off[0]=4;
+in->sys.att_off[1]=4;
 
 in->sys.center_off.x=0;
 in->sys.center_off.y=0;
 in->sys.center_off1.x=0;
 in->sys.center_off1.y=0;
 
-in->center_off_when_move[Xr]=0;//-0.2;
-in->center_off_when_move[Yr]=0;//-0.88;
+in->sys.center_off_when_move[Xr]=0;//-0.2;
+in->sys.center_off_when_move[Yr]=0;//-0.88;
 in->sys.leg_t=0.5;
-in->sys.leg_h=4.68;
-in->sys.desire_time=0.3;//0.76;
-in->leg_move_min_dt=0;//35 ;
+in->sys.leg_h=3.68;
+in->sys.desire_time=0.33;//0.76;
+in->sys.leg_move_min_dt=90;//35 ;
 
 leg[1].sys.id=1;
 leg[2].sys.id=2;
 leg[3].sys.id=3;
 leg[4].sys.id=4;
+
+#if TEST_MODE1
+in->sys.k_center_c[0]=4;
+in->sys.k_center_c[1]=4;
+in->sys.desire_time=3.3;//0.76;
+in->sys.leg_move_min_dt=0;
+#endif
 }	
 
 //转换腿局部坐标系到全局机体坐标系
@@ -300,27 +354,33 @@ barin_init(&brain);}
 				
 				center_control(dt);	
 					
+				att_control(dt);
+					
         cal_deng_from_spd(&brain);	
  				
+				if(brain.leg_move_state==S_BODY_MOVE&&brain.center_stable)
+				brain.leg_move_state=S_LEG_TRIG;
+	 			 
 				if(brain.leg_move_state==S_LEG_TRIG){			
 					leg_tar_est(&brain,&leg[brain.move_id],0,0,0,1,dt);
 					brain.can_move_leg=0;
 					leg[brain.move_id].sys.leg_move_pass_cnt=0;	 
 					brain.leg_move_state=S_LEG_TRIG_ING;
 				}	
+				
 				if(brain.leg_move_state==S_LEG_TRIG_ING&&brain.ground_leg_num<4)
 					brain.leg_move_state=S_LEG_TRIG_ING1;
+				
 				if(brain.leg_move_state==S_LEG_TRIG_ING1&&brain.ground_leg_num>3)
-				  brain.leg_move_state=S_BODY_RETURN;
-			  if(brain.center_stable&&brain.leg_move_state==S_BODY_RETURN)
+				{brain.leg_move_state=S_BODY_RETURN;brain.tar_att[0]=brain.tar_att[1]=0;}
+				
+			  if(brain.leg_move_state==S_BODY_RETURN&&brain.center_stable)
 					brain.force_stop=brain.leg_move_state=S_IDLE;	
-				
-				
 				
 				leg_trig_flag_reg=brain.leg_move_state;
 	}
 }
-
+//------------------------------------------------START HERE-----------------------------------------------------------------
 
 
 //估计机器人中心
@@ -336,11 +396,11 @@ void estimate_center(BRAIN_STRUCT *in,float att[3],float spd_body[3],float acc_b
 		}else
 		k_off_z=1;
 		
-	in->center.x=0-leg[1].leg_ground*in->center_off_when_move[Xr]-leg[2].leg_ground*in->center_off_when_move[Xr]
-	+leg[3].leg_ground*in->center_off_when_move[Xr]+leg[4].leg_ground*in->center_off_when_move[Xr];
+	in->center.x=0-leg[1].leg_ground*in->sys.center_off_when_move[Xr]-leg[2].leg_ground*in->sys.center_off_when_move[Xr]
+	+leg[3].leg_ground*in->sys.center_off_when_move[Xr]+leg[4].leg_ground*in->sys.center_off_when_move[Xr];
 	
-	in->center.y=0-leg[1].leg_ground*in->center_off_when_move[Yr]-leg[3].leg_ground*in->center_off_when_move[Yr]
-	+leg[2].leg_ground*in->center_off_when_move[Yr]+leg[4].leg_ground*in->center_off_when_move[Yr];
+	in->center.y=0-leg[1].leg_ground*in->sys.center_off_when_move[Yr]-leg[3].leg_ground*in->sys.center_off_when_move[Yr]
+	+leg[2].leg_ground*in->sys.center_off_when_move[Yr]+leg[4].leg_ground*in->sys.center_off_when_move[Yr];
 	in->center.x*=k_off_z;	
 	in->center.y*=k_off_z;	
 	in->center.z=0;
@@ -369,6 +429,7 @@ switch(in->ground_leg_num)
    in->leg_ground_center[Xr]=(float)(x[0]+x[1]+x[2])/3.;
    in->leg_ground_center[Yr]=(float)(y[0]+y[1]+y[2])/3.;
    in->area_of_leg[0]=cal_area_trig( x[0],y[0], x[1],y[1], x[2],y[2]);
+   in->steady_value=cal_steady_s(in->leg_ground_center[Xr],in->leg_ground_center[Yr],x[0],y[0], x[1],y[1], x[2],y[2]);
  break;
  case 4:
     temp[0][Xr]=(float)(x[0]+x[1]+x[2])/3.;
@@ -422,7 +483,7 @@ void check_leg_need_move(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],flo
 	 tar_y=leg[i].pos_now[2].y+leg[i].sys.off_local[Yr]+dt*LIMIT(spd_tar[Yr],-0.5,0.5)*0;
 	 
 	 //计算速度直线与椭圆交点
-	 float temp=sqrt(pow(in->leg_move_range[Xr],2)/(1+pow(in->leg_move_range[Xr]*tan(tyaw/57.3)/in->leg_move_range[Yr],2)));
+	 float temp=sqrt(pow(in->sys.leg_move_range[Xr],2)/(1+pow(in->sys.leg_move_range[Xr]*tan(tyaw/57.3)/in->sys.leg_move_range[Yr],2)));
 	 //判断速度方向交点符号
 	 if(in->spd_yaw+0.0001>0&&in->spd_yaw+0.0001<180)
 	 {jiaodiao[0][Xr]=temp;jiaodiao[1][Xr]=-temp;}
@@ -437,8 +498,8 @@ void check_leg_need_move(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],flo
 	 dis[0]=pow(leg[i].pos_now[2].x-jiaodiao[0][Xr],2)+pow(leg[i].pos_now[2].y-jiaodiao[0][Yr],2);
 	 dis[1]=pow(leg[i].pos_now[2].x-jiaodiao[1][Xr],2)+pow(leg[i].pos_now[2].y-jiaodiao[1][Yr],2);
 	 
-	 range_in[i]=pow(tar_x/(in->leg_move_range[Xr]*brain.sys.move_range_k),2)+pow(tar_y/(in->leg_move_range[Yr]*brain.sys.move_range_k),2);
-	 range_out[i]=pow(tar_x/in->leg_move_range[Xr],2)+pow(tar_y/in->leg_move_range[Yr],2);
+	 range_in[i]=pow(tar_x/(in->sys.leg_move_range[Xr]*brain.sys.move_range_k),2)+pow(tar_y/(in->sys.leg_move_range[Yr]*brain.sys.move_range_k),2);
+	
 	 
 	 if(spd>0)
 	  brain.tabu=1;
@@ -450,7 +511,8 @@ void check_leg_need_move(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],flo
 	 leg[i].need_move=1;	 
 	 }
 	 
-	 if(range_out[i]>1)
+	 range_out[i]=pow(tar_x/in->sys.leg_move_range[Xr],2)+pow(tar_y/in->sys.leg_move_range[Yr],2);
+	 if(dis[1]<dis[0]&&range_out[i]>1&&spd>0)
 	 { 
 	 leg[i].need_move=3;	 
 	 brain.force_stop=1; 	 
@@ -500,32 +562,38 @@ static u8 last_move_leg,leg_flag;
 	
  if(brain.ground_leg_num<4)//may cause hard error when use if else
 	 brain.sys.dt_leg_min_trig_cnt=0;
- if(brain.sys.dt_leg_min_trig_cnt++>brain.leg_move_min_dt*brain.sys.desire_time/dt)
+ if(brain.sys.dt_leg_min_trig_cnt++>brain.sys.leg_move_min_dt*brain.sys.desire_time/dt)
 	 brain.can_move_leg=1;
  
  //判断谁权限高
  u8 id_need_to_move=RNG_Get_RandomRange(1,4);
-// if(leg_out_cnt[2]==0)//normal no outter
-// {
    id_need_to_move=trig_list[leg_flag];
-// }
-// else{
-// for(i=1;i<5;i++)
-//   if(leg[i].sys.leg_move_pass_cnt>leg[id_need_to_move].sys.leg_move_pass_cnt)
-//		  id_need_to_move=i;
-//	 
-//	 id_need_to_move=trig_list[id_need_to_move];
-// }	 
- 
+
  if(brain.can_move_leg&&brain.leg_move_state==S_IDLE&&(leg_out_cnt[0]+leg_out_cnt[1]+leg_out_cnt[2]>0)){
  last_move_leg=in->move_id = id_need_to_move;
+ //	姿态倾斜 
+	if(id_need_to_move==1||id_need_to_move==3)	 
+	brain.tar_att[0]=-brain.sys.att_off[0]; 
+	else
+	brain.tar_att[0]=brain.sys.att_off[0]; 	 
+
+	if(id_need_to_move==1||id_need_to_move==2)	 
+	brain.tar_att[1]=brain.sys.att_off[1]; 
+	else
+	brain.tar_att[1]=-brain.sys.att_off[1]; 
  leg_flag++;
   if(leg_flag>4)
    leg_flag=1;		
  }
+ 
+  if(brain.tar_att_force[0]!=0)
+	 brain.tar_att[0]=brain.tar_att_force[0];
+	if(brain.tar_att_force[1]!=0)
+	 brain.tar_att[1]=brain.tar_att_force[1];
 }
 
 u8 pass_id[5]={0,3,4,1,2};
+u8 pass_id1[5]={0,1,2,3,4};
 void cal_target_of_center_move(BRAIN_STRUCT *in)
 {
 u8 i=0,j=0,j1=0;
@@ -535,11 +603,11 @@ double x1[5],y1[5];
 float temp[2][3];
 
   for(i=1;i<5;i++){
-		if(i!=pass_id[in->move_id]){
+		if(i!=pass_id1[in->move_id]){
 		x[j]=leg[i].sys.init_end_pos.x+in->sys.leg_local[i].x;y[j]=leg[i].sys.init_end_pos.y+in->sys.leg_local[i].y;
 		j=j+1;
 		}
-		if(i!=pass_id[in->move_id]){
+		if(i!=pass_id1[in->move_id]){
     x1[j1]=leg[i].pos_now_brain[2].x;y1[j1]=leg[i].pos_now_brain[2].y;
 		j1=j1+1;
 		}
@@ -547,10 +615,10 @@ float temp[2][3];
 	
    if(in->move_id!=leg_move_id&&in->ground_leg_num>3){
 	 in->leg_move_state=S_BODY_MOVE; 
-   in->leg_ground_center_trig_init[Xr]=(float)(x[0]+x[1]+x[2])/3.;
-   in->leg_ground_center_trig_init[Yr]=(float)(y[0]+y[1]+y[2])/3.;
-	 in->leg_ground_center_trig[Xr]=(float)(x1[0]+x1[1]+x1[2])/3.;
-   in->leg_ground_center_trig[Yr]=(float)(y1[0]+y1[1]+y1[2])/3.;	 
+   in->leg_ground_center_trig_init[Xr]=-(float)(x[0]+x[1]+x[2])/3.;
+   in->leg_ground_center_trig_init[Yr]=-(float)(y[0]+y[1]+y[2])/3.;
+	 in->leg_ground_center_trig[Xr]=-(float)(x1[0]+x1[1]+x1[2])/3.;
+   in->leg_ground_center_trig[Yr]=-(float)(y1[0]+y1[1]+y1[2])/3.;	 
    }
    leg_move_id=in->move_id;	
 }
@@ -563,7 +631,7 @@ void center_control(float dt)//中心控制PID
   
 	float ero[2];
 	float yaw;
-	yaw=90-brain.spd_yaw+0.001;
+	yaw=90-brain.spd_yaw+0.000001;
 	float center_tar_x,center_tar_y;
 	#if USE_INIT_AS_LINE
 	if(brain.ground_leg_num<4||brain.leg_move_state==S_BODY_MOVE){
@@ -576,12 +644,14 @@ void center_control(float dt)//中心控制PID
 	center_tar_x=brain.leg_ground_center_trig[Xr];
 	#endif
 	
-	double b = center_tar_y-tan(yaw/ 57.3f) * center_tar_x*brain.sys.kp_center;
-	double b2 = brain.leg_ground_center[Yr]+ brain.leg_ground_center[Xr]/tan(yaw/ 57.3f) ;
+	double b = (center_tar_y*brain.sys.kp_center[1])-tan(yaw/ 57.3f) * (center_tar_x*brain.sys.kp_center[0]);//目标
+	double b2 = brain.leg_ground_center[Yr]+ brain.leg_ground_center[Xr]/tan(yaw/ 57.3f) ;//当前
+	//过目标平行线上  当前点垂直线交点
 	float tar_x_9 = (b2 - b) / (tan(yaw/ 57.3f) + 1 / tan(yaw/ 57.3f));
 	float tar_y_9 = tan(yaw/ 57.3f) * tar_x_9 + b;
-	float spdx=sin(brain.spd_yaw*0.0173)*brain.spd+0.0001;
-	float spdy=cos(brain.spd_yaw*0.0173)*brain.spd+0.0001;
+	
+	float spdx=sin(brain.spd_yaw/ 57.3f)*brain.spd+0.0001;
+	float spdy=cos(brain.spd_yaw/ 57.3f)*brain.spd+0.0001;
 	
 	static u8 reg_flag;
 	int flag[2];
@@ -612,13 +682,45 @@ void center_control(float dt)//中心控制PID
 	 else
 	 brain.center_stable=0;
 	
-	 if(brain.center_stable&&brain.leg_move_state==S_BODY_MOVE)
-		 brain.leg_move_state=S_LEG_TRIG;
-	 
-	 	reg_flag=brain.leg_move_state;
+	 reg_flag=brain.leg_move_state;
 }
 
-
+float att_control_out[5];
+float kp_att=0.01;
+float ki_att=0.0;
+float kd_att=0;
+float flt=0.234;
+void att_control(float dt)
+{ static float int_ero[2];
+  static float ero[2],ero_r[2];
+  float control[2],ero_d[2];	
+  ero[0]+=( 1 / ( 1 + 1 / ( flt *3.14f *dt ) ) ) *(my_deathzoom(LIMIT(brain.tar_att[0]-brain.att[0],-33,33),0.235)- ero[0]);
+	ero[1]+=( 1 / ( 1 + 1 / ( flt *3.14f *dt ) ) ) *(my_deathzoom(LIMIT(brain.tar_att[1]-brain.att[1],-33,33),0.235)- ero[1]);
+	
+	if(ki_att==0)
+	int_ero[1]=int_ero[0]=0;	
+	else{
+	int_ero[0]+=my_deathzoom(LIMIT(brain.tar_att[0]-brain.att[0],-33,33),0.235)*ki_att;
+	int_ero[1]+=my_deathzoom(LIMIT(brain.tar_att[1]-brain.att[1],-33,33),0.235)*ki_att;
+	}
+	int_ero[0]=LIMIT(int_ero[0],-3,3);
+	int_ero[1]=LIMIT(int_ero[1],-3,3);
+	
+	ero_d[0] = 0.02f/dt *kd_att * (ero[0]-ero_r[0]) *dt;
+  ero_d[1] = 0.02f/dt *kd_att * (ero[1]-ero_r[1]) *dt;
+	
+	control[0]=LIMIT(ero[0]*kp_att+int_ero[0]+ero_d[0],-5,5);
+	control[1]=LIMIT(ero[1]*kp_att+int_ero[1]+ero_d[1],-5,5);
+  
+	ero_r[0]=ero[0];
+	ero_r[1]=ero[1];
+	
+	att_control_out[1] = LIMIT(-control[0]+control[1],-6,8) ;
+	att_control_out[3] = LIMIT(-control[0]-control[1],-6,8) ;
+	att_control_out[2] = LIMIT(control[0]+control[1] ,-6,8) ;
+	att_control_out[4] = LIMIT(control[0]-control[1] ,-6,8) ;
+	att_control_out[0] =  fabs(control[1])+fabs(control[0]);
+}	
 
 //由机体速度换算蹬腿速度
 void cal_deng_from_spd(BRAIN_STRUCT *in)
@@ -630,8 +732,8 @@ float yaw=in->spd_yaw;
 	
 
 	float k_move=1;
-  in->sys.tar_spd[Xr]=spdx=sin(yaw*0.0173)*spd*k_move;
-	in->sys.tar_spd[Yr]=spdy=cos(yaw*0.0173)*spd*k_move;
+  in->sys.tar_spd[Xr]=spdx=sin(yaw/ 57.3f)*spd*k_move;
+	in->sys.tar_spd[Yr]=spdy=cos(yaw/ 57.3f)*spd*k_move;
 	if(in->force_stop)
   spdx=spdy=0;
 	
@@ -639,16 +741,18 @@ float yaw=in->spd_yaw;
 		if((leg[i].control_mode||in->control_mode)&&leg[i].leg_ground&&!leg[i].sys.leg_ground_force){	
 		leg[i].deng[Xr]=LIMIT(spdx+1*center_control_out[Xr],-8.8,8.8);
 		leg[i].deng[Yr]=LIMIT(spdy+1*center_control_out[Yr],-8.8,8.8);	}
-		}
-		
+		}	
 }
+
 
 #define EN_KUAI_ADD_MOVE_OFF 1
 //需要跨腿的目标调用该函数
-float h_k=0.98;
+float h_k=1;
+float k_band=1.125;
 void leg_tar_est(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt)
 {
 u8 id=leg->sys.id;
+float band_x,band_y,range_limit;
 float tar_yaw,spd;
 		tar_yaw=in->spd_yaw;
 	  spd=in->spd;
@@ -666,18 +770,40 @@ else
 off_y=LIMIT(leg->pos_now[2].y-leg->sys.init_end_pos.y,-leg->sys.off_local[1],0)*fabs(sin(tar_yaw/57.3));	
 #endif	
 	
+
+	band_x=0;//in->sys.leg_local[id].x*k_band ;
+  band_y=0;//in->sys.leg_local[id].y*k_band;
+  range_limit=0;
 switch(need_move){//超出范围
 	case 1 :
-		tar_x=LIMIT(sin(tar_yaw*0.0173)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->leg_move_range[Xr]*in->sys.move_range_k,in->leg_move_range[Xr]*in->sys.move_range_k);
-	  tar_y=LIMIT(cos(tar_yaw*0.0173)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->leg_move_range[Yr]*in->sys.move_range_k,in->leg_move_range[Yr]*in->sys.move_range_k);
-	  leg->pos_tar_trig[2].x=leg->sys.init_end_pos.x*1+tar_x+(float)RNG_Get_RandomRange(-1000,1000)/100000.+off_x;
-	  leg->pos_tar_trig[2].y=leg->sys.init_end_pos.y*1+tar_y+(float)RNG_Get_RandomRange(-1000,1000)/100000.+off_y;
-	  leg->pos_tar_trig[2].z=leg->sys.init_end_pos.z*h_k;
+//		tar_x=LIMIT(sin(tar_yaw*0.0173)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->leg_move_range[Xr]*in->sys.move_range_k,in->leg_move_range[Xr]*in->sys.move_range_k);
+//	  tar_y=LIMIT(cos(tar_yaw*0.0173)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->leg_move_range[Yr]*in->sys.move_range_k,in->leg_move_range[Yr]*in->sys.move_range_k);
+//	  leg->pos_tar_trig[2].x=leg->sys.init_end_pos.x*1+tar_x+(float)RNG_Get_RandomRange(-1000,1000)/100000.+off_x*cos(tar_yaw*0.0173);
+//	  leg->pos_tar_trig[2].y=leg->sys.init_end_pos.y*1+tar_y+(float)RNG_Get_RandomRange(-1000,1000)/100000.+off_y*sin(tar_yaw*0.0173);
+//	  leg->pos_tar_trig[2].z=leg->sys.init_end_pos.z*h_k;
+	
+		
+	tar_x=sin(tar_yaw/ 57.3f)*LIMIT(spd*in->sys.k_spd_to_range,-in->sys.leg_move_range[Xr]*in->sys.move_range_k,in->sys.leg_move_range[Xr]*in->sys.move_range_k)+leg->sys.init_end_pos.x;//leg->pos_now[2].x;
+	tar_y=cos(tar_yaw/ 57.3f)*LIMIT(spd*in->sys.k_spd_to_range,-in->sys.leg_move_range[Yr]*in->sys.move_range_k,in->sys.leg_move_range[Yr]*in->sys.move_range_k)+leg->sys.init_end_pos.y;//leg->pos_now[2].y;
+	leg->pos_tar_trig[2].x=tar_x;
+	leg->pos_tar_trig[2].y=tar_y;
+	leg->pos_tar_trig[2].x=LIMIT(leg->pos_tar_trig[2].x,-in->sys.leg_move_range[Xr],in->sys.leg_move_range[Xr])+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;
+	leg->pos_tar_trig[2].y=LIMIT(leg->pos_tar_trig[2].y,-in->sys.leg_move_range[Yr],in->sys.leg_move_range[Yr])+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;
+	leg->pos_tar_trig[2].z=leg->sys.init_end_pos.z*h_k;
+	
+//	if(leg->pos_tar_trig[2].x<band_x&&leg->pos_tar_trig[2].y<band_y&&id==1)
+//	{leg->pos_tar_trig[2].x=band_x;leg->pos_tar_trig[2].y=band_y;}
+//	if(leg->pos_tar_trig[2].x<band_x&&leg->pos_tar_trig[2].y>band_y&&id==2)
+//	{leg->pos_tar_trig[2].x=band_x;leg->pos_tar_trig[2].y=band_y;}
+//	if(leg->pos_tar_trig[2].x>band_x&&leg->pos_tar_trig[2].y<band_y&&id==3)
+//	{leg->pos_tar_trig[2].x=band_x;leg->pos_tar_trig[2].y=band_y;}
+//	if(leg->pos_tar_trig[2].x>band_x&&leg->pos_tar_trig[2].y>band_y&&id==4)
+//	{leg->pos_tar_trig[2].x=band_x;leg->pos_tar_trig[2].y=band_y;}
 	break;
 	case 2 ://重心丢失
-		tar_x=LIMIT(sin(tar_yaw*0.0173)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->leg_move_range[Xr]*0.98,in->leg_move_range[Xr]*0.98);
-	  tar_y=LIMIT(cos(tar_yaw*0.0173)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->leg_move_range[Yr]*0.98,in->leg_move_range[Yr]*0.98);
-	  leg->pos_tar[2].x=tar_x+(float)RNG_Get_RandomRange(-1000,1000)/100000.;
+		tar_x=LIMIT(sin(tar_yaw*0.0173)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->sys.leg_move_range[Xr]*0.98,in->sys.leg_move_range[Xr]*0.98);
+	  tar_y=LIMIT(cos(tar_yaw*0.0173)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->sys.leg_move_range[Yr]*0.98,in->sys.leg_move_range[Yr]*0.98);
+	  leg->pos_tar[2].x=tar_x+(float)RNG_Get_RandomRange(-1000,1000 )/100000.;
 		leg->pos_tar[2].y=tar_y+(float)RNG_Get_RandomRange(-1000,1000)/100000.;	
 	break;
 }

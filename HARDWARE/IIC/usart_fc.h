@@ -311,4 +311,5 @@ extern u8 SendBuff4[SEND_BUF_SIZE4];	//发送数据缓冲区
 void data_per_uart4(u8 sel);
 
 void Send_LEG(u8 sel);
+void GOL_LINK_TASK(void);
 #endif

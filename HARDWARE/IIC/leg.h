@@ -29,7 +29,7 @@ typedef struct
 	u16 PWM_INIT[3];
 	u16 PWM_MIN[3],PWM_MAX[3];
 	float PWM_OUT[4];
-	float PWM_PER_DEGREE;
+	float PWM_PER_DEGREE[3];
 	u8 use_ground_check;
 	u8 leg_set_invert,leg_ground_cnt;
 	float pos_tar_reg[3],off_local[2];
@@ -63,30 +63,33 @@ typedef struct
 //------------------------------BARIN-----
 
 typedef struct 
-{u16 leg_loss_cnt,dt_leg_min_trig_cnt;
-	float k_spd_to_range,kp_center,k_center_fp,move_range_k,k_center_c[2];
+{ u8 leg_connect;
+	u16 leg_loss_cnt,dt_leg_min_trig_cnt;
+	float att_off[2],k_spd_to_range,kp_center[2],k_center_fp,move_range_k,k_center_c[2];
+	float desire_time;
 	POS leg_local[5];
 	u8 leg_use_ground;
 	u8 init_mode;
 	POS pos_tar_trig[5];
 	u8 err,rst;
+	float center_off_when_move[2];
 	float leg_t,tar_spd[3];
-	float leg_h;
-	float desire_time;
+	float leg_h;	
+	float leg_move_range[2],leg_move_min_dt;//cm
 	POS off_leg[5],center_off,center_off1,center_scale;
 }BRAIN_SYS;
 
 typedef struct 
-{ u8 leg_connect,control_mode,power_all,rst_all,tabu;
+{ u8 control_mode,power_all,rst_all,tabu;
+	float steady_value;
 	u8 force_stop,loss_center,ground_leg_num,can_move_leg;	
 	u8 leg_move[5],leg_out_range[5];	
-	float att[3],now_spd[3],now_acc[3],tar_w,spd,spd_d,spd_yaw;
+	float tar_att_force[3],tar_att[3],att[3],tar_w,spd,spd_d,spd_yaw;
   u8 center_stable,move_id,leg_move_state;
 	float area_of_leg[2];
 	POS center;
 	double leg_ground_center[3],leg_ground_center_trig[3],leg_ground_center_trig_init[3],tar_center[2];
-	float leg_move_range[2],leg_move_min_dt;//cm
-	float center_off_when_move[2];
+	float now_pos[3],now_spd[3],now_acc[3];
 	BRAIN_SYS sys;
 }BRAIN_STRUCT;
 extern u8 last_move_leg;
@@ -117,11 +120,12 @@ u8 inTrig(float x, float y,float x1,float y1,float x2,float y2,float x3,float y3
 u8 inTrig2(float x, float y,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4) ;
 void find_closet_point(u8*min_id,float x, float y,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4,u8 num); 
 void find_leg_need_move(float spd_tar[3],float str[4],float end[4]) ;
-void leg_task(float dt);
+void leg_task1(float dt);
 void cal_deng_from_spd(BRAIN_STRUCT *in);
 void cal_target_of_center_move(BRAIN_STRUCT *in);
 void leg_tar_est(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt);
-extern float center_control_out[2];
+void att_control(float dt);
+extern float center_control_out[2],att_control_out[5];;
 #define Xr 0
 #define Yr 1
 #define Zr 2
