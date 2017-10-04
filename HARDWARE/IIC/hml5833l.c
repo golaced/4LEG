@@ -1,6 +1,6 @@
 
 
-#include "hml_sample.h"
+#include "mpu9250.h"
 #include "parameter.h"
 #include "my_math.h"
 #include "include.h"
@@ -10,19 +10,6 @@
 
 ak8975_t ak8975 = { {0,0,0},{-1,-1,-1},{1,0.8538,0.9389},{0,0,0} };
 
-bool ANO_AK8975_Run(void)
-{
-	return IIC_Write_1Byte(AK8975_ADDRESS,AK8975_CNTL,0x01);	
-}
-
-xyz_f_t XYZ_STRUCT_COPY(float x,float y, float z)
-{
-	xyz_f_t m ;
-	m.x = x;
-	m.y = y;
-	m.z = z;
-	return m;
-}
 #define  IIR_ORDER     4      //使用IIR滤波器的阶数
 static double b_IIR_hml[IIR_ORDER+1] ={0.0008f, 0.0032f, 0.0048f, 0.0032f, 0.0008f};  //系数b
 static double a_IIR_hml[IIR_ORDER+1] ={1.0000f, -3.0176f, 3.5072f, -1.8476f, 0.3708f};//系数a
@@ -34,28 +21,10 @@ void ANO_AK8975_Read_Mag_Data(void)
 	int16_t mag_temp[3];
 //u8 ak8975_buffer[6]; //接收数据缓存
 	
-	I2C_FastMode = 0;
-	/*
-	IIC_Read_1Byte(AK8975_ADDRESS,AK8975_HXL,&ak8975_buffer[0]); 
-	IIC_Read_1Byte(AK8975_ADDRESS,AK8975_HXH,&ak8975_buffer[1]);
-	mag_temp[1] = -((((int16_t)ak8975_buffer[1]) << 8) | ak8975_buffer[0]) ;  //磁力计X轴
-
-	IIC_Read_1Byte(AK8975_ADDRESS,AK8975_HYL,&ak8975_buffer[2]);
-	IIC_Read_1Byte(AK8975_ADDRESS,AK8975_HYH,&ak8975_buffer[3]);
-	mag_temp[0] = -((((int16_t)ak8975_buffer[3]) << 8) | ak8975_buffer[2]) ;  //磁力计Y轴
-
-	IIC_Read_1Byte(AK8975_ADDRESS,AK8975_HZL,&ak8975_buffer[4]);
-	IIC_Read_1Byte(AK8975_ADDRESS,AK8975_HZH,&ak8975_buffer[5]);
-	mag_temp[2] =  ((((int16_t)ak8975_buffer[5]) << 8) | ak8975_buffer[4]) ;  //磁力计Z轴	
+	mag_temp[0]=rawMag[0].value/10;
+	mag_temp[1]=rawMag[1].value/10;
+	mag_temp[2]=rawMag[2].value/10;
 	
-	ak8975.Mag_Adc.x = mag_temp[0];
-	ak8975.Mag_Adc.y = mag_temp[1];
-	ak8975.Mag_Adc.z = mag_temp[2];
-	*/
-	 HMC58X3_getRaw(&mag_temp[0], &mag_temp[1],&mag_temp[2]);
-	//ak8975.Mag_Adc.x = mag_temp[0];
-	//ak8975.Mag_Adc.y = mag_temp[1];
-	//ak8975.Mag_Adc.z = mag_temp[2];
 	ak8975.Mag_Adc.x= IIR_I_Filter(mag_temp[0], InPut_IIR_hml[0], OutPut_IIR_hml[0], b_IIR_hml, IIR_ORDER+1, a_IIR_hml, IIR_ORDER+1);
   ak8975.Mag_Adc.y= IIR_I_Filter(mag_temp[1], InPut_IIR_hml[1], OutPut_IIR_hml[1], b_IIR_hml, IIR_ORDER+1, a_IIR_hml, IIR_ORDER+1);
 	ak8975.Mag_Adc.z= IIR_I_Filter(mag_temp[2], InPut_IIR_hml[2], OutPut_IIR_hml[2], b_IIR_hml, IIR_ORDER+1, a_IIR_hml, IIR_ORDER+1);
@@ -64,19 +33,8 @@ void ANO_AK8975_Read_Mag_Data(void)
 	ak8975.Mag_Val.z = (ak8975.Mag_Adc.z - ak8975.Mag_Offset.z)*ak8975.Mag_Gain.z ;
 	//磁力计中点矫正	
 	ANO_AK8975_CalOffset_Mag();
-	
-	//AK8975采样触发
-//	ANO_AK8975_Run();
+
 }
-
-xyz_f_t ANO_AK8975_Get_Mag(void)
-{
-	return ak8975.Mag_Val;
-}
-
-
-
-
 
 u8 Mag_CALIBRATED = 0,Mag_CALIBRATED_R=0;;
 //磁力计中点矫正
@@ -139,13 +97,4 @@ static u8 state_cal_hml;
 
 	}
 }
-
-void ANO_AK8975_Read(void)
-{
-		//读取磁力计
-		ANO_AK8975_Read_Mag_Data();
-}
-
-
-/******************* (C) COPYRIGHT 2014 ANO TECH *****END OF FILE************/
 

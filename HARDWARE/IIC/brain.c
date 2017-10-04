@@ -1,7 +1,8 @@
 #include "include.h" 
-#define TEST_MODE1 1
+#define TEST_MODE1 0
+#define BODY_MOVE_WHEN_LEG_UP 0
 void get_leg_tar_trig(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
-
+void fall_reset(float dt);
 static void swap(float *a, float *b)  
 {  
     int     c;  
@@ -184,6 +185,8 @@ void barin_init(BRAIN_STRUCT *in)
 {
 float W=5.7  *2;//cm	
 float L=18.5;
+in->sys.yaw_trig=fast_atan2(W/2,L/2)*57.3;	
+	
 in->sys.leg_local[1].x=W/2;
 in->sys.leg_local[1].y=L/2;
 in->sys.leg_local[1].z=0;	
@@ -208,12 +211,12 @@ cal_area_trig(in->sys.leg_local[4].x,in->sys.leg_local[4].y,
 in->sys.leg_local[2].x,in->sys.leg_local[2].y,
 in->sys.leg_local[3].x,in->sys.leg_local[3].y)/2;
 	
+float temp=0.825;
+in->sys.leg_move_range[Yr]=leg[1].sys.limit.y*temp;//cm		
+in->sys.leg_move_range[Xr]=in->sys.leg_move_range[Yr]*W/L;//cm	
 
-in->sys.leg_move_range[Yr]=leg[1].sys.limit.y*0.98;//cm		
-in->sys.leg_move_range[Xr]=in->sys.leg_move_range[Yr]*0.78;//cm	
-
-in->sys.k_spd_to_range=2;
-in->sys.kp_center[0]=0.6;
+in->sys.k_spd_to_range=1.86;
+in->sys.kp_center[0]=0.8;
 in->sys.kp_center[1]=0.6;
 in->sys.k_center_fp=0.0;
 
@@ -234,8 +237,8 @@ in->sys.center_off_when_move[Xr]=0;//-0.2;
 in->sys.center_off_when_move[Yr]=0;//-0.88;
 in->sys.leg_t=0.5;
 in->sys.leg_h=3.68;
-in->sys.desire_time=0.33;//0.76;
-in->sys.leg_move_min_dt=90;//35 ;
+in->sys.desire_time=0.5;//0.76;
+in->sys.leg_move_min_dt=1;//35 ;
 
 leg[1].sys.id=1;
 leg[2].sys.id=2;
@@ -345,7 +348,10 @@ barin_init(&brain);}
 				conver_legpos_to_barin(&brain,&leg[i],i);      
 		
 				estimate_center(&brain,brain.att,brain.now_spd,brain.now_acc,brain.sys.tar_spd,brain.tar_w);//估计机体重心
-
+         
+		if(brain.fall!=0)
+			  fall_reset(dt);
+		else{
 				cal_center_of_leg_ground(&brain);//估计着地多边形
 		
 				check_leg_need_move(&brain,brain.now_spd,brain.sys.tar_spd,brain.tar_w,dt);//判断需要跨的脚
@@ -365,24 +371,31 @@ barin_init(&brain);}
 					leg_tar_est(&brain,&leg[brain.move_id],0,0,0,1,dt);
 					brain.can_move_leg=0;
 					leg[brain.move_id].sys.leg_move_pass_cnt=0;	 
-					brain.leg_move_state=S_LEG_TRIG_ING;
+					brain.leg_move_state=S_LEG_TRIG_LEAVE_GROUND_CHECK;
 				}	
 				
-				if(brain.leg_move_state==S_LEG_TRIG_ING&&brain.ground_leg_num<4)
-					brain.leg_move_state=S_LEG_TRIG_ING1;
+				if(brain.leg_move_state==S_LEG_TRIG_LEAVE_GROUND_CHECK&&brain.ground_leg_num<4)
+					brain.leg_move_state=S_LEG_TRIG_ING;
 				
-				if(brain.leg_move_state==S_LEG_TRIG_ING1&&brain.ground_leg_num>3)
+				if(brain.leg_move_state==S_LEG_TRIG_ING&&brain.ground_leg_num>3)
 				{brain.leg_move_state=S_BODY_RETURN;brain.tar_att[0]=brain.tar_att[1]=0;}
 				
 			  if(brain.leg_move_state==S_BODY_RETURN&&brain.center_stable)
-					brain.force_stop=brain.leg_move_state=S_IDLE;	
+				{brain.force_stop=brain.leg_move_state=S_IDLE;	
+					
+					if(brain.rst_all_soft>0)
+						brain.rst_all_soft++;
+					if(brain.rst_all_soft>4)
+						 brain.rst_all_soft=0;
+				}	
 				
 				leg_trig_flag_reg=brain.leg_move_state;
-	}
+		 }
+	}//end_init
 }
 //------------------------------------------------START HERE-----------------------------------------------------------------
 
-
+float k_acc=0;
 //估计机器人中心
 void estimate_center(BRAIN_STRUCT *in,float att[3],float spd_body[3],float acc_body[3],float spd_tar[3],float w_tar)//估计机体重心
 { u8 i,j;
@@ -396,14 +409,25 @@ void estimate_center(BRAIN_STRUCT *in,float att[3],float spd_body[3],float acc_b
 		}else
 		k_off_z=1;
 		
-	in->center.x=0-leg[1].leg_ground*in->sys.center_off_when_move[Xr]-leg[2].leg_ground*in->sys.center_off_when_move[Xr]
-	+leg[3].leg_ground*in->sys.center_off_when_move[Xr]+leg[4].leg_ground*in->sys.center_off_when_move[Xr];
-	
-	in->center.y=0-leg[1].leg_ground*in->sys.center_off_when_move[Yr]-leg[3].leg_ground*in->sys.center_off_when_move[Yr]
-	+leg[2].leg_ground*in->sys.center_off_when_move[Yr]+leg[4].leg_ground*in->sys.center_off_when_move[Yr];
-	in->center.x*=k_off_z;	
-	in->center.y*=k_off_z;	
-	in->center.z=0;
+//	in->center.x=0-leg[1].leg_ground*in->sys.center_off_when_move[Xr]-leg[2].leg_ground*in->sys.center_off_when_move[Xr]
+//	+leg[3].leg_ground*in->sys.center_off_when_move[Xr]+leg[4].leg_ground*in->sys.center_off_when_move[Xr];
+//	
+//	in->center.y=0-leg[1].leg_ground*in->sys.center_off_when_move[Yr]-leg[3].leg_ground*in->sys.center_off_when_move[Yr]
+//	+leg[2].leg_ground*in->sys.center_off_when_move[Yr]+leg[4].leg_ground*in->sys.center_off_when_move[Yr];
+//	in->center.x*=k_off_z;	
+//	in->center.y*=k_off_z;	
+		in->center.x=0+brain.now_acc[0]*k_acc;
+		in->center.y=0+brain.now_acc[1]*k_acc;
+	  in->center.z=high_robot;
+		
+		
+		brain.att[0]=Pitch;
+		brain.att[1]=Roll;
+		
+		if(brain.att[1]>45)
+			brain.fall=1;
+		else if(brain.att[1]<-45)
+      brain.fall=-1;			
 }
 
 
@@ -477,6 +501,7 @@ void check_leg_need_move(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],flo
 	 tar_x=leg[i].pos_now[2].x-leg[i].sys.off_local[Xr]+dt*LIMIT(spd_tar[Xr],-0.5,0.5)*0;
 	  else
 	 tar_x=leg[i].pos_now[2].x+leg[i].sys.off_local[Xr]+dt*LIMIT(spd_tar[Xr],-0.5,0.5)*0;
+		
    if(i==1||i==3) 
 	 tar_y=leg[i].pos_now[2].y-leg[i].sys.off_local[Yr]+dt*LIMIT(spd_tar[Yr],-0.5,0.5)*0;	
 	 else
@@ -501,7 +526,7 @@ void check_leg_need_move(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],flo
 	 range_in[i]=pow(tar_x/(in->sys.leg_move_range[Xr]*brain.sys.move_range_k),2)+pow(tar_y/(in->sys.leg_move_range[Yr]*brain.sys.move_range_k),2);
 	
 	 
-	 if(spd>0)
+	 if(spd>0||brain.rst_all_soft)
 	  brain.tabu=1;
 	 else
 		brain.tabu=0;  
@@ -530,6 +555,7 @@ void check_leg_need_move(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],flo
 
 //判断跨脚
 u8 trig_list[5]=		 {0,3,2,4,1};
+u8 trig_list1[5]=		 {0,3,2,1,4};
 u8 trig_list_ero[5]= {0,2,3,4,1};
 u8 trig_list_ero2[5]={0,0,0,0,0};
 u8 test112=15;
@@ -567,9 +593,14 @@ static u8 last_move_leg,leg_flag;
  
  //判断谁权限高
  u8 id_need_to_move=RNG_Get_RandomRange(1,4);
+   if((To_180_degrees(in->spd_yaw)<in->sys.yaw_trig&&To_180_degrees(in->spd_yaw)>-in->sys.yaw_trig)
+	 ||(To_180_degrees(in->spd_yaw)>90+in->sys.yaw_trig&&To_180_degrees(in->spd_yaw)<-90-in->sys.yaw_trig))
    id_need_to_move=trig_list[leg_flag];
-
+   else
+	 id_need_to_move=trig_list1[leg_flag];
+	 
  if(brain.can_move_leg&&brain.leg_move_state==S_IDLE&&(leg_out_cnt[0]+leg_out_cnt[1]+leg_out_cnt[2]>0)){
+	 
  last_move_leg=in->move_id = id_need_to_move;
  //	姿态倾斜 
 	if(id_need_to_move==1||id_need_to_move==3)	 
@@ -583,7 +614,10 @@ static u8 last_move_leg,leg_flag;
 	brain.tar_att[1]=-brain.sys.att_off[1]; 
  leg_flag++;
   if(leg_flag>4)
-   leg_flag=1;		
+   leg_flag=1;	
+
+  if(brain.rst_all_soft>0)
+     last_move_leg=in->move_id =trig_list[brain.rst_all_soft];	
  }
  
   if(brain.tar_att_force[0]!=0)
@@ -665,19 +699,29 @@ void center_control(float dt)//中心控制PID
 	else
 	 flag[0]=1;	
 	
-	brain.tar_center[Xr]=tar_x_9+(spdx/fabs(spdx))*brain.sys.k_center_fp*flag[0]*0;
-	brain.tar_center[Yr]=tar_y_9+(spdy/fabs(spdy))*brain.sys.k_center_fp*flag[1]*0;
+	brain.tar_center[Xr]=tar_x_9;//+(spdx/fabs(spdx))*brain.sys.k_center_fp*flag[0]*0;
+	brain.tar_center[Yr]=tar_y_9;//+(spdy/fabs(spdy))*brain.sys.k_center_fp*flag[1]*0;
 
-	if(brain.leg_move_state==S_BODY_MOVE||brain.leg_move_state==S_BODY_RETURN){ 
-	ero[Xr]=-my_deathzoom(brain.tar_center[Xr]-brain.leg_ground_center[Xr],0.001);
-  ero[Yr]=-my_deathzoom(brain.tar_center[Yr]-brain.leg_ground_center[Yr],0.001);
+	if(brain.leg_move_state==S_BODY_MOVE||brain.leg_move_state==S_BODY_RETURN
+		#if BODY_MOVE_WHEN_LEG_UP
+		||brain.leg_move_state==S_LEG_TRIG_LEAVE_GROUND_CHECK||brain.leg_move_state==S_LEG_TRIG_ING
+	  #endif
+	){ 
+	ero[Xr]=-my_deathzoom((brain.tar_center[Xr]-brain.leg_ground_center[Xr])-brain.center.x*1,0.005);
+  ero[Yr]=-my_deathzoom((brain.tar_center[Yr]-brain.leg_ground_center[Yr])-brain.center.y*1,0.005);
 	}else
 	ero[Xr]=ero[Yr]=0;
 	
 	center_control_out[Xr]=ero[Xr]*brain.sys.k_center_c[Xr];
 	center_control_out[Yr]=ero[Yr]*brain.sys.k_center_c[Yr];
-
-   if(sqrt(pow(ero[Xr],2)+pow(ero[Yr],2))<0.005&&(brain.leg_move_state==S_BODY_MOVE||brain.leg_move_state==S_BODY_RETURN))
+  
+	float dis_ero=sqrt(pow(ero[Xr],2)+pow(ero[Yr],2));
+	
+   if(dis_ero<0.01&&(brain.leg_move_state==S_BODY_MOVE||brain.leg_move_state==S_BODY_RETURN
+		#if BODY_MOVE_WHEN_LEG_UP
+		||brain.leg_move_state==S_LEG_TRIG_LEAVE_GROUND_CHECK||brain.leg_move_state==S_LEG_TRIG_ING 
+	  #endif
+	 ))
 	 brain.center_stable=1; 
 	 else
 	 brain.center_stable=0;
@@ -686,10 +730,10 @@ void center_control(float dt)//中心控制PID
 }
 
 float att_control_out[5];
-float kp_att=0.01;
+float kp_att=0.1;
 float ki_att=0.0;
 float kd_att=0;
-float flt=0.234;
+float flt=0.223;
 void att_control(float dt)
 { static float int_ero[2];
   static float ero[2],ero_r[2];
@@ -734,7 +778,7 @@ float yaw=in->spd_yaw;
 	float k_move=1;
   in->sys.tar_spd[Xr]=spdx=sin(yaw/ 57.3f)*spd*k_move;
 	in->sys.tar_spd[Yr]=spdy=cos(yaw/ 57.3f)*spd*k_move;
-	if(in->force_stop)
+	if((in->force_stop&&1)||brain.rst_all_soft>0)
   spdx=spdy=0;
 	
 		for(i=1;i<5;i++){
@@ -748,7 +792,7 @@ float yaw=in->spd_yaw;
 #define EN_KUAI_ADD_MOVE_OFF 1
 //需要跨腿的目标调用该函数
 float h_k=1;
-float k_band=1.125;
+float k_band=0.8;
 void leg_tar_est(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt)
 {
 u8 id=leg->sys.id;
@@ -771,25 +815,26 @@ off_y=LIMIT(leg->pos_now[2].y-leg->sys.init_end_pos.y,-leg->sys.off_local[1],0)*
 #endif	
 	
 
-	band_x=0;//in->sys.leg_local[id].x*k_band ;
-  band_y=0;//in->sys.leg_local[id].y*k_band;
+	band_x=in->sys.leg_local[id].x*k_band ;
+  band_y=in->sys.leg_local[id].y*k_band;
   range_limit=0;
 switch(need_move){//超出范围
 	case 1 :
-//		tar_x=LIMIT(sin(tar_yaw*0.0173)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->leg_move_range[Xr]*in->sys.move_range_k,in->leg_move_range[Xr]*in->sys.move_range_k);
-//	  tar_y=LIMIT(cos(tar_yaw*0.0173)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->leg_move_range[Yr]*in->sys.move_range_k,in->leg_move_range[Yr]*in->sys.move_range_k);
-//	  leg->pos_tar_trig[2].x=leg->sys.init_end_pos.x*1+tar_x+(float)RNG_Get_RandomRange(-1000,1000)/100000.+off_x*cos(tar_yaw*0.0173);
-//	  leg->pos_tar_trig[2].y=leg->sys.init_end_pos.y*1+tar_y+(float)RNG_Get_RandomRange(-1000,1000)/100000.+off_y*sin(tar_yaw*0.0173);
-//	  leg->pos_tar_trig[2].z=leg->sys.init_end_pos.z*h_k;
+		tar_x=LIMIT(sin(tar_yaw/ 57.3f)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->sys.leg_move_range[Xr]*in->sys.move_range_k,in->sys.leg_move_range[Xr]*in->sys.move_range_k);
+	  tar_y=LIMIT(cos(tar_yaw/ 57.3f)*LIMIT(spd*in->sys.k_spd_to_range,-20,20),-in->sys.leg_move_range[Yr]*in->sys.move_range_k,in->sys.leg_move_range[Yr]*in->sys.move_range_k);
+	  leg->pos_tar_trig[2].x=leg->sys.init_end_pos.x*1+tar_x+(float)RNG_Get_RandomRange(-1000,1000)/1000000.+off_x*cos(tar_yaw/ 57.3f);
+	  leg->pos_tar_trig[2].y=leg->sys.init_end_pos.y*1+tar_y+(float)RNG_Get_RandomRange(-1000,1000)/1000000.+off_y*sin(tar_yaw/ 57.3f);
+	  leg->pos_tar_trig[2].z=leg->sys.init_end_pos.z*h_k;
 	
-		
-	tar_x=sin(tar_yaw/ 57.3f)*LIMIT(spd*in->sys.k_spd_to_range,-in->sys.leg_move_range[Xr]*in->sys.move_range_k,in->sys.leg_move_range[Xr]*in->sys.move_range_k)+leg->sys.init_end_pos.x;//leg->pos_now[2].x;
-	tar_y=cos(tar_yaw/ 57.3f)*LIMIT(spd*in->sys.k_spd_to_range,-in->sys.leg_move_range[Yr]*in->sys.move_range_k,in->sys.leg_move_range[Yr]*in->sys.move_range_k)+leg->sys.init_end_pos.y;//leg->pos_now[2].y;
-	leg->pos_tar_trig[2].x=tar_x;
-	leg->pos_tar_trig[2].y=tar_y;
-	leg->pos_tar_trig[2].x=LIMIT(leg->pos_tar_trig[2].x,-in->sys.leg_move_range[Xr],in->sys.leg_move_range[Xr])+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;
-	leg->pos_tar_trig[2].y=LIMIT(leg->pos_tar_trig[2].y,-in->sys.leg_move_range[Yr],in->sys.leg_move_range[Yr])+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;
-	leg->pos_tar_trig[2].z=leg->sys.init_end_pos.z*h_k;
+	
+
+//	tar_x=sin(tar_yaw/ 57.3f)*LIMIT(spd*in->sys.k_spd_to_range,-in->sys.leg_move_range[Xr]*in->sys.move_range_k,in->sys.leg_move_range[Xr]*in->sys.move_range_k)+leg->sys.init_end_pos.x;//leg->pos_now[2].x;
+//	tar_y=cos(tar_yaw/ 57.3f)*LIMIT(spd*in->sys.k_spd_to_range,-in->sys.leg_move_range[Yr]*in->sys.move_range_k,in->sys.leg_move_range[Yr]*in->sys.move_range_k)+leg->sys.init_end_pos.y;//leg->pos_now[2].y;
+//	leg->pos_tar_trig[2].x=tar_x;
+//	leg->pos_tar_trig[2].y=tar_y;
+//	leg->pos_tar_trig[2].x=LIMIT(leg->pos_tar_trig[2].x,-in->sys.leg_move_range[Xr]+leg->sys.init_end_pos.x,in->sys.leg_move_range[Xr]+leg->sys.init_end_pos.x)+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;
+//	leg->pos_tar_trig[2].y=LIMIT(leg->pos_tar_trig[2].y,-in->sys.leg_move_range[Yr]+leg->sys.init_end_pos.y,in->sys.leg_move_range[Yr]+leg->sys.init_end_pos.y)+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;
+//	leg->pos_tar_trig[2].z=leg->sys.init_end_pos.z*h_k;
 	
 //	if(leg->pos_tar_trig[2].x<band_x&&leg->pos_tar_trig[2].y<band_y&&id==1)
 //	{leg->pos_tar_trig[2].x=band_x;leg->pos_tar_trig[2].y=band_y;}
@@ -807,4 +852,99 @@ switch(need_move){//超出范围
 		leg->pos_tar[2].y=tar_y+(float)RNG_Get_RandomRange(-1000,1000)/100000.;	
 	break;
 }
+
+		if(brain.rst_all_soft>0)
+		{
+		leg->pos_tar_trig[2].x=leg->sys.init_end_pos.x*2+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;//+off_x*cos(tar_yaw/ 57.3f);
+	  leg->pos_tar_trig[2].y=leg->sys.init_end_pos.y+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;//+off_y*sin(tar_yaw/ 57.3f);
+	  leg->pos_tar_trig[2].z=leg->sys.init_end_pos.z*h_k;
+		}
+}
+
+float reset_deng=30;
+float reset_sita[3]={10,125,15};
+float reset_sita1[3]={45,85,-8};
+float reset_sita2[3]={45,85,-8};
+void fall_reset(float dt)
+{ u8 i;
+  static u8 state;
+	static u16 cnt[3];
+	int flag;
+	switch(state)
+	{
+	  case 0:	 
+			 if(brain.fall!=0)
+			 {brain.sys.control_angle=1;
+			  cnt[0]=cnt[1]=cnt[2]=0;			 
+				leg[1].sita_force[0]=reset_sita[0];leg[1].sita_force[1]=reset_sita[1];leg[1].sita_force[2]=reset_sita[2];
+				leg[2].sita_force[0]=reset_sita[0];leg[2].sita_force[1]=reset_sita[1];leg[2].sita_force[2]=-reset_sita[2];
+				leg[3].sita_force[0]=reset_sita[0];leg[3].sita_force[1]=reset_sita[1];leg[3].sita_force[2]=-reset_sita[2];
+				leg[4].sita_force[0]=reset_sita[0];leg[4].sita_force[1]=reset_sita[1];leg[4].sita_force[2]=reset_sita[2];
+				state=1;	
+			 }
+		break;
+	  case 1:
+			 if(cnt[0]++>2/dt)
+			 {state=2;cnt[0]=0;}
+		break;
+	  case 2:
+			 if((brain.att[1]>10))
+				 state=3;
+			 else if((brain.att[1]<-10))
+		     state=13;
+			 else if(ABS(brain.att[1])<10)
+				 state=23;
+		break;
+		case 3://left
+			 leg[3].sita_force[2]=reset_deng;
+		   leg[4].sita_force[2]=-reset_deng;
+		     if(cnt[0]++>0.5/dt)
+			 {state=33;cnt[0]=0;}  
+		break;
+	  case 13://right
+			  leg[1].sita_force[2]=-reset_deng;
+		    leg[2].sita_force[2]=reset_deng;		  
+		     if(cnt[0]++>0.5/dt)
+			 {state=33;cnt[0]=0;}
+		break;
+			 
+		case 33:	 
+	  	  leg[1].sita_force[0]=reset_sita[0];leg[1].sita_force[1]=reset_sita[1];leg[1].sita_force[2]=reset_sita[2];
+				leg[2].sita_force[0]=reset_sita[0];leg[2].sita_force[1]=reset_sita[1];leg[2].sita_force[2]=-reset_sita[2];
+				leg[3].sita_force[0]=reset_sita[0];leg[3].sita_force[1]=reset_sita[1];leg[3].sita_force[2]=-reset_sita[2];
+				leg[4].sita_force[0]=reset_sita[0];leg[4].sita_force[1]=reset_sita[1];leg[4].sita_force[2]=reset_sita[2];	
+        if(cnt[0]++>2/dt)
+			 {state=34;cnt[0]=0;}		
+		break;
+	  case 34:
+			 if(ABS(brain.att[1])<10)
+			 { state=23;
+				 
+			  }		
+			 else 
+				 state=0;
+		break;
+		case 23:
+//			 	leg[1].sita_force[0]=reset_sita1[0];leg[1].sita_force[1]=reset_sita1[1];leg[1].sita_force[2]=reset_sita1[2];
+//				leg[2].sita_force[0]=reset_sita1[0];leg[2].sita_force[1]=reset_sita1[1];leg[2].sita_force[2]=-reset_sita1[2];
+//				leg[3].sita_force[0]=reset_sita1[0];leg[3].sita_force[1]=reset_sita1[1];leg[3].sita_force[2]=-reset_sita1[2];
+//				leg[4].sita_force[0]=reset_sita1[0];leg[4].sita_force[1]=reset_sita1[1];leg[4].sita_force[2]=reset_sita1[2];
+		   brain.sys.control_angle=0;
+		    for(i=1;i<4;i++)
+		   {
+				if(i==1||i==2)
+					flag=1;
+				else 
+					flag=1;
+				leg[i].pos_tar[2].x=leg[i].sys.init_end_pos.x*flag+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;//+off_x*cos(tar_yaw/ 57.3f);
+				leg[i].pos_tar[2].y=leg[i].sys.init_end_pos.y+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;//+off_y*sin(tar_yaw/ 57.3f);
+				leg[i].pos_tar[2].z=leg[i].sys.init_end_pos.z*h_k;
+			 }
+			 if(cnt[0]++>2/dt)
+			 {state=0;
+		    
+        brain.fall=0;				
+			 }	
+		break;
+	}
 }

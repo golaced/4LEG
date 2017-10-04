@@ -1,13 +1,13 @@
 ..\obj\spi_nrf.o: ..\HARDWARE\IIC\spi_nrf.c
 ..\obj\spi_nrf.o: ..\HARDWARE\IIC\include.h
-..\obj\spi_nrf.o: e:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
-..\obj\spi_nrf.o: e:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
-..\obj\spi_nrf.o: e:\Keil_v5\ARM\ARMCC\Bin\..\include\ctype.h
-..\obj\spi_nrf.o: e:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
-..\obj\spi_nrf.o: e:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+..\obj\spi_nrf.o: d:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+..\obj\spi_nrf.o: d:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+..\obj\spi_nrf.o: d:\Keil_v5\ARM\ARMCC\Bin\..\include\ctype.h
+..\obj\spi_nrf.o: d:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+..\obj\spi_nrf.o: d:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
 ..\obj\spi_nrf.o: ..\USER\stm32f4xx.h
 ..\obj\spi_nrf.o: ..\CORE\core_cm4.h
-..\obj\spi_nrf.o: e:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+..\obj\spi_nrf.o: d:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 ..\obj\spi_nrf.o: ..\CORE\core_cmInstr.h
 ..\obj\spi_nrf.o: ..\CORE\core_cmFunc.h
 ..\obj\spi_nrf.o: ..\CORE\core_cm4_simd.h
@@ -47,7 +47,6 @@
 ..\obj\spi_nrf.o: ..\SYSTEM\delay\delay.h
 ..\obj\spi_nrf.o: ..\SYSTEM\sys\sys.h
 ..\obj\spi_nrf.o: ..\MALLOC\malloc.h
-..\obj\spi_nrf.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\spi_nrf.o: ..\HARDWARE\IIC\spi_nrf.h
 ..\obj\spi_nrf.o: ..\HARDWARE\IIC\rc_mine.h
 ..\obj\spi_nrf.o: ..\HARDWARE\IIC\nrf.h
@@ -61,4 +60,7 @@
 ..\obj\spi_nrf.o: ..\HARDWARE\IIC\height_ctrl.h
 ..\obj\spi_nrf.o: ..\HARDWARE\IIC\flash.h
 ..\obj\spi_nrf.o: ..\HARDWARE\IIC\dma.h
+..\obj\spi_nrf.o: ..\HARDWARE\IIC\leg.h
+..\obj\spi_nrf.o: ..\HARDWARE\IIC\rng.h
 ..\obj\spi_nrf.o: ..\HARDWARE\IIC\m100.h
+..\obj\spi_nrf.o: ..\HARDWARE\IIC\spi.h

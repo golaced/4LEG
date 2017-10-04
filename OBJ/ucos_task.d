@@ -47,7 +47,6 @@
 ..\obj\ucos_task.o: ..\SYSTEM\delay\delay.h
 ..\obj\ucos_task.o: ..\SYSTEM\sys\sys.h
 ..\obj\ucos_task.o: ..\MALLOC\malloc.h
-..\obj\ucos_task.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\spi_nrf.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\rc_mine.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\nrf.h
@@ -73,6 +72,7 @@
 ..\obj\ucos_task.o: d:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\alt_kf.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\arm_math_m.h
+..\obj\ucos_task.o: ..\CORE\core_cm4.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\led_fc.h
 ..\obj\ucos_task.o: ..\UCOSII\CORE\ucos_ii.h
 ..\obj\ucos_task.o: ..\UCOSII\CONFIG\includes.h
@@ -82,6 +82,8 @@
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\ucos_task.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\pwm_in.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\flow.h
-..\obj\ucos_task.o: ..\HARDWARE\IIC\circle.h
+..\obj\ucos_task.o: ..\HARDWARE\IIC\usart_fc.h
+..\obj\ucos_task.o: ..\HARDWARE\IIC\sbus.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\gps.h
-..\obj\ucos_task.o: ..\HARDWARE\IIC\eso.h
+..\obj\ucos_task.o: ..\HARDWARE\IIC\filter.h
+..\obj\ucos_task.o: ..\HARDWARE\IIC\circle.h

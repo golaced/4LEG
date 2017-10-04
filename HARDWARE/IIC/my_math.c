@@ -269,6 +269,8 @@ float my_deathzoom(float x,float zoom)
   return (t);
 }
 
+
+
 float my_deathzoom_2(float x,float zoom)
 {
 	float t;
@@ -282,6 +284,33 @@ float my_deathzoom_2(float x,float zoom)
 		t = x;
 	}
 
+  return (t);
+}
+
+
+float my_deathzoom_21(float x,float zoom)
+{
+	float t;
+	
+	if( x> -zoom && x < zoom )
+	{
+		t = 0;
+	}
+	else
+	{
+		t = x;
+	}
+
+  return (t);
+}
+
+float my_deathzoom_rc(float x,float zoom)
+{
+	float t;
+	if(x>1500)
+			t=LIMIT(my_deathzoom_21(x,zoom)-zoom,1500,2000);
+		else
+			t=LIMIT(my_deathzoom_21(x,zoom)+zoom,1000,1500);
   return (t);
 }
 

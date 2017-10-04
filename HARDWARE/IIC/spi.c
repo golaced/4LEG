@@ -1,6 +1,3 @@
-
-#include "include.h"
-#include "spi_nrf.h"							//nrf24l01??spi.h??u8 Spi_RW(u8 dat)??
 #include "spi.h"
 
 
@@ -29,14 +26,12 @@ void SPI2_Init1(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz; 
 	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;//普通输出模式
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;//推挽输出
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;//上拉
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 	
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0; //csn  pa4
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz; 
 	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;//普通输出模式
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;//推挽输出
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;//上拉
 	GPIO_Init(GPIOC, &GPIO_InitStructure);	
 	/*??SPI_NRF_SPI?IRQ??,*/  //pc5
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3; 
@@ -49,13 +44,11 @@ void SPI2_Init1(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz; 
 	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;//普通输出模式
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;//推挽输出
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;//上拉
 	GPIO_Init(GPIOB, &GPIO_InitStructure);	
 		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9; //csn  pa4
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz; 
 	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;//普通输出模式
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;//推挽输出
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;//上拉
 	GPIO_Init(GPIOB, &GPIO_InitStructure);	
 	
 

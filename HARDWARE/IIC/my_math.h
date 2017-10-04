@@ -38,5 +38,7 @@ float To_180_degrees(float x);
 float my_pow_2_curve(float in,float a,float max);
 float limit_mine(float x,float zoom);
 float limit_mine2(float x,float min,float max);
+float my_deathzoom_21(float x,float zoom);
+float my_deathzoom_rc(float x,float zoom);
 #endif
 

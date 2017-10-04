@@ -9,13 +9,13 @@
 
 #define OFFSET_AV_NUM 50
 #define FILTER_NUM 10
-
-
+#define ITEMS 7
 
 typedef struct 
-{
+{ 
 	char Acc_CALIBRATE;
 	char Gyro_CALIBRATE;
+	char Cali_3d;
   xyz_s16_t Acc_I16;
 	xyz_s16_t Gyro_I16;
 
@@ -28,17 +28,24 @@ typedef struct
 	xyz_f_t Acc_Offset;
 	xyz_f_t Gyro_Offset;
 	xyz_f_t Gyro_Auto_Offset;
-	float Temprea_Offset;
+	xyz_f_t vec_3d_cali;
+	xyz_f_t Gain_3d;
+	xyz_f_t Off_3d;
+	float att_off[2];
+	float Acc_Temprea_Offset;
+	float Gyro_Temprea_Offset;
+	
 	float Gyro_Temprea_Adjust;
 	float ACC_Temprea_Adjust;
-
+ 
 	s16 Tempreature;
 	float TEM_LPF;
 	float Ftempreature;
 }MPU6050_STRUCT;
 
-extern MPU6050_STRUCT mpu6050,mpu6050_r;
-extern float mpu6050_tmp[7];
+extern MPU6050_STRUCT mpu6050,mpu6050_fc;
+extern float mpu6050_tmp[ITEMS];
+extern u8 acc_3d_calibrate_f,acc_3d_step;
 
 
 #define MPU6050_ADDR         			  MPU6050_ADDRESS_AD0_LOW

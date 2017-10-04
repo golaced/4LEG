@@ -54,7 +54,7 @@ typedef struct
 	u8 curve_trig,control_mode;
 	POS pos_now[3],pos_now_brain[3];
 	POS pos_tar[3],pos_tar_trig[3];
-	float sita[3];
+	float sita[3],sita_force[3];
 	 //0->openloop 1->closeloop	
 	float leg_end_force[4],leg_meme_angle[4];
 	float deng[3];
@@ -63,8 +63,8 @@ typedef struct
 //------------------------------BARIN-----
 
 typedef struct 
-{ u8 leg_connect;
-	u16 leg_loss_cnt,dt_leg_min_trig_cnt;
+{ u8 leg_connect,control_angle;
+	u16 leg_loss_cnt,dt_leg_min_trig_cnt,no_control_cnt;
 	float att_off[2],k_spd_to_range,kp_center[2],k_center_fp,move_range_k,k_center_c[2];
 	float desire_time;
 	POS leg_local[5];
@@ -76,11 +76,13 @@ typedef struct
 	float leg_t,tar_spd[3];
 	float leg_h;	
 	float leg_move_range[2],leg_move_min_dt;//cm
+	float yaw_trig;
 	POS off_leg[5],center_off,center_off1,center_scale;
 }BRAIN_SYS;
 
 typedef struct 
-{ u8 control_mode,power_all,rst_all,tabu;
+{ u8 control_mode,power_all,rst_all,rst_all_soft,tabu;
+	int fall;
 	float steady_value;
 	u8 force_stop,loss_center,ground_leg_num,can_move_leg;	
 	u8 leg_move[5],leg_out_range[5];	
@@ -99,8 +101,8 @@ extern BRAIN_STRUCT brain;
 #define S_IDLE 0
 #define S_BODY_MOVE 1
 #define S_LEG_TRIG 2
-#define S_LEG_TRIG_ING 3
-#define S_LEG_TRIG_ING1 4
+#define S_LEG_TRIG_LEAVE_GROUND_CHECK 3
+#define S_LEG_TRIG_ING 4
 #define S_LEG_TRIG_DONE 5
 #define S_BODY_RETURN 6
 void cal_sita_from_pos( LEG_STRUCT *in,float x_i,float y_i,float z_i,u8 out);

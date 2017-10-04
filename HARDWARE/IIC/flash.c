@@ -1,30 +1,10 @@
 
 #include "include.h"
 #include "flash.h"
-#include "mpu6050.h"
 #include "hml5833l.h"
-#include "pwm_in.h"
-u8 FLASH_Buffer[SIZE_FLASH_ROOM];
-u8 FLASH_READ_BUF[SIZE];
-										//否则,写操作的时候,可能会导致擦除整个扇区,从而引起部分程序丢失.引起死机.
- 		/*
-//FLASH 扇区的起始地址
-#define ADDR_FLASH_SECTOR_0     ((u32)0x08000000) 	//扇区0起始地址, 16 Kbytes  
-#define ADDR_FLASH_SECTOR_1     ((u32)0x08004000) 	//扇区1起始地址, 16 Kbytes  
-#define ADDR_FLASH_SECTOR_2     ((u32)0x08008000) 	//扇区2起始地址, 16 Kbytes  
-#define ADDR_FLASH_SECTOR_3     ((u32)0x0800C000) 	//扇区3起始地址, 16 Kbytes  
-#define ADDR_FLASH_SECTOR_4     ((u32)0x08010000) 	//扇区4起始地址, 64 Kbytes  
-#define ADDR_FLASH_SECTOR_5     ((u32)0x08020000) 	//扇区5起始地址, 128 Kbytes  
-#define ADDR_FLASH_SECTOR_6     ((u32)0x08040000) 	//扇区6起始地址, 128 Kbytes  
-#define ADDR_FLASH_SECTOR_7     ((u32)0x08060000) 	//扇区7起始地址, 128 Kbytes  
-#define ADDR_FLASH_SECTOR_8     ((u32)0x08080000) 	//扇区8起始地址, 128 Kbytes  
-#define ADDR_FLASH_SECTOR_9     ((u32)0x080A0000) 	//扇区9起始地址, 128 Kbytes  
-#define ADDR_FLASH_SECTOR_10    ((u32)0x080C0000) 	//扇区10起始地址,128 Kbytes  
-#define ADDR_FLASH_SECTOR_11    ((u32)0x080E0000) 	//扇区11起始地址,128 Kbytes  
-STMFLASH_Write(FLASH_SAVE_ADDR,(u32*)TEXT_Buffer,SIZE);
-STMFLASH_Read(FLASH_SAVE_ADDR,(u32*)datatemp,SIZE);		
-		*/	
- 
+#include "mpu6050.h"	
+
+
 //读取指定地址的半字(16位数据) 
 //faddr:读地址 
 //返回值:对应数据.
@@ -112,28 +92,244 @@ void STMFLASH_Read(u32 ReadAddr,u32 *pBuffer,u32 NumToRead)
 	}
 }
 
+//-----------------------------------------存储参数
+#define SIZE_PARAM 50*2
+u8 FLASH_READ_BUF[SIZE_PARAM]={0};
+u8 FLASH_Buffer[SIZE_PARAM]={0};
+float k_sensitivity[3]={1,1,1};//感度
+u32 FLASH_SIZE=16*1024*1024;	//FLASH 大小为16字节
+u16 LENGTH_OF_DRONE=330;//飞行器轴距
+int H_INT; //悬停油门
+float SONAR_HEIGHT=0.054+0.015;//超声波安装高度
+u8 need_init_mems=0;//mems flash error
+
+u16 SBUS_MIN =954;
+u16 SBUS_MAX =2108;
+u16 SBUS_MID =1524;
+u16 SBUS_MIN_A =954;
+u16 SBUS_MAX_A =2108;
+u16 SBUS_MID_A =1524;
+
 void READ_PARM(void)
 {
+
 STMFLASH_Read(FLASH_SAVE_ADDR,(u32*)FLASH_READ_BUF,SIZE);	
 
+mpu6050_fc.Gyro_Offset.x=(vs16)(FLASH_READ_BUF[1]<<8|FLASH_READ_BUF[0]);
+mpu6050_fc.Gyro_Offset.y=(vs16)(FLASH_READ_BUF[3]<<8|FLASH_READ_BUF[2]);
+mpu6050_fc.Gyro_Offset.z=(vs16)(FLASH_READ_BUF[5]<<8|FLASH_READ_BUF[4]);
+	
+mpu6050_fc.Acc_Offset.x=(vs16)(FLASH_READ_BUF[7]<<8|FLASH_READ_BUF[6]);
+mpu6050_fc.Acc_Offset.y=(vs16)(FLASH_READ_BUF[9]<<8|FLASH_READ_BUF[8]);
+mpu6050_fc.Acc_Offset.z=(vs16)(FLASH_READ_BUF[11]<<8|FLASH_READ_BUF[10]);
+	
+ak8975.Mag_Offset.x=(vs16)(FLASH_READ_BUF[13]<<8|FLASH_READ_BUF[12]);
+ak8975.Mag_Offset.y=(vs16)(FLASH_READ_BUF[15]<<8|FLASH_READ_BUF[14]);
+ak8975.Mag_Offset.z=(vs16)(FLASH_READ_BUF[17]<<8|FLASH_READ_BUF[16]);
+	
+ak8975.Mag_Gain.x =(float)((vs16)((FLASH_READ_BUF[19]<<8|FLASH_READ_BUF[18])))/100.;
+ak8975.Mag_Gain.y=(float)((vs16)((FLASH_READ_BUF[21]<<8|FLASH_READ_BUF[20])))/100.;
+ak8975.Mag_Gain.z =(float)((vs16)((FLASH_READ_BUF[23]<<8|FLASH_READ_BUF[22])))/100.;
+	
+SONAR_HEIGHT=(float)((vs16)((FLASH_READ_BUF[25]<<8|FLASH_READ_BUF[24])))/1000.;	
+LENGTH_OF_DRONE=(float)((vs16)((FLASH_READ_BUF[27]<<8|FLASH_READ_BUF[26])));
+
+//imu_board.flow_module_offset_x=(float)((vs16)((FLASH_READ_BUF[29]<<8|FLASH_READ_BUF[28])))/1000.;	
+//imu_board.flow_module_offset_y=(float)((vs16)((FLASH_READ_BUF[31]<<8|FLASH_READ_BUF[30])))/1000.;	
+//imu_board.k_flow_sel=(float)((vs16)((FLASH_READ_BUF[33]<<8|FLASH_READ_BUF[32])))/1000.;	
+//imu_board.flow_set_yaw=(float)((vs16)((FLASH_READ_BUF[35]<<8|FLASH_READ_BUF[34])))/100.;//树莓派摄像头安装角度
+//H_INT=((vs16)((FLASH_READ_BUF[37]<<8|FLASH_READ_BUF[36])));
+//circle.yaw_off=0;
+
+mpu6050_fc.Off_3d.x=(vs16)(FLASH_READ_BUF[39]<<8|FLASH_READ_BUF[38]);
+mpu6050_fc.Off_3d.y=(vs16)(FLASH_READ_BUF[41]<<8|FLASH_READ_BUF[40]);
+mpu6050_fc.Off_3d.z=(vs16)(FLASH_READ_BUF[43]<<8|FLASH_READ_BUF[42]);
+	
+mpu6050_fc.Gain_3d.x =(float)((vs16)((FLASH_READ_BUF[45]<<8|FLASH_READ_BUF[44])))/1000.;
+mpu6050_fc.Gain_3d.y =(float)((vs16)((FLASH_READ_BUF[47]<<8|FLASH_READ_BUF[46])))/1000.;
+mpu6050_fc.Gain_3d.z =(float)((vs16)((FLASH_READ_BUF[49]<<8|FLASH_READ_BUF[48])))/1000.;
+
+mpu6050_fc.att_off[0]=(float)((vs16)((FLASH_READ_BUF[51]<<8|FLASH_READ_BUF[50])))/100.;
+mpu6050_fc.att_off[1]=(float)((vs16)((FLASH_READ_BUF[53]<<8|FLASH_READ_BUF[52])))/100.;
+
+
+k_sensitivity[0]=(float)((vs16)((FLASH_READ_BUF[55]<<8|FLASH_READ_BUF[54])))/100.;
+k_sensitivity[1]=(float)((vs16)((FLASH_READ_BUF[57]<<8|FLASH_READ_BUF[56])))/100.;
+
+//	
+SBUS_MIN=(vs16)(FLASH_READ_BUF[59]<<8|FLASH_READ_BUF[58]);
+SBUS_MAX=(vs16)(FLASH_READ_BUF[61]<<8|FLASH_READ_BUF[60]);
+SBUS_MID=(vs16)(FLASH_READ_BUF[63]<<8|FLASH_READ_BUF[62]);
+//	
+SBUS_MIN_A=(vs16)(FLASH_READ_BUF[65]<<8|FLASH_READ_BUF[64]);
+SBUS_MAX_A=(vs16)(FLASH_READ_BUF[67]<<8|FLASH_READ_BUF[66]);
+SBUS_MID_A=(vs16)(FLASH_READ_BUF[69]<<8|FLASH_READ_BUF[68]);
+
+k_sensitivity[2]=(float)((vs16)((FLASH_READ_BUF[71]<<8|FLASH_READ_BUF[70])))/100.;
+
+//----------------------------------------------------------
+if(k_sensitivity[0]<=0||k_sensitivity[0]>5)
+	k_sensitivity[0]=1;
+if(k_sensitivity[1]<=0||k_sensitivity[1]>5)
+	k_sensitivity[1]=1;
+if(k_sensitivity[2]<=0||k_sensitivity[2]>5)
+	k_sensitivity[2]=1;
+u8 need_init=0;
+if(LENGTH_OF_DRONE<100||LENGTH_OF_DRONE>1200){
+ LENGTH_OF_DRONE=330;//飞行器轴距
+ need_init=1;	
+}
+if(SONAR_HEIGHT<0||SONAR_HEIGHT>0.5){
+	SONAR_HEIGHT=0.054+0.015;
+	 need_init=1;	
+ }
+
+if(H_INT>88||H_INT<-88){
+	H_INT=0;
+	need_init=1;	
+}
+
+if(ABS(mpu6050_fc.Acc_Offset.x)<10&&ABS(mpu6050_fc.Acc_Offset.y)<10&&ABS(mpu6050_fc.Acc_Offset.z)<10){
+	need_init_mems=1;	
+}
+
+ H_INT=LIMIT(H_INT,-88,88);
+ if(need_init)
+	 WRITE_PARM();
 }
 
 void WRITE_PARM(void)
 { 
-vs32 _temp32;
+
 int16_t _temp;
 u8 cnt=0;
+
+_temp=(int16_t)mpu6050_fc.Gyro_Offset.x;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)mpu6050_fc.Gyro_Offset.y;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)mpu6050_fc.Gyro_Offset.z;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+
+_temp=(int16_t)mpu6050_fc.Acc_Offset.x;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)mpu6050_fc.Acc_Offset.y;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)mpu6050_fc.Acc_Offset.z;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)ak8975.Mag_Offset.x;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)ak8975.Mag_Offset.y;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)ak8975.Mag_Offset.z;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+
+
+_temp=(int16_t)(ak8975.Mag_Gain.x*100);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)(ak8975.Mag_Gain.y*100);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)(ak8975.Mag_Gain.z*100);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+
+_temp=(int16_t)(SONAR_HEIGHT*1000);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+
+_temp=LENGTH_OF_DRONE;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+
+
+//-----------imu para
+_temp=0;//imu_board.flow_module_offset_x*1000;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=0;//imu_board.flow_module_offset_y*1000;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=0;//imu_board.k_flow_sel*1000;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=0;//imu_board.flow_set_yaw*100;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+
+_temp=H_INT;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+
+
+
+_temp=(int16_t)mpu6050_fc.Off_3d .x;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)mpu6050_fc.Off_3d.y;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)mpu6050_fc.Off_3d.z;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+
+_temp=(int16_t)(mpu6050_fc.Gain_3d.x*1000);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)(mpu6050_fc.Gain_3d.y*1000);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)(mpu6050_fc.Gain_3d.z*1000);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+
+_temp=(int16_t)(mpu6050_fc.att_off[0]*100);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)(mpu6050_fc.att_off[1]*100);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+
+_temp=(int16_t)(k_sensitivity[0]*100);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)(k_sensitivity[1]*100);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+
+
+_temp=(int16_t)SBUS_MIN;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)SBUS_MAX;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)SBUS_MID;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)SBUS_MIN_A;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)SBUS_MAX_A;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)SBUS_MID_A;
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
+_temp=(int16_t)(k_sensitivity[2]*100);
+FLASH_Buffer[cnt++]=BYTE0(_temp);
+FLASH_Buffer[cnt++]=BYTE1(_temp);
 
 STMFLASH_Write(FLASH_SAVE_ADDR,(u32*)FLASH_Buffer,SIZE);
 
 }
-
-
-
-
-
-
-
-
-
-

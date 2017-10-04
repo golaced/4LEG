@@ -47,7 +47,6 @@
 ..\obj\leg.o: ..\SYSTEM\delay\delay.h
 ..\obj\leg.o: ..\SYSTEM\sys\sys.h
 ..\obj\leg.o: ..\MALLOC\malloc.h
-..\obj\leg.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\leg.o: ..\HARDWARE\IIC\spi_nrf.h
 ..\obj\leg.o: ..\HARDWARE\IIC\rc_mine.h
 ..\obj\leg.o: ..\HARDWARE\IIC\nrf.h

@@ -3,7 +3,7 @@
 #include "include.h"
 #include "hml5833l.h"
 #include "my_math.h"
-
+u8 fly_ready;
 #define Kp 0.6f                	// proportional gain governs rate of convergence to accelerometer/magnetometer
 #define Ki 0.1f                	// 0.001  integral gain governs rate of convergence of gyroscope biases
 

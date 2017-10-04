@@ -17,6 +17,7 @@ void CPU_LINK_TASK(void);
 typedef struct PID_STA{u16 OP,OI,OD,IP,II,ID,YP,YI,YD;}PID_STA;
 extern PID_STA HPID,SPID,FIX_PID,NAV_PID;
 void UsartSend_M100(uint8_t ch);
+
 typedef struct int16_rcget{
 				int16_t ROLL;
 				int16_t PITCH;
@@ -27,9 +28,14 @@ typedef struct int16_rcget{
 				int16_t AUX3;
 				int16_t AUX4;
 				int16_t AUX5;
-				u8 RST;}RC_GETDATA;
+	      int16_t HEIGHT_MODE;
+	      int16_t POS_MODE;
+	      u8 update,Heart,Heart_rx,Heart_error;
+	      u16 lose_cnt,lose_cnt_rx;
+	      u8 connect;
+				int16_t RST;}RC_GETDATA;
 
-extern RC_GETDATA Rc_Get;//接收到的RC数据,1000~2000
+extern RC_GETDATA Rc_Get,Rc_Get_PWM,Rc_Get_SBUS;//接收到的RC数据,1000~2000
 				
 				
 struct _float{
@@ -123,15 +129,9 @@ float y;
 float x_f;
 float y_f;
 };	
-struct _POS_FLOW_NAV {
-float	east;
-float	west;
-long LAT;
-long LON;
-long Weidu_Dig;
-long Jingdu_Dig;
-u8 flow_qual;
-};
+
+
+
 struct _POS_GPS_NAV {
 long J;
 long W;
@@ -146,7 +146,6 @@ u8 star_num;
 struct _FLOW_NAV{
 struct _SPEED_FLOW_NAV speed;
 struct _SPEED_FLOW_NAV speed_h;	
-struct _POS_FLOW_NAV position;
 u8 rate;
 };	
 
@@ -179,7 +178,7 @@ struct _PID1 circle;
 };
 extern struct _PID_SET pid;
 
-struct _MODE
+typedef struct
 {
 u8 thr_fix;
 u8 en_pid_out_pit;
@@ -187,26 +186,16 @@ u8 en_pid_out_rol;
 u8 en_pid_out_yaw;
 u8 en_pid_fuzzy_p;
 u8 en_pid_sb_set;
-u8 en_dji_yaw;
-u8 set_point1; 
-u8 en_hold2_h_off_fix;	
-u8 en_flow_break;
-u8 rst_h_m100;
-u8 en_gps1;	
-u8 en_gps;
-u8 en_yun_per_off;
-u8 en_shoot;
+u8 trig_flow_spd;
+u8 return_home;
+u8 trig_h_spd;
+u8 px4_map;
 u8 en_fuzzy_angle_pid;
 u8 en_sensor_equal_flp;
 u8 pit_rol_pid_out_flp;	
 u8 en_pid_yaw_angle_control;	
 u8 en_pid_yaw_control_by_pit_rol;	
-u8 circle_miss_fly;
 u8 thr_add_pos;
-u8 dj_by_hand;	
-u8 en_circle_locate;
-u8 en_track_forward;
-u8 dj_yaw_follow;
 u8 spid;
 u8 mpu6050_bw_42;
 u8 en_imu_q_update_mine;	
@@ -216,23 +205,42 @@ u8 no_head;
 u8 sonar_avoid;	
 u8 yaw_sel;
 u8 sb_smooth;
+u8 use_px4_err;
 u8 flow_hold_position;
-u8 en_circle_nav;
+u8 dji_sonar_high;
+u8 auto_fly_up,auto_land;
+u8 en_circle_nav,circle_miss_fly,en_track_forward,en_circle_locate;
 u8 flow_hold_position_use_global;
 u8 flow_hold_position_high_fix;
 u8 height_safe;
+u8 baro_lock;
+u8 baro_f_use_ukfm;
+u8 flow_f_use_ukfm;
+u8 use_ano_bmp_spd;
+u8 tune_ctrl_angle_offset;
+u8 imu_use_mid_down;
 u8 hunman_pid;
 u8 yaw_imu_control;	
 u8 cal_sel;
 u8 flow_sel;
-u8 video_save;
 u8 height_in_speed;
 u8 height_upload;
 u8 en_h_mode_switch;
 u8 en_dj_cal;
 u8 en_sd_save;
+u8 cal_rc;
+u8 en_break;
+u8 use_dji;
+u8 en_marker;
+u8 rc_control_flow_spd;
+u8 rc_control_flow_pos;
+u8 rc_control_flow_pos_sel;
+u8 dj_by_hand;
+u8 en_dj_control;
+u8 dj_yaw_follow;
+u8 dji_mode;
+u8 en_visual_control;
 u8 hold_use_flow;
-u8 en_rth_mine;
 u8 en_sonar_avoid;
 u8 thr_fix_test;
 u8 en_imu_ekf;
@@ -242,20 +250,29 @@ u8 dj_lock;
 u8 en_eso;
 u8 en_eso_h_out;
 u8 en_eso_h_in;
-u8 en_dji_h;
+u8 yaw_use_eso;
+u8 flow_d_acc;
+u8 en_hinf_height_spd;
 u8 en_circle_control;
+u8 save_video;
+u8 en_h_inf;
 u8 test1;
 u8 test2;
 u8 test3;
 u8 test4;	
 u8 mode_fly;
-u8 auto_fly_up,auto_land;
-u8 en_flow_hold;
-u8 debug_without_odroid;
+u8 h_is_fix;
+u8 mems_state;
+u8 att_ident1;
 //flow
 u8 en_flow_gro_fix;
 u8 flow_size;
-};
+u8 show_qr_origin;
+//test
+u8 fc_test1;
+}_MODE;
+
+extern _MODE mode;
 	
 
 typedef struct{
@@ -269,7 +286,6 @@ typedef struct{
 extern float angle_imu_dj[3];
 extern RESULT color;
 extern u8 LOCK, KEY[8],KEY_SEL[4],NAV_BOARD_CONNECT;
-extern struct _MODE mode;
 extern void GOL_LINK_TASK(void);
 extern void SD_LINK_TASK(void);
 extern void Usart1_Init(u32 br_num);//SD_board

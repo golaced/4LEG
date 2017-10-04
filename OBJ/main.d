@@ -47,7 +47,6 @@
 ..\obj\main.o: ..\SYSTEM\delay\delay.h
 ..\obj\main.o: ..\SYSTEM\sys\sys.h
 ..\obj\main.o: ..\MALLOC\malloc.h
-..\obj\main.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\main.o: ..\HARDWARE\IIC\spi_nrf.h
 ..\obj\main.o: ..\HARDWARE\IIC\rc_mine.h
 ..\obj\main.o: ..\HARDWARE\IIC\nrf.h
@@ -65,6 +64,7 @@
 ..\obj\main.o: ..\HARDWARE\IIC\rng.h
 ..\obj\main.o: ..\HARDWARE\IIC\m100.h
 ..\obj\main.o: ..\HARDWARE\IIC\led_fc.h
+..\obj\main.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\main.o: ..\UCOSII\CORE\ucos_ii.h
 ..\obj\main.o: ..\UCOSII\CONFIG\includes.h
 ..\obj\main.o: ..\UCOSII\CORE\ucos_ii.h
@@ -72,3 +72,5 @@
 ..\obj\main.o: ..\UCOSII\CONFIG\os_cfg.h
 ..\obj\main.o: ..\HARDWARE\IIC\ucos_task.h
 ..\obj\main.o: ..\HARDWARE\IIC\pwm_in.h
+..\obj\main.o: ..\HARDWARE\IIC\mpu9250.h
+..\obj\main.o: ..\HARDWARE\IIC\spi.h

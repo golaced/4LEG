@@ -47,7 +47,6 @@
 ..\obj\brain.o: ..\SYSTEM\delay\delay.h
 ..\obj\brain.o: ..\SYSTEM\sys\sys.h
 ..\obj\brain.o: ..\MALLOC\malloc.h
-..\obj\brain.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\brain.o: ..\HARDWARE\IIC\spi_nrf.h
 ..\obj\brain.o: ..\HARDWARE\IIC\rc_mine.h
 ..\obj\brain.o: ..\HARDWARE\IIC\nrf.h

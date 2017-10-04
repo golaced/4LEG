@@ -48,7 +48,6 @@
 ..\obj\rc_mine.o: ..\SYSTEM\delay\delay.h
 ..\obj\rc_mine.o: ..\SYSTEM\sys\sys.h
 ..\obj\rc_mine.o: ..\MALLOC\malloc.h
-..\obj\rc_mine.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\rc_mine.o: ..\HARDWARE\IIC\spi_nrf.h
 ..\obj\rc_mine.o: ..\HARDWARE\IIC\rc_mine.h
 ..\obj\rc_mine.o: ..\HARDWARE\IIC\nrf.h
@@ -65,3 +64,4 @@
 ..\obj\rc_mine.o: ..\HARDWARE\IIC\leg.h
 ..\obj\rc_mine.o: ..\HARDWARE\IIC\rng.h
 ..\obj\rc_mine.o: ..\HARDWARE\IIC\m100.h
+..\obj\rc_mine.o: ..\HARDWARE\IIC\usart_fc.h

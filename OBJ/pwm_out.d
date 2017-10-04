@@ -49,7 +49,6 @@
 ..\obj\pwm_out.o: ..\SYSTEM\delay\delay.h
 ..\obj\pwm_out.o: ..\SYSTEM\sys\sys.h
 ..\obj\pwm_out.o: ..\MALLOC\malloc.h
-..\obj\pwm_out.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\pwm_out.o: ..\HARDWARE\IIC\spi_nrf.h
 ..\obj\pwm_out.o: ..\HARDWARE\IIC\rc_mine.h
 ..\obj\pwm_out.o: ..\HARDWARE\IIC\nrf.h

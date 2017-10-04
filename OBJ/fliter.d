@@ -47,7 +47,6 @@
 ..\obj\fliter.o: ..\SYSTEM\delay\delay.h
 ..\obj\fliter.o: ..\SYSTEM\sys\sys.h
 ..\obj\fliter.o: ..\MALLOC\malloc.h
-..\obj\fliter.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\fliter.o: ..\HARDWARE\IIC\spi_nrf.h
 ..\obj\fliter.o: ..\HARDWARE\IIC\rc_mine.h
 ..\obj\fliter.o: ..\HARDWARE\IIC\nrf.h

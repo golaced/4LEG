@@ -332,9 +332,9 @@
             <v6WtE>0</v6WtE>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
+              <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER,ARM_MATH_CM4,__CC_ARM</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\HARDWARE\LED;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\IIC;..\HARDWARE\24CXX;..\FWLIB\inc;..\HARDWARE\TOUCH;..\HARDWARE\BEEP;..\UCOSII\CONFIG;..\UCOSII\CORE;..\UCOSII\PORT;..\HARDWARE\TPAD;..\MALLOC;..\HARDWARE\circle</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\HARDWARE\LED;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\IIC;..\HARDWARE\24CXX;..\FWLIB\inc;..\HARDWARE\TOUCH;..\HARDWARE\BEEP;..\UCOSII\CONFIG;..\UCOSII\CORE;..\UCOSII\PORT;..\HARDWARE\TPAD;..\MALLOC;..\HARDWARE\circle;..\HARDWARE\IIC</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -612,6 +612,11 @@
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\IIC\rng.c</FilePath>
             </File>
+            <File>
+              <FileName>spi_nrf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\IIC\spi_nrf.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -623,15 +628,35 @@
               <FilePath>..\HARDWARE\IIC\usart_fc.c</FilePath>
             </File>
             <File>
-              <FileName>rc_mine.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HARDWARE\IIC\rc_mine.c</FilePath>
+              <FileName>sbus_oldx.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\HARDWARE\IIC\sbus_oldx.lib</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
           <GroupName>MEMS</GroupName>
           <Files>
+            <File>
+              <FileName>mpu6050.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\IIC\mpu6050.c</FilePath>
+            </File>
+            <File>
+              <FileName>mpu9250.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\IIC\mpu9250.c</FilePath>
+            </File>
+            <File>
+              <FileName>hml5833l.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\IIC\hml5833l.c</FilePath>
+            </File>
+            <File>
+              <FileName>imu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\IIC\imu.c</FilePath>
+            </File>
             <File>
               <FileName>OLD_X_AVOID_N.c</FileName>
               <FileType>1</FileType>
@@ -651,6 +676,11 @@
               <FileName>rtGetNaN.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\circle\rtGetNaN.c</FilePath>
+            </File>
+            <File>
+              <FileName>cycle_cal_oldx.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\HARDWARE\IIC\cycle_cal_oldx.lib</FilePath>
             </File>
           </Files>
         </Group>

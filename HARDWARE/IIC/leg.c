@@ -34,7 +34,7 @@ case 1:
 in->sys.leg_set_invert=1;
 in->sys.PWM_OFF[0]=1850;//570;	
 in->sys.PWM_OFF[1]=870;//1870;	
-in->sys.PWM_OFF[2]=1400+SET_PWM3_OFF;//1600		
+in->sys.PWM_OFF[2]=1500+SET_PWM3_OFF;//1600		
 in->sys.PWM_OFF[3]=1380;
 in->sys.sita_flag[0]=-1;
 in->sys.sita_flag[1]=1;	
@@ -48,7 +48,7 @@ case 2:
 in->sys.leg_set_invert=0;
 in->sys.PWM_OFF[0]=666;	
 in->sys.PWM_OFF[1]=1960;	
-in->sys.PWM_OFF[2]=1480+SET_PWM3_OFF;	
+in->sys.PWM_OFF[2]=1510+SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1380;
 in->sys.sita_flag[0]=1;
 in->sys.sita_flag[1]=-1;	
@@ -62,7 +62,7 @@ case 3:
 in->sys.leg_set_invert=1;	
 in->sys.PWM_OFF[0]=1060;	
 in->sys.PWM_OFF[1]=1880;//1540;	
-in->sys.PWM_OFF[2]=1480-SET_PWM3_OFF;	
+in->sys.PWM_OFF[2]=1510-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1416;
 in->sys.sita_flag[0]=1;
 in->sys.sita_flag[1]=-1;	
@@ -76,7 +76,7 @@ case 4:
 in->sys.leg_set_invert=0;	
 in->sys.PWM_OFF[0]=1530;	
 in->sys.PWM_OFF[1]=720;	
-in->sys.PWM_OFF[2]=1350-SET_PWM3_OFF;	
+in->sys.PWM_OFF[2]=1390-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1360;
 in->sys.sita_flag[0]=-1;
 in->sys.sita_flag[1]=1;	
@@ -121,12 +121,22 @@ switch(in->sys.id){
 case 1:
 in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
 in->sys.PWM_PER_DEGREE[1]=12.64;
-in->sys.PWM_PER_DEGREE[2]=9.34;
+in->sys.PWM_PER_DEGREE[2]=11.34;//9.34;
+break;
+case 2:
+in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
+in->sys.PWM_PER_DEGREE[1]=9.34;
+in->sys.PWM_PER_DEGREE[2]=11.34;//9.34;
+break;
+case 3:
+in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
+in->sys.PWM_PER_DEGREE[1]=9.34;
+in->sys.PWM_PER_DEGREE[2]=11.34;//9.34;
 break;
 case 4:
 in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
 in->sys.PWM_PER_DEGREE[1]=12.64;
-in->sys.PWM_PER_DEGREE[2]=9.34;
+in->sys.PWM_PER_DEGREE[2]=11.34;
 break;
 default:
 in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
@@ -522,7 +532,15 @@ static u16 cnt[5];
 	z_temp+in->sys.off_all.z,1);
 	 if(line_test[3]){//强制角度测试
 	in->sita[0]=sita_test[0];in->sita[1]=sita_test[1];in->sita[2]=sita_test[2];}
+	 else if(brain.sys.control_angle)
+	 { in->sita[0]=in->sita_force[0];
+		 in->sita[1]=in->sita_force[1];
+		 in->sita[2]=in->sita_force[2];}
   cal_pwm_from_sita(in);//计算PWM由角度	
+	if(brain.sys.control_angle)
+  cal_sita_from_pos(in,x_temp+in->sys.off_all.x,y_temp+in->sys.off_all.y,
+	z_temp+in->sys.off_all.z,1);
+  else	
 	cal_sita_from_pos(in,x_temp,y_temp,z_temp,0);//从角度反推位置	
 	}
 	

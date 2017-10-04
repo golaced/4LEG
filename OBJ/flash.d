@@ -47,7 +47,6 @@
 ..\obj\flash.o: ..\SYSTEM\delay\delay.h
 ..\obj\flash.o: ..\SYSTEM\sys\sys.h
 ..\obj\flash.o: ..\MALLOC\malloc.h
-..\obj\flash.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\flash.o: ..\HARDWARE\IIC\spi_nrf.h
 ..\obj\flash.o: ..\HARDWARE\IIC\rc_mine.h
 ..\obj\flash.o: ..\HARDWARE\IIC\nrf.h
@@ -66,4 +65,3 @@
 ..\obj\flash.o: ..\HARDWARE\IIC\m100.h
 ..\obj\flash.o: ..\HARDWARE\IIC\hml5833l.h
 ..\obj\flash.o: d:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
-..\obj\flash.o: ..\HARDWARE\IIC\pwm_in.h

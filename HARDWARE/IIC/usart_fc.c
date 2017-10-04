@@ -5,7 +5,7 @@
 #include "os_cpu.h"
 #include "os_cfg.h"
 #include "rc.h"
-
+#include "sbus.h"
 void Usart1_Init(u32 br_num)//-------UPload_board1
 {
 	USART_InitTypeDef USART_InitStructure;
@@ -819,9 +819,9 @@ void Data_Receive_Anl1_RC(u8 *data_buf,u8 num)
   if(*(data_buf+2)==0x66)//RC_GET1
   {
 		for(i=0;i<32;i++)
-		NRF24L01_RXDATA[i]=*(data_buf+i+4);
+		;//NRF24L01_RXDATA[i]=*(data_buf+i+4);
 		
-	  NRF_DataAnl();
+	  //NRF_DataAnl();
   
 	}
 }
@@ -923,8 +923,8 @@ void USART1_IRQHandler(void)
 		//imu_loss_cnt=0;
     //NAV_BOARD_CONNECT=1;
 		
-		brain.att[0]=(float)((int16_t)(*(data_buf+4)<<8)|*(data_buf+5))/10.;
-    brain.att[1]=(float)((int16_t)(*(data_buf+6)<<8)|*(data_buf+7))/10.;
+		//brain.att[0]=(float)((int16_t)(*(data_buf+4)<<8)|*(data_buf+5))/10.;
+   // brain.att[1]=(float)((int16_t)(*(data_buf+6)<<8)|*(data_buf+7))/10.;
 		brain.att[2]=(float)((int16_t)(*(data_buf+8)<<8)|*(data_buf+9))/10.;
 		
 		brain.now_spd[2]=(float)(int16_t)((*(data_buf+10)<<8)|*(data_buf+11))/1000.;//m
@@ -1278,7 +1278,7 @@ void UART4_IRQHandler(void)
 }
 
 
-
+RC_GETDATA Rc_Get_PWM,Rc_Get_SBUS;
 //leg4
 
 u8 TxBuffer5[256];
@@ -1307,6 +1307,13 @@ void UART5_IRQHandler(void)
 		USART_ClearITPendingBit(UART5,USART_IT_RXNE);//清除中断标志
 
 		com_data = UART5->DR;
+		Rc_Get_SBUS.lose_cnt=0;
+		Rc_Get_SBUS.connect=1;
+		oldx_sbus_rx(com_data);
+		if(channels[16]==500||channels[16]==503){
+		Rc_Get_SBUS.update=1;Rc_Get_SBUS.lose_cnt_rx=0; }
+		if(Rc_Get_SBUS.lose_cnt_rx++>100){
+		Rc_Get_SBUS.update=0;}
 		if(RxState5==0&&com_data==0xAA)
 		{
 			RxState5=1;

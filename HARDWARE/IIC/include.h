@@ -15,7 +15,7 @@
 #include "parameter.h"
 #include "delay.h" 
 #include "malloc.h"   
-#include "usart_fc.h"   
+//#include "usart_fc.h"   
 #include "spi_nrf.h"							//nrf24l01??spi.h??u8 Spi_RW(u8 dat)??
 #include "rc_mine.h"							//nrf24l01??spi.h??u8 Spi_RW(u8 dat)??
 #include "nrf.h"							//nrf24l01??spi.h??u8 Spi_RW(u8 dat)??

@@ -1,11 +1,14 @@
 #include "include.h" 
 #include "flash.h"
 #include "led_fc.h"
+#include "usart_fc.h"
 #include "ucos_ii.h"
 #include "os_cpu.h"
 #include "os_cfg.h"
 #include "ucos_task.h"
 #include "pwm_in.h"
+#include "mpu9250.h"
+#include "spi.h"
 #include "stm32f4xx_dma.h"
  /////////////////////////UCOSII启动任务设置///////////////////////////////////
 //START 任务
@@ -26,12 +29,14 @@ OS_FLAG_GRP * flags_key;	//按键信号量集
 void * MsgGrp[256];			//消息队列存储地址,最大支持256个消息
 u8 en_read=1;
 int main(void)
-{ 
+ { 
 	NVIC_PriorityGroupConfig(NVIC_GROUP);//设置系统中断优先级分组2
 	delay_init(168);  //初始化延时函数
 	Initial_Timer_SYS();
   RNG_Init();
 	Delay_ms(100);
+	READ_PARM();
+	
 //------------------------Uart Init-------------------------------------
 	#if USE_DJ_CONTROL_BOARD
 	Usart1_Init(115200);
@@ -59,7 +64,7 @@ int main(void)
 	#if EN_DMA_UART3
 	MYDMA_Config(DMA1_Stream3,DMA_Channel_4,(u32)&USART3->DR,(u32)SendBuff3,SEND_BUF_SIZE3+2,2);//DMA2,STEAM7,CH4,外设为串口1,存储器为SendBuff,长度为:SEND_BUF_SIZE.
   #endif	
-  Uart5_Init (38400);     //LEG4
+  Uart5_Init (100000);     //LEG4
 
 	Delay_ms(100);
 	
@@ -84,6 +89,11 @@ int main(void)
 #endif		
 	Delay_ms(100);
   LED_Init();								//LED功能初始化
+	Delay_ms(100);
+  SPI2_Init1();
+	Delay_ms(100);
+	Mpu9250_Init();
+	Delay_ms(100);
 //	while(1)
 //	{
 //	leg_init(&leg[1],1);
@@ -118,7 +128,7 @@ void start_task(void *pdata)
 
 	 OSTaskCreate(uart_task,(void *)0,(OS_STK*)&UART_TASK_STK[UART_STK_SIZE-1],UART_TASK_PRIO);
 
-//	 OSTaskCreate(leg1_task,(void *)0,(OS_STK*)&LEG1_TASK_STK[LEG_STK_SIZE-1],LEG1_TASK_PRIO);
+	 OSTaskCreate(leg1_task,(void *)0,(OS_STK*)&LEG1_TASK_STK[LEG_STK_SIZE-1],LEG1_TASK_PRIO);
 //	 OSTaskCreate(leg2_task,(void *)0,(OS_STK*)&LEG2_TASK_STK[LEG_STK_SIZE-1],LEG2_TASK_PRIO);
 //	 OSTaskCreate(leg3_task,(void *)0,(OS_STK*)&LEG3_TASK_STK[LEG_STK_SIZE-1],LEG3_TASK_PRIO);
 //	 OSTaskCreate(leg4_task,(void *)0,(OS_STK*)&LEG4_TASK_STK[LEG_STK_SIZE-1],LEG4_TASK_PRIO);

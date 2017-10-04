@@ -18,6 +18,8 @@
 #define AK8975_HZH     0x08
 #define AK8975_CNTL    0x0A
 
+void ANO_AK8975_Read_Mag_Data(void);
+	
 typedef struct 
 { 
 	xyz_s16_t Mag_Adc;			//²ÉÑùÖµ

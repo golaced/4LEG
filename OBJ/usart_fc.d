@@ -47,7 +47,6 @@
 ..\obj\usart_fc.o: ..\SYSTEM\delay\delay.h
 ..\obj\usart_fc.o: ..\SYSTEM\sys\sys.h
 ..\obj\usart_fc.o: ..\MALLOC\malloc.h
-..\obj\usart_fc.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\usart_fc.o: ..\HARDWARE\IIC\spi_nrf.h
 ..\obj\usart_fc.o: ..\HARDWARE\IIC\rc_mine.h
 ..\obj\usart_fc.o: ..\HARDWARE\IIC\nrf.h
@@ -64,8 +63,10 @@
 ..\obj\usart_fc.o: ..\HARDWARE\IIC\leg.h
 ..\obj\usart_fc.o: ..\HARDWARE\IIC\rng.h
 ..\obj\usart_fc.o: ..\HARDWARE\IIC\m100.h
+..\obj\usart_fc.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\usart_fc.o: ..\UCOSII\CORE\ucos_ii.h
 ..\obj\usart_fc.o: ..\UCOSII\CONFIG\includes.h
 ..\obj\usart_fc.o: ..\UCOSII\CORE\ucos_ii.h
 ..\obj\usart_fc.o: ..\UCOSII\PORT\os_cpu.h
 ..\obj\usart_fc.o: ..\UCOSII\CONFIG\os_cfg.h
+..\obj\usart_fc.o: ..\HARDWARE\IIC\sbus.h
