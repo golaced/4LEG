@@ -15,7 +15,7 @@ void conver_legpos_to_barin(BRAIN_STRUCT *in,LEG_STRUCT * inl,u8 id)
 //两点求直线方程
 void line_function_from_two_point(float x1,float y1,float x2,float y2,float *k,float *b)
 { 
-	float k_temp;
+	float k_temp=0;
   *k=k_temp=(y1-y2)/(x1-x2+0.000001);
   *b=y1-k_temp*x1;
 }	
@@ -23,8 +23,8 @@ void line_function_from_two_point(float x1,float y1,float x2,float y2,float *k,f
 //矢量求直线方程
 void line_function_from_arrow(float x,float y,float yaw,float *k,float *b)
 { 
-	float tyaw=90-yaw+0.0001;
-	float k_temp;
+	float tyaw=90-yaw+0.0011;
+	float k_temp=0;
   *k=k_temp=tan(tyaw/57.3);
   *b=y-k_temp*x;
 }	
@@ -32,8 +32,8 @@ void line_function_from_arrow(float x,float y,float yaw,float *k,float *b)
 //矢量垂线方程
 void line_function90_from_arrow(float x,float y,float yaw,float *k,float *b)
 { 
-	float tyaw=90-yaw+0.0001;
-	float k_temp;
+	float tyaw=90-yaw+0.0011;
+	float k_temp=0;
   *k=k_temp=-1/tan(tyaw/57.3);
   *b=y-k_temp*x;
 }	
@@ -64,7 +64,7 @@ u8 cross_point_of_lines(float k1,float b1,float k2,float b2,float *x,float *y)
 //点在点矢量方向前
 u8 check_point_front_arrow(float x,float y,float cx,float cy,float yaw)
 { 
-  float tyaw=90-yaw+0.0001;
+  float tyaw=90-yaw+0.0011;
 	float kc_90=-1/tan(tyaw/57.3);
 	float bc_90=cy-kc_90*cx;
 	float cx_t=cx+sin(yaw/57.3),cy_t=cy+cos(yaw/57.3);
@@ -80,7 +80,7 @@ u8 check_point_front_arrow(float x,float y,float cx,float cy,float yaw)
 //点矢量与直线交点
 u8 check_cross_arrow_line(float cx,float cy,float yaw,float k,float b,float *x,float *y)
 { 
-  float tyaw=90-yaw+0.0001;
+  float tyaw=90-yaw+0.0011;
 	float kc=tan(tyaw/57.3);
 	float bc=cy-kc*cx;
 	float cro_x,cro_y;
@@ -103,7 +103,7 @@ u8 check_cross_arrow_line(float cx,float cy,float yaw,float k,float b,float *x,f
 //点矢量垂线与直线交点
 u8 check_cross_arrow90_line(float cx,float cy,float yaw,float k,float b,float *x,float *y)
 { 
-  float tyaw=90-yaw+0.0001;
+  float tyaw=90-yaw+0.0011;
 	float kc=tan(tyaw/57.3);
 	float kc_90=-1/kc;
 	float bc_90=cy-kc_90*cx;
@@ -129,7 +129,7 @@ return sqrt(pow(x1-x2,2)+pow(y1-y2,2));
 u8 in_circle(float cx,float cy,float d_short,float d_long,float x,float y)
 {
    float temp=pow(x-cx,2)/pow(d_short,2)+pow(y-cy,2)/pow(d_long,2);
-   if(temp>1)
+   if(temp>1)//外面
 		 return 0;
 	 else 
 		 return 1;
@@ -138,7 +138,7 @@ u8 in_circle(float cx,float cy,float d_short,float d_long,float x,float y)
 //点到直线距离
 float dis_point_to_line(float x,float y,float k,float b)
 { 
-  float k_90=-1/(k+0.000001);
+  float k_90=-1/(k+0.0011);
 	float b_90=y-k_90*x;
 	float cx,cy;
 	cross_point_of_lines(k,b,k_90,b_90,&cx,&cy);
@@ -149,22 +149,22 @@ float dis_point_to_line(float x,float y,float k,float b)
 //将机体坐标转换到全局坐标
 void conver_body_to_global(float bx,float by,float *gx,float *gy)
 {
- *gx=bx-brain.sys.leg_local[1].x-leg[4].pos_now[2].x;
- *gy=by-brain.sys.leg_local[1].y-leg[4].pos_now[2].y;
+ *gx=bx+brain.sys.leg_local[1].x-leg[4].pos_now[2].x;
+ *gy=by+brain.sys.leg_local[1].y-leg[4].pos_now[2].y;
 }
 //计算椭圆与矢量的两个角度
 void cal_jiao_of_tuo_and_line(float cx,float cy,float d_short,float d_long,float yaw,float *jiao1_x,float *jiao1_y,float *jiao2_x,float *jiao2_y)
 {
-   float tyaw=90-yaw+0.0001;
-	 float tan_yaw=tan(tyaw*0.0174);
-	 float jiaodiao[2][2];
+   float tyaw=90-yaw+0.0011;
+	 float tan_yaw=tan(tyaw/57.3);
+	 float jiaodiao[2][2]={0};
 	 //计算速度直线与椭圆交点
 	 float temp=sqrt(pow(d_short,2)/(1+pow(d_short*tan_yaw/d_long,2)));
 	 //判断速度方向交点符号
-	 if(yaw+0.0001>0&&yaw+0.0001<180)
-	 {*jiao1_x=temp; *jiao2_x=-temp;}
+	 if(yaw+0.0011>0&&yaw+0.0011<180)
+	 {jiaodiao[0][Xr]=temp; jiaodiao[1][Xr]=-temp;}
 	 else 
-	 {*jiao1_x=-temp;*jiao2_x=temp;}
+	 {jiaodiao[0][Xr]=-temp;jiaodiao[1][Xr]=temp;}
 	 
 	 jiaodiao[0][Yr]=tan_yaw*jiaodiao[0][Xr];
 	 jiaodiao[1][Yr]=tan_yaw*jiaodiao[1][Xr];

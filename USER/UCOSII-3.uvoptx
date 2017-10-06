@@ -1185,30 +1185,18 @@
     <File>
       <GroupNumber>9</GroupNumber>
       <FileNumber>55</FileNumber>
-      <FileType>1</FileType>
+      <FileType>5</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\HARDWARE\IIC\leg.c</PathWithFileName>
-      <FilenameWithoutPath>leg.c</FilenameWithoutPath>
+      <PathWithFileName>..\HARDWARE\IIC\leg.h</PathWithFileName>
+      <FilenameWithoutPath>leg.h</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
     <File>
       <GroupNumber>9</GroupNumber>
       <FileNumber>56</FileNumber>
-      <FileType>1</FileType>
-      <tvExp>0</tvExp>
-      <tvExpOptDlg>0</tvExpOptDlg>
-      <bDave2>0</bDave2>
-      <PathWithFileName>..\HARDWARE\IIC\brain.c</PathWithFileName>
-      <FilenameWithoutPath>brain.c</FilenameWithoutPath>
-      <RteFlg>0</RteFlg>
-      <bShared>0</bShared>
-    </File>
-    <File>
-      <GroupNumber>9</GroupNumber>
-      <FileNumber>57</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -1220,13 +1208,25 @@
     </File>
     <File>
       <GroupNumber>9</GroupNumber>
-      <FileNumber>58</FileNumber>
-      <FileType>5</FileType>
+      <FileNumber>57</FileNumber>
+      <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\HARDWARE\IIC\leg.h</PathWithFileName>
-      <FilenameWithoutPath>leg.h</FilenameWithoutPath>
+      <PathWithFileName>..\HARDWARE\IIC\leg.c</PathWithFileName>
+      <FilenameWithoutPath>leg.c</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>9</GroupNumber>
+      <FileNumber>58</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\HARDWARE\IIC\brain.c</PathWithFileName>
+      <FilenameWithoutPath>brain.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

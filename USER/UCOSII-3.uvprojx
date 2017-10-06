@@ -688,6 +688,16 @@
           <GroupName>CONTROL</GroupName>
           <Files>
             <File>
+              <FileName>leg.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\HARDWARE\IIC\leg.h</FilePath>
+            </File>
+            <File>
+              <FileName>leg_lib.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\IIC\leg_lib.c</FilePath>
+            </File>
+            <File>
               <FileName>leg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\IIC\leg.c</FilePath>
@@ -696,16 +706,6 @@
               <FileName>brain.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\IIC\brain.c</FilePath>
-            </File>
-            <File>
-              <FileName>leg_lib.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HARDWARE\IIC\leg_lib.c</FilePath>
-            </File>
-            <File>
-              <FileName>leg.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\HARDWARE\IIC\leg.h</FilePath>
             </File>
           </Files>
         </Group>
