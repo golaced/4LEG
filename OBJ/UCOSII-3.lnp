@@ -49,6 +49,7 @@
 "..\obj\rtgetinf.o"
 "..\obj\rtgetnan.o"
 "..\HARDWARE\IIC\cycle_cal_oldx.lib"
+"..\obj\leg_lib.o"
 "..\obj\leg.o"
 "..\obj\brain.o"
 "..\obj\fliter.o"
