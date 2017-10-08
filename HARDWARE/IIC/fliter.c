@@ -191,7 +191,7 @@ void simple_3d_trans(_xyz_f_t *ref, _xyz_f_t *in, _xyz_f_t *out) //Ð¡·¶Î§ÄÚÕýÈ·¡
 
 
 float ACC_HIGHPASS_TAU        = 4.0;
-float ACC_LOWPASS_TAU        = 0.05;
+float ACC_LOWPASS_TAU        = 0.5;
 float ACC_LOWPASS_SAMPLE_TIME =0.005f;
 float ACC_LOWPASS_A        ;
 float ACC_LOWPASS_GX1      ;

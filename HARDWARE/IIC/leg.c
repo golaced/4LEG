@@ -24,9 +24,9 @@ void leg_init( LEG_STRUCT *in,u8 id)
 in->sys.id=id;
 in->leg_ground=1;
 in->sys.init_mode=0;	
-in->sys.l1=4.9;
-in->sys.l2=6.3;
-in->sys.l3=7.8;	
+in->sys.l1=3.9;
+in->sys.l2=6.4;
+in->sys.l3=6.8;	
 in->sys.off_local[0]=off_local[0];
 in->sys.off_local[1]=off_local[1];
 switch(in->sys.id){
@@ -102,7 +102,7 @@ in->pos_tar_trig[2].z=in->sys.init_end_pos.z;
 
 in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.25;	
 in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.25;	
-in->sys.limit.z=(in->sys.l1+in->sys.l2+in->sys.l3)*0.88;	
+in->sys.limit.z=(in->sys.l1+in->sys.l2+in->sys.l3)*0.925;	
 	
 in->sys.limit_min.z=(in->sys.l3-(in->sys.l2-in->sys.l1))*1.05;
 
@@ -125,7 +125,7 @@ in->sys.PWM_PER_DEGREE[2]=11.34;//9.34;
 break;
 case 2:
 in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
-in->sys.PWM_PER_DEGREE[1]=9.34;
+in->sys.PWM_PER_DEGREE[1]=11.34;//9.34;
 in->sys.PWM_PER_DEGREE[2]=11.34;//9.34;
 break;
 case 3:
@@ -344,19 +344,29 @@ pos_tar[Zs]=in->pos_tar_trig[2].z;
 }
 
 //读出规划曲线各采样三维位置
-void  cal_pos_tar_from_curve(LEG_STRUCT * in,float time_now)
+void  cal_pos_tar_from_curve(LEG_STRUCT * in,float time_now,float dt)
 {
 float cal_curve[3];	
 u8 i;
 for(i=0;i<3;i++)
 cal_curve[i]=curve_cal(c0[i],c3[i],c4[i],c5[i],c6[i],time_now);
 	
+
 in->pos_tar[2].x=cal_curve[Xs];
 in->pos_tar[2].y=cal_curve[Ys];
 in->pos_tar[2].z=cal_curve[Zs];
+	
+//if(in->sys.leg_set_invert){	
+//in->pos_tar[2].x+=-in->deng[Xr]*dt;
+//in->pos_tar[2].y+=-in->deng[Yr]*dt;
+//}else{
+//in->pos_tar[2].x+=-in->deng[Xr]*dt;
+//in->pos_tar[2].y+=-in->deng[Yr]*dt;
+//}
+
 }	
 
-float rate_delay_kuai=0.1;
+float rate_delay_kuai=0.066;
 float delay_time_kuai=0.66;
 //跨腿
 void leg_follow_curve(LEG_STRUCT * in,float desire_time,u8 *en,float dt)
@@ -374,17 +384,17 @@ if(*en){//由着地点规划当前轨迹
 cal_curve_from_pos(in,desire_time);
 state[id]=1;	
 ground_mask[id]=time[id]=delay[id]=0;	
-//	if(!in->sys.use_ground_check)
+
 in->leg_ground=0;
 }
 break;
 case 1://有时间和轨迹计算每一时间的曲线坐标
 if(*en){
-cal_pos_tar_from_curve(in,time[id]);
+cal_pos_tar_from_curve(in,time[id],dt);
 time[id]+=dt;
+state[id]=3;
 if(time[id]>desire_time*rate_delay_kuai)	
 {state[id]=2;}
-state[id]=3;
 }
 break;
 case 2:
@@ -396,7 +406,7 @@ if(delay[id]>delay_time_kuai)
 break;
 case 3:
 if(*en){
-cal_pos_tar_from_curve(in,time[id]);
+cal_pos_tar_from_curve(in,time[id],dt);
 time[id]+=dt;
 if(time[id]>desire_time)	
 {state[id]=4;}
@@ -508,7 +518,7 @@ static u16 cnt[5];
 
 	
 	
-	#if USE_BUS_DJ
+	#if USE_BUS_DJ&&!USE_DJ_CONTROL_BOARD
 	if(in->leg_power==0){	
 		if(cnt[in->sys.id]++>1/0.02){cnt[in->sys.id]=0;
 		LEG_POWER_OFF(in->sys.id);}

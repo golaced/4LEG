@@ -207,192 +207,149 @@
           <Name>UL2CM3(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0STM32F4xx_1024 -FS08000000 -FL0100000 -FP0($$Device:STM32F407ZG$Flash\STM32F4xx_1024.FLM))</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint/>
+      <Breakpoint>
+        <Bp>
+          <Number>0</Number>
+          <Type>0</Type>
+          <LineNumber>193</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134271256</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>D:\椋炴帶\OLDX_FC2.0\4LEG\HARDWARE\IIC\leg_lib.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\UCOSII_3\../HARDWARE/IIC/leg_lib.c\193</Expression>
+        </Bp>
+      </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>buf,0x10</ItemText>
+          <ItemText>brain,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>id_sel,0x0A</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.global,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>conver_id</ItemText>
+          <ItemText>leg</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>id,0x0A</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\leg[1].pos_now_brain[2]</ItemText>
         </Ww>
         <Ww>
           <count>4</count>
           <WinNumber>1</WinNumber>
-          <ItemText>leg_out_cnt</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\leg[2].pos_now_brain[2]</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
           <WinNumber>1</WinNumber>
-          <ItemText>id_need_to_move_global</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\leg[3].pos_now_brain[2]</ItemText>
         </Ww>
         <Ww>
           <count>6</count>
           <WinNumber>1</WinNumber>
-          <ItemText>kp_center</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\leg[4].pos_now_brain[2]</ItemText>
         </Ww>
         <Ww>
           <count>7</count>
           <WinNumber>1</WinNumber>
-          <ItemText>can_move_leg</ItemText>
+          <ItemText>hard_fall,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>8</count>
           <WinNumber>1</WinNumber>
-          <ItemText>brain,0x0A</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.center_stable</ItemText>
         </Ww>
         <Ww>
           <count>9</count>
           <WinNumber>1</WinNumber>
-          <ItemText>kp_att</ItemText>
+          <ItemText>leg_dt</ItemText>
         </Ww>
         <Ww>
           <count>10</count>
           <WinNumber>1</WinNumber>
-          <ItemText>flt</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.power_all</ItemText>
         </Ww>
         <Ww>
           <count>11</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.kp_center</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.control_mode</ItemText>
         </Ww>
         <Ww>
           <count>12</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.desire_time</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.ground_leg_num,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>13</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.k_center_c</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.spd</ItemText>
         </Ww>
         <Ww>
           <count>14</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ki_att</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.force_stop,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>15</count>
           <WinNumber>1</WinNumber>
-          <ItemText>k_acc</ItemText>
+          <ItemText>jiaodiao</ItemText>
         </Ww>
         <Ww>
           <count>16</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.spd</ItemText>
+          <ItemText>jiaodiao</ItemText>
         </Ww>
         <Ww>
           <count>17</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.k_spd_to_range</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.min_st</ItemText>
         </Ww>
         <Ww>
           <count>18</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.k_spd_to_range</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.desire_time</ItemText>
         </Ww>
         <Ww>
           <count>19</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.att</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.min_range</ItemText>
         </Ww>
         <Ww>
           <count>20</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.leg_move_range</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.max_range</ItemText>
         </Ww>
         <Ww>
           <count>21</count>
           <WinNumber>1</WinNumber>
-          <ItemText>temp</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.spd_yaw</ItemText>
         </Ww>
         <Ww>
           <count>22</count>
           <WinNumber>1</WinNumber>
-          <ItemText>mpu6050_fc</ItemText>
+          <ItemText>jiaodiao</ItemText>
         </Ww>
         <Ww>
           <count>23</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Rc_Get_PWM,0x0A</ItemText>
+          <ItemText>x</ItemText>
         </Ww>
         <Ww>
           <count>24</count>
           <WinNumber>1</WinNumber>
-          <ItemText>channels,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>25</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>SBUS_MIN,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>26</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>SBUS_MAX,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>27</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>SBUS_MID,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>28</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>SBUS_MIN_A,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>29</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>SBUS_MAX_A,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>30</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>SBUS_MID_A,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>31</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>reset_deng</ItemText>
-        </Ww>
-        <Ww>
-          <count>32</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>reset_sita</ItemText>
-        </Ww>
-        <Ww>
-          <count>33</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>leg,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>34</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>reset_deng</ItemText>
-        </Ww>
-        <Ww>
-          <count>35</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>line_test</ItemText>
-        </Ww>
-        <Ww>
-          <count>36</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>sita_test</ItemText>
+          <ItemText>y</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
@@ -410,6 +367,26 @@
           <count>2</count>
           <WinNumber>2</WinNumber>
           <ItemText>att_control_out_ki</ItemText>
+        </Ww>
+        <Ww>
+          <count>3</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>line_test</ItemText>
+        </Ww>
+        <Ww>
+          <count>4</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>leg_dt</ItemText>
+        </Ww>
+        <Ww>
+          <count>5</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>OSCPUUsage,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>6</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>cpuusage,0x0A</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>

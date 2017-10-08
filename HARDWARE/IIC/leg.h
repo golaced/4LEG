@@ -5,6 +5,8 @@
 #define Zs 2
 
 #define USE_UART_LEG 1
+#define RANDOM (float)RNG_Get_RandomRange(-1000,1000)/1000000.
+#define FLAG_IN(in) ((in) >= (0) ? 1 : -1)
 typedef struct 
 {
 	float x;
@@ -48,7 +50,7 @@ typedef struct
 
 
 typedef struct 
-{ u8 leg_connect,leg_ground,err;
+{ u8 leg_connect,leg_ground,leg_ground_fake,err;
 	u8 leg_power,rst_leg;
 	u8 need_move;	
 	u8 curve_trig,control_mode;
@@ -66,12 +68,12 @@ typedef struct
 { u8 leg_connect,control_angle;
 	u16 leg_loss_cnt,dt_leg_min_trig_cnt,no_control_cnt;
 	float att_off[2],k_spd_to_range,kp_center[2],k_center_fp,move_range_k,k_center_c[2];
-	float desire_time;
+	float desire_time,min_range,max_range,off_cor[2];
 	POS leg_local[5];
 	u8 leg_use_ground;
 	u8 init_mode;
 	POS pos_tar_trig[5];
-	
+	u8 front_leg_num;
 	u8 err,rst;
 	float center_off_when_move[2];
 	float leg_t,tar_spd[3];
@@ -93,7 +95,7 @@ typedef struct
 typedef struct 
 { u8 control_mode,power_all,rst_all,rst_all_soft,tabu;
 	int fall;
-	float steady_value,min_st;
+	float steady_value,min_st[2];
 	u8 force_stop,loss_center,ground_leg_num,can_move_leg;	
 	u8 leg_move[5],leg_out_range[5];	
 	BRAIN_GLOBAL global;
@@ -143,14 +145,16 @@ extern float center_control_out[2],att_control_out[5];;
 #define Yr 1
 #define Zr 2
 
-u8 planner_leg(u8 last_move_id);
+u8 planner_leg(u8 last_move_id,u8 last_last_move_id);
 void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
 void center_control_global(float dt);//中心控制PID  GLOBAL
 void state_clear(void);
 void get_leg_tar_trig(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
 void fall_reset(float dt);
 void cal_pos_global(float dt);
-
+void leg_tar_est_global(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt);
+//计算三角形重心坐标
+void cal_center_of_trig(float x1,float y1,float x2,float y2,float x3,float x4,float *cx,float *cy);
 //点到直线距离
 float dis_point_to_line(float x,float y,float k,float b);
 //两点求直线方程
@@ -167,6 +171,8 @@ u8 cross_point_of_lines(float k1,float b1,float k2,float b2,float *x,float *y);
 u8 check_point_front_arrow(float x,float y,float cx,float cy,float yaw);
 //点矢量与直线交点
 u8 check_cross_arrow_line(float cx,float cy,float yaw,float k,float b,float *x,float *y);
+//判断两点在线同一侧
+u8 check_points_same_side(float x1,float y1,float x2,float y2,float k,float b);
 //点矢量垂线与直线交点
 u8 check_cross_arrow90_line(float cx,float cy,float yaw,float k,float b,float *x,float *y);
 float cal_dis_of_points(float x1,float y1,float x2,float y2);
@@ -174,6 +180,16 @@ u8 in_circle(float cx,float cy,float d_short,float d_long,float x,float y);
 void conver_body_to_global(float bx,float by,float *gx,float *gy);
 void cal_jiao_of_tuo_and_line(float cx,float cy,float d_short,float d_long,float yaw,float *jiao1_x,float *jiao1_y,float *jiao2_x,float *jiao2_y);
 float cal_area_trig(float ax,float ay,float bx,float by,float cx,float cy);
+//点矢量与三角形交点
+u8 check_point_to_trig(float x,float y,float yaw,float x1,float y1,float x2,float y2,float x3,float y3,float *jiao1_x,float *jiao1_y,float *jiao2_x,float *jiao2_y);
+//计算移动区域与矢量的两个交点
+void cal_jiao_of_range_and_line(u8 id,float cx,float cy,float min,float max,float yaw,float *jiao1_x,float *jiao1_y,float *jiao2_x,float *jiao2_y);
+//移动区域限幅度 方框
+void limit_move_range_tangle(u8 id,float cx,float cy,float x,float y,float min,float max,float *outx,float *outy);
+//判断点在移动区域内部
+u8 check_in_move_range(u8 id,float x,float y,float cx,float cy,float min,float max);
+//点矢量与四边形交点
+u8 check_point_to_tangle(float x,float y,float yaw,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4,float *jiao1_x,float *jiao1_y,float *jiao2_x,float *jiao2_y);
 //一个点在三角形内部
 u8 inTrig(float x, float y,float x1,float y1,float x2,float y2,float x3,float y3);
 float cal_steady_s(float cx,float cy,float x1,float y1,float x2,float y2,float x3, float y3 );
@@ -184,3 +200,4 @@ u8 inTrig2(float x, float y,float x1,float y1,float x2,float y2,float x3,float y
 void find_closet_point(u8*min_id,float x, float y,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4,u8 num);
 //转换腿局部坐标系到全局机体坐标系
 void conver_legpos_to_barin(BRAIN_STRUCT *in,LEG_STRUCT * inl,u8 id);
+float cal_steady_s4(float cx,float cy,float x1,float y1,float x2,float y2,float x3, float y3 ,float x4,float y4 );

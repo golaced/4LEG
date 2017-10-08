@@ -29,6 +29,7 @@ void leg1_task(void *pdata)
  	while(1)
 	{
 	leg_dt[0] = Get_Cycle_T(GET_T_LEG1); 						//获取内环准确的执行周期
+	leg_dt[0]=0.005;	
 //  leg_drive(&leg[1],0.01);//leg_dt[0]);
 //  //Send_LEG(1);
 //  //UsartSend_LEG_BUF_BUF(1);
@@ -36,7 +37,7 @@ void leg1_task(void *pdata)
   ANO_AK8975_Read_Mag_Data();
 	MPU6050_Data_Prepare( leg_dt[0] );			//mpu6????????
 
-	if(cnt_init++>2/0.005){cnt_init=65530;
+	if(cnt_init++>1/0.005){cnt_init=65530;
  
  	IMUupdate(0.5f *leg_dt[0],mpu6050_fc.Gyro_deg.x, mpu6050_fc.Gyro_deg.y, mpu6050_fc.Gyro_deg.z, mpu6050_fc.Acc.x, mpu6050_fc.Acc.y, mpu6050_fc.Acc.z
 	,&Roll,&Pitch,&Yaw);
@@ -166,13 +167,13 @@ void brain_task(void *pdata)
 	if(Rc_Get_PWM.AUX1>1500)
 	{brain.power_all=brain.control_mode=1;flag=1;}
 	else
-		brain.power_all=brain.control_mode=0;
+	 brain.power_all=brain.control_mode=0;
 	static u16 cnt_soft_rst;
-	brain.sys.desire_time=LIMIT(0.5+(Rc_Get_PWM.AUX4-1500)/1000.,0.2,2);
+	//brain.sys.desire_time=LIMIT(0.5+(Rc_Get_PWM.AUX4-1500)/1000.,0.2,2);
 	if(flag&&Rc_Get_PWM.AUX1<1500)
 	{flag=0;brain.rst_all_soft=1;cnt_soft_rst=0;}
-	if(brain.rst_all_soft>0)
-		brain.sys.desire_time=0.33;
+//	if(brain.rst_all_soft>0)
+//		brain.sys.desire_time=0.33;
 	
 	if(brain.rst_all_soft>0)
 		cnt_soft_rst++;
