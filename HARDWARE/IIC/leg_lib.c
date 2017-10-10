@@ -10,7 +10,85 @@ void conver_legpos_to_barin(BRAIN_STRUCT *in,LEG_STRUCT * inl,u8 id)
 	inl->pos_now_brain[i].z=inl->pos_now[i].z+in->sys.leg_local[id].z;
 	}
 }
-
+//判断脚到达初始化的位置
+u8 check_leg_near_init(float ero)
+{
+ u8 i;
+ float dis[5];	
+	for(i=1;i<5;i++)
+	 {
+	   dis[i]=cal_dis_of_points(leg[i].pos_now[2].x,leg[i].pos_now[2].y,
+		 leg[i].sys.init_end_pos.x,leg[i].sys.init_end_pos.y);
+	 }
+  if(dis[1]<ero&&dis[2]<ero&&dis[3]<ero&&dis[4]<ero)
+	  return 1;
+	else 
+		return 0;
+}	
+//跨腿重复保护器
+u8 leg_repeat_protect(u8 id,u8 last_move_id,u8 last_last_move_id,float yaw,float yaw_trig){
+u8 i;	
+u8 trig_list_f[5]=		 {0,1,4,3,2};
+u8 trig_list_r[5]=		 {0,2,3,1,4};
+u8 trig_list_b[5]=		 {0,4,1,2,3};
+u8 trig_list_l[5]=		 {0,3,2,4,1};	
+float yaw_in=To_180_degrees(yaw);
+float yaw_temp=yaw_trig;
+u8 temp_id;
+				if(id==last_move_id)//id==last_last_move_id)
+				{
+				  for(i=1;i<5;i++){
+					if(yaw_in>yaw_temp&&yaw_in<90+yaw_temp)
+					temp_id=trig_list_r[i];
+					else if(yaw_in<-yaw_temp&&yaw_in>-90-yaw_temp)
+					temp_id=trig_list_l[i];
+					else if((yaw_in<yaw_temp&&yaw_in>=0)||(yaw_in>-yaw_temp&&yaw_in<0))
+					temp_id=trig_list_f[i];
+					else
+					temp_id=trig_list_b[i];
+					if(temp_id==id)
+						break;
+				  }
+					if(i>=4)
+						if(yaw_in>yaw_temp&&yaw_in<90+yaw_temp)
+						return trig_list_r[1];
+						else if(yaw_in<-yaw_temp&&yaw_in>-90-yaw_temp)
+						return trig_list_l[1];
+						else if((yaw_in<yaw_temp&&yaw_in>=0)||(yaw_in>-yaw_temp&&yaw_in<0))
+						return trig_list_f[1];
+						else
+						return trig_list_b[1];
+					else
+						if(yaw_in>yaw_temp&&yaw_in<90+yaw_temp)
+						return trig_list_r[i+1];
+						else if(yaw_in<-yaw_temp&&yaw_in>-90-yaw_temp)
+						return trig_list_l[i+1];
+						else if((yaw_in<yaw_temp&&yaw_in>=0)||(yaw_in>-yaw_temp&&yaw_in<0))
+						return trig_list_f[i+1];
+						else
+						return trig_list_b[i+1];
+				}else	
+        return id;
+}
+//点沿矢量对称缩放
+void resize_point_with_arrow(float x,float y,float cx,float cy,float yaw,float k,float *nx,float *ny)
+{
+float kc,bc;	
+float kp_90,bp_90;	
+float cro_x,cro_y;
+if(k==1)
+{
+*nx=x;
+*ny=y;	
+}else{	
+line_function_from_arrow( cx, cy, yaw, &kc,&bc);
+line_function90_from_arrow(x, y, yaw, &kp_90,&bp_90);
+cross_point_of_lines(kc,bc,kp_90,bp_90,&cro_x,&cro_y);	
+	
+*nx=cro_x+(cro_x-x)*k;	
+*ny=cro_y+(cro_y-y)*k;	
+}	
+}
 
 //两点求直线方程
 void line_function_from_two_point(float x1,float y1,float x2,float y2,float *k,float *b)
@@ -67,7 +145,7 @@ u8 check_point_front_arrow(float x,float y,float cx,float cy,float yaw)
   float tyaw=90-yaw+0.000011;
 	float kc_90=-1/tan(tyaw/57.3);
 	float bc_90=cy-kc_90*cx;
-	float cx_t=cx+sin(yaw/57.3)*10,cy_t=cy+cos(yaw/57.3)*10;
+	float cx_t=cx+sin(yaw/57.3)*1,cy_t=cy+cos(yaw/57.3)*1;
 	int flag[2];
 	flag[0]=kc_90*cx_t+bc_90-cy_t;
 	flag[1]=kc_90*x+bc_90-y;
@@ -117,7 +195,7 @@ u8 check_cross_arrow90_line(float cx,float cy,float yaw,float k,float b,float *x
 { 
   float tyaw=90-yaw+0.000011;
 	float kc=tan(tyaw/57.3);
-	float kc_90=-1/kc;
+	float kc_90=-1/(kc+0.00001);
 	float bc_90=cy-kc_90*cx;
 	float cro_x,cro_y;
 	
@@ -175,38 +253,89 @@ void conver_body_to_global(float bx,float by,float *gx,float *gy)
 void limit_move_range_tangle(u8 id,float cx,float cy,float x,float y,float min,float max,float *outx,float *outy)
 {
   float tangle[4][2];
+	float length[5];
+	
 	
 	switch(id){
 	case 1:
-	tangle[0][Xr]=-min;tangle[0][Yr]=max;
-	tangle[1][Xr]=max; tangle[1][Yr]=max;
-	tangle[2][Xr]=max; tangle[2][Yr]=-min;
-	tangle[3][Xr]=-min;tangle[3][Yr]=-min;
+	length[1]=brain.sys.leg_move_range1[1];
+	length[2]=brain.sys.leg_move_range1[2];
+	length[3]=brain.sys.leg_move_range1[3];
+	length[4]=brain.sys.leg_move_range1[4];
 	break;
 	case 2:
-	tangle[0][Xr]=-min;tangle[0][Yr]=min;
-	tangle[1][Xr]=max; tangle[1][Yr]=min;
-	tangle[2][Xr]=max; tangle[2][Yr]=-max;
-	tangle[3][Xr]=-min;tangle[3][Yr]=-max;
+	length[1]=brain.sys.leg_move_range1[3];
+	length[2]=brain.sys.leg_move_range1[2];
+	length[3]=brain.sys.leg_move_range1[1];
+	length[4]=brain.sys.leg_move_range1[4];
 	break;
 	case 3:
-	tangle[0][Xr]=-max;tangle[0][Yr]=max;
-	tangle[1][Xr]=min; tangle[1][Yr]=max;
-	tangle[2][Xr]=min; tangle[2][Yr]=-min;
-	tangle[3][Xr]=-max;tangle[3][Yr]=-min;
+	length[1]=brain.sys.leg_move_range1[1];
+	length[2]=brain.sys.leg_move_range1[4];
+	length[3]=brain.sys.leg_move_range1[3];
+	length[4]=brain.sys.leg_move_range1[2];
 	break;
 	case 4:
-	tangle[0][Xr]=-max;tangle[0][Yr]=min;
-	tangle[1][Xr]=min; tangle[1][Yr]=min;
-	tangle[2][Xr]=min; tangle[2][Yr]=-max;
-	tangle[3][Xr]=-max;tangle[3][Yr]=-max;
+	length[1]=brain.sys.leg_move_range1[3];
+	length[2]=brain.sys.leg_move_range1[4];
+	length[3]=brain.sys.leg_move_range1[1];
+	length[4]=brain.sys.leg_move_range1[2];
 	break;
   }
- 
+	tangle[0][Xr]=-length[4];tangle[0][Yr]=length[1];
+	tangle[1][Xr]=length[2];tangle[1][Yr]=length[1];
+	tangle[2][Xr]=length[2];tangle[2][Yr]=-length[3];
+	tangle[3][Xr]=-length[4];tangle[3][Yr]=-length[3];
+	
 	*outx=LIMIT(x,tangle[0][Xr]+cx,tangle[1][Xr]+cx);
 	*outy=LIMIT(y,tangle[2][Yr]+cy,tangle[1][Yr]+cy);
 }	
 
+//判断点在移动区域内部tangle
+u8 check_in_move_range_tangle(u8 id,float x,float y,float cx,float cy,float min,float max)
+{
+		float tangle[4][2];
+		u8 flag[3];
+		float length[5];
+		switch(id){
+		case 1:
+		length[1]=brain.sys.leg_move_range1[1];
+		length[2]=brain.sys.leg_move_range1[2];
+		length[3]=brain.sys.leg_move_range1[3];
+		length[4]=brain.sys.leg_move_range1[4];
+		break;
+		case 2:
+		length[1]=brain.sys.leg_move_range1[3];
+		length[2]=brain.sys.leg_move_range1[2];
+		length[3]=brain.sys.leg_move_range1[1];
+		length[4]=brain.sys.leg_move_range1[4];
+		break;
+		case 3:
+		length[1]=brain.sys.leg_move_range1[1];
+		length[2]=brain.sys.leg_move_range1[4];
+		length[3]=brain.sys.leg_move_range1[3];
+		length[4]=brain.sys.leg_move_range1[2];
+		break;
+		case 4:
+		length[1]=brain.sys.leg_move_range1[3];
+		length[2]=brain.sys.leg_move_range1[4];
+		length[3]=brain.sys.leg_move_range1[1];
+		length[4]=brain.sys.leg_move_range1[2];
+		break;
+		}
+		tangle[0][Xr]=-length[4]+cx;tangle[0][Yr]=length[1]+cy;
+		tangle[1][Xr]=length[2]+cx;tangle[1][Yr]=length[1]+cy;
+		tangle[2][Xr]=length[2]+cx;tangle[2][Yr]=-length[3]+cy;
+		tangle[3][Xr]=-length[4]+cx;tangle[3][Yr]=-length[3]+cy;
+
+	 flag[0]=inTrig2(x,y,tangle[0][Xr],tangle[0][Yr],tangle[1][Xr],tangle[1][Yr]
+													 ,tangle[2][Xr],tangle[2][Yr],tangle[3][Xr],tangle[3][Yr]); 
+	 
+	 if(flag[0])
+	  return 1;
+	 else 
+		return 0;
+}
 
 //判断点在移动区域内部
 u8 check_in_move_range(u8 id,float x,float y,float cx,float cy,float min,float max)
@@ -375,6 +504,64 @@ void cal_jiao_of_range_and_line(u8 id,float cx,float cy,float min,float max,floa
 	 
 }
 
+
+//计算移动区域与矢量的两个交点 方框
+void cal_jiao_of_range_and_line_tangle(u8 id,float cx,float cy,float min,float max,float yaw,float *jiao1_x,float *jiao1_y,float *jiao2_x,float *jiao2_y)
+{
+
+	 float jiaodiao[2][2]={0};
+   float yaw_use;	
+	 float tangle[4][2];
+	 float tar_x=0,tar_y=0;
+	 u8 flag[3];
+float length[5];
+	
+	
+	switch(id){
+	case 1:
+	length[1]=brain.sys.leg_move_range1[1];
+	length[2]=brain.sys.leg_move_range1[2];
+	length[3]=brain.sys.leg_move_range1[3];
+	length[4]=brain.sys.leg_move_range1[4];
+	break;
+	case 2:
+	length[1]=brain.sys.leg_move_range1[3];
+	length[2]=brain.sys.leg_move_range1[2];
+	length[3]=brain.sys.leg_move_range1[1];
+	length[4]=brain.sys.leg_move_range1[4];
+	break;
+	case 3:
+	length[1]=brain.sys.leg_move_range1[1];
+	length[2]=brain.sys.leg_move_range1[4];
+	length[3]=brain.sys.leg_move_range1[3];
+	length[4]=brain.sys.leg_move_range1[2];
+	break;
+	case 4:
+	length[1]=brain.sys.leg_move_range1[3];
+	length[2]=brain.sys.leg_move_range1[4];
+	length[3]=brain.sys.leg_move_range1[1];
+	length[4]=brain.sys.leg_move_range1[2];
+	break;
+  }
+	tangle[0][Xr]=-length[4];tangle[0][Yr]=length[1];
+	tangle[1][Xr]=length[2];tangle[1][Yr]=length[1];
+	tangle[2][Xr]=length[2];tangle[2][Yr]=-length[3];
+	tangle[3][Xr]=-length[4];tangle[3][Yr]=-length[3];
+	 
+	 check_point_to_tangle(0,0,yaw,tangle[0][Xr],tangle[0][Yr],tangle[1][Xr],tangle[1][Yr]
+											 ,tangle[2][Xr],tangle[2][Yr],tangle[3][Xr],tangle[3][Yr],
+												&jiaodiao[0][Xr],&jiaodiao[0][Yr],&jiaodiao[1][Xr],&jiaodiao[1][Yr]);	 
+	
+			
+	 jiaodiao[0][Xr]+=cx;jiaodiao[1][Xr]+=cx;
+	 jiaodiao[0][Yr]+=cy;jiaodiao[1][Yr]+=cy;
+
+   *jiao1_x=jiaodiao[0][Xr];
+	 *jiao1_y=jiaodiao[0][Yr];
+	 *jiao2_x=jiaodiao[1][Xr];
+	 *jiao2_y=jiaodiao[1][Yr]; 
+}
+
 //点矢量与四边形交点
 u8 check_point_to_tangle(float x,float y,float yaw,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4
 	,float *jiao1_x,float *jiao1_y,float *jiao2_x,float *jiao2_y)
@@ -400,7 +587,7 @@ u8 check_point_to_tangle(float x,float y,float yaw,float x1,float y1,float x2,fl
 	float jiaodiao1[2][2];
 	for(i=0;i<4;i++)
 		{
-		  if(flag[i]&&(fabs(cro_x[i])<x2)&&(fabs(cro_y[i])<y2))
+		  if(flag[i]&&(fabs(cro_x[i])<fabs(x2)+fabs(x1))&&(fabs(cro_y[i])<fabs(y2)+fabs(y3)))
 			{ jiaodiao1[j][Xr]=cro_x[i];jiaodiao1[j][Yr]=cro_y[i];
         j++;
 				if(j>2)

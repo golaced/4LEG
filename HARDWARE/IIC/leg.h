@@ -1,5 +1,12 @@
 
 #include "include.h"
+
+#define TEST_MODE1 0
+#define BODY_MOVE_WHEN_LEG_UP 0
+#define BODY_CONTROL_USE_GLOBAL 1
+#define DENG_LIMIT_TEST 0
+#define USE_LEG_TRIG_DELAY 0
+#define USE_SIMPLE_CENTER 0
 #define Xs 0
 #define Ys 1
 #define Zs 2
@@ -68,7 +75,7 @@ typedef struct
 { u8 leg_connect,control_angle;
 	u16 leg_loss_cnt,dt_leg_min_trig_cnt,no_control_cnt;
 	float att_off[2],k_spd_to_range,kp_center[2],k_center_fp,move_range_k,k_center_c[2];
-	float desire_time,min_range,max_range,off_cor[2];
+	float desire_time,min_range,max_range,off_cor[2],down_h,down_t,yaw_dead;
 	POS leg_local[5];
 	u8 leg_use_ground;
 	u8 init_mode;
@@ -76,9 +83,9 @@ typedef struct
 	u8 front_leg_num;
 	u8 err,rst;
 	float center_off_when_move[2];
-	float leg_t,tar_spd[3];
+	float leg_t,tar_spd[3],in_rst_check;
 	float leg_h;	
-	float leg_move_range[2],leg_move_min_dt;//cm
+	float leg_move_range[2],leg_move_range1[5],leg_move_min_dt;//cm
 	float yaw_trig;
 	POS off_leg[5],center_off,center_off1,center_scale;
 }BRAIN_SYS;
@@ -86,9 +93,9 @@ typedef struct
 typedef struct 
 { 
 	POS end_pos_global[5],body_coner[5];
-	float steady_value;
+	float steady_value,out_value;
 	float center_stable_weight;
-	float area_of_leg[2];
+	float area_of_leg[2],dis_leg_out[5];
 	double leg_ground_center[3],leg_ground_center_trig[3],leg_ground_center_trig_init[3],tar_center[2];
 }BRAIN_GLOBAL;
 
@@ -97,7 +104,7 @@ typedef struct
 	int fall;
 	float steady_value,min_st[2];
 	u8 force_stop,loss_center,ground_leg_num,can_move_leg;	
-	u8 leg_move[5],leg_out_range[5];	
+	u8 leg_move[5],leg_out_range[5],way;	
 	BRAIN_GLOBAL global;
 	float tar_att_force[3],tar_att[3],att[3],tar_w,spd,spd_d,spd_yaw;
   u8 center_stable,move_id,leg_move_state;
@@ -144,7 +151,10 @@ extern float center_control_out[2],att_control_out[5];;
 #define Xr 0
 #define Yr 1
 #define Zr 2
-
+extern u8 trig_list_f[5];
+extern u8 trig_list_r[5];
+extern u8 trig_list_b[5];
+extern u8 trig_list_l[5];
 u8 planner_leg(u8 last_move_id,u8 last_last_move_id);
 void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
 void center_control_global(float dt);//中心控制PID  GLOBAL
@@ -157,12 +167,22 @@ void leg_tar_est_global(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float
 void cal_center_of_trig(float x1,float y1,float x2,float y2,float x3,float x4,float *cx,float *cy);
 //点到直线距离
 float dis_point_to_line(float x,float y,float k,float b);
+//判断点在移动区域内部tangle
+u8 check_in_move_range_tangle(u8 id,float x,float y,float cx,float cy,float min,float max);
 //两点求直线方程
 void line_function_from_two_point(float x1,float y1,float x2,float y2,float *k,float *b);
 //矢量求直线方程
 void line_function_from_arrow(float x,float y,float yaw,float *k,float *b);
+//点沿矢量对称缩放
+void resize_point_with_arrow(float x,float y,float cx,float cy,float yaw,float k,float *nx,float *ny);
+//判断脚到达初始化的位置
+u8 check_leg_near_init(float ero);
+//跨腿重复保护器
+u8 leg_repeat_protect(u8 id,u8 last_move_id,u8 last_last_move_id,float yaw,float yaw_trig);
 //矢量垂线方程
 void line_function90_from_arrow(float x,float y,float yaw,float *k,float *b);
+//计算移动区域与矢量的两个交点 方框
+void cal_jiao_of_range_and_line_tangle(u8 id,float cx,float cy,float min,float max,float yaw,float *jiao1_x,float *jiao1_y,float *jiao2_x,float *jiao2_y);
 //点在直线上
 u8 check_point_on_line(float x,float y,float k,float b,float err);
 //两直线交点

@@ -707,6 +707,11 @@
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\IIC\brain.c</FilePath>
             </File>
+            <File>
+              <FileName>brain_g.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\IIC\brain_g.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

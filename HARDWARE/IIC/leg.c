@@ -15,8 +15,8 @@ void READ_LEG_ID(LEG_STRUCT *in)
 {
 in->sys.id=0;
 }
-float off_local[2]={2,0};	
-float k_z=0.93;
+float off_local[2]={2.68,0};	
+float k_z=0.968;
 u16 SET_PWM3_OFF=0;
 void leg_init( LEG_STRUCT *in,u8 id)
 {
@@ -100,7 +100,7 @@ in->pos_tar_trig[2].x=in->sys.init_end_pos.x;
 in->pos_tar_trig[2].y=in->sys.init_end_pos.y;
 in->pos_tar_trig[2].z=in->sys.init_end_pos.z;
 
-in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.25;	
+in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.5;	
 in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.25;	
 in->sys.limit.z=(in->sys.l1+in->sys.l2+in->sys.l3)*0.925;	
 	
@@ -369,7 +369,7 @@ in->pos_tar[2].z=cal_curve[Zs];
 float rate_delay_kuai=0.066;
 float delay_time_kuai=0.66;
 //跨腿
-void leg_follow_curve(LEG_STRUCT * in,float desire_time,u8 *en,float dt)
+void leg_follow_curve(LEG_STRUCT * in,float desire_time,u8 *en,float dt,float down_h,float down_t)
 {
 u8 id=in->sys.id;
 static u16 ground_mask[5];	
@@ -381,38 +381,47 @@ switch(state[id])
 {
 case 0:
 if(*en){//由着地点规划当前轨迹
-cal_curve_from_pos(in,desire_time);
+//cal_curve_from_pos(in,desire_time);
 state[id]=1;	
 ground_mask[id]=time[id]=delay[id]=0;	
-
-in->leg_ground=0;
+	in->leg_ground=0;
 }
 break;
 case 1://有时间和轨迹计算每一时间的曲线坐标
 if(*en){
-cal_pos_tar_from_curve(in,time[id],dt);
-time[id]+=dt;
-state[id]=3;
-if(time[id]>desire_time*rate_delay_kuai)	
+in->pos_tar[2].z=in->pos_now[2].z+down_h;
 {state[id]=2;}
+
 }
 break;
 case 2:
 if(*en){
-delay[id]+=dt;
-if(delay[id]>delay_time_kuai)	
-{state[id]=3;}
+time[id]+=dt;
+if(time[id]>down_t)	
+{
+state[id]=3;
+time[id]=0;		
+in->pos_tar[2].z=in->sys.init_end_pos.z-1.61*down_h;
+}
+}
+break;///////////////
+case 3:
+if(*en){
+in->pos_tar[2].z=in->sys.init_end_pos.z-1.61*down_h;	
+cal_curve_from_pos(in,desire_time);	
+time[id]+=dt;
+state[id]=4;
 }
 break;
-case 3:
+case 4:
 if(*en){
 cal_pos_tar_from_curve(in,time[id],dt);
 time[id]+=dt;
 if(time[id]>desire_time)	
-{state[id]=4;}
+{state[id]=5;}
 }
 break;
-case 4:
+case 5:
 	in->leg_ground=1;
   state[id]=0;
   if(in->rst_leg)
@@ -607,7 +616,7 @@ void leg_drive(LEG_STRUCT * in,float dt)
 			{in->curve_trig=1;}//trig 使能
     //跨
 		if(in->curve_trig&&in->sys.desire_time>0)
-		leg_follow_curve(in,in->sys.desire_time,& in->curve_trig,dt);
+		leg_follow_curve(in,in->sys.desire_time,& in->curve_trig,dt,brain.sys.down_h,brain.sys.down_t);
 		//着地
 		leg_ground_check(in);
 		//蹬

@@ -207,24 +207,7 @@
           <Name>UL2CM3(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0STM32F4xx_1024 -FS08000000 -FL0100000 -FP0($$Device:STM32F407ZG$Flash\STM32F4xx_1024.FLM))</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint>
-        <Bp>
-          <Number>0</Number>
-          <Type>0</Type>
-          <LineNumber>193</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134271256</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>D:\椋炴帶\OLDX_FC2.0\4LEG\HARDWARE\IIC\leg_lib.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\UCOSII_3\../HARDWARE/IIC/leg_lib.c\193</Expression>
-        </Bp>
-      </Breakpoint>
+      <Breakpoint/>
       <WatchWindow1>
         <Ww>
           <count>0</count>
@@ -351,6 +334,81 @@
           <WinNumber>1</WinNumber>
           <ItemText>y</ItemText>
         </Ww>
+        <Ww>
+          <count>25</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>i,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>26</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.min_st</ItemText>
+        </Ww>
+        <Ww>
+          <count>27</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>rate_delay_kuai</ItemText>
+        </Ww>
+        <Ww>
+          <count>28</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.leg_move_min_dt</ItemText>
+        </Ww>
+        <Ww>
+          <count>29</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>kp_att</ItemText>
+        </Ww>
+        <Ww>
+          <count>30</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.spd</ItemText>
+        </Ww>
+        <Ww>
+          <count>31</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>id_need_to_move,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>32</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>flt</ItemText>
+        </Ww>
+        <Ww>
+          <count>33</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.k_center_c</ItemText>
+        </Ww>
+        <Ww>
+          <count>34</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>h_k</ItemText>
+        </Ww>
+        <Ww>
+          <count>35</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>h_k2</ItemText>
+        </Ww>
+        <Ww>
+          <count>36</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>ACC_LOWPASS_TAU</ItemText>
+        </Ww>
+        <Ww>
+          <count>37</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>flag_acc,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>38</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>flt</ItemText>
+        </Ww>
+        <Ww>
+          <count>39</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\rate_delay_kuai</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
@@ -387,6 +445,21 @@
           <count>6</count>
           <WinNumber>2</WinNumber>
           <ItemText>cpuusage,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>sita_test</ItemText>
+        </Ww>
+        <Ww>
+          <count>8</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>mpu6050_fc</ItemText>
+        </Ww>
+        <Ww>
+          <count>9</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>off_local</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>
@@ -1207,6 +1280,18 @@
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
+    <File>
+      <GroupNumber>9</GroupNumber>
+      <FileNumber>59</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\HARDWARE\IIC\brain_g.c</PathWithFileName>
+      <FilenameWithoutPath>brain_g.c</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
   </Group>
 
   <Group>
@@ -1217,7 +1302,7 @@
     <RteFlg>0</RteFlg>
     <File>
       <GroupNumber>10</GroupNumber>
-      <FileNumber>59</FileNumber>
+      <FileNumber>60</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -1229,7 +1314,7 @@
     </File>
     <File>
       <GroupNumber>10</GroupNumber>
-      <FileNumber>60</FileNumber>
+      <FileNumber>61</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>

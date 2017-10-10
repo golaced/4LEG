@@ -52,6 +52,7 @@
 "..\obj\leg_lib.o"
 "..\obj\leg.o"
 "..\obj\brain.o"
+"..\obj\brain_g.o"
 "..\obj\fliter.o"
 "..\obj\my_math.o"
 --strict --scatter "..\OBJ\UCOSII-3.sct"
