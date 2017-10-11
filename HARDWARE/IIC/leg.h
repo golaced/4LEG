@@ -5,7 +5,7 @@
 #define BODY_MOVE_WHEN_LEG_UP 0
 #define BODY_CONTROL_USE_GLOBAL 1
 #define DENG_LIMIT_TEST 0
-#define USE_LEG_TRIG_DELAY 0
+#define USE_LEG_TRIG_DELAY 1
 #define USE_SIMPLE_CENTER 0
 #define Xs 0
 #define Ys 1
@@ -92,7 +92,7 @@ typedef struct
 
 typedef struct 
 { 
-	POS end_pos_global[5],body_coner[5];
+	POS end_pos_global[5],body_coner[5],ZMP;
 	float steady_value,out_value;
 	float center_stable_weight;
 	float area_of_leg[2],dis_leg_out[5];
@@ -177,6 +177,8 @@ void line_function_from_arrow(float x,float y,float yaw,float *k,float *b);
 void resize_point_with_arrow(float x,float y,float cx,float cy,float yaw,float k,float *nx,float *ny);
 //判断脚到达初始化的位置
 u8 check_leg_near_init(float ero);
+//跨腿重复保护器
+u8 leg_repeat_protect1(u8 id,u8 last_move_id,u8 last_last_move_id,float yaw,float yaw_trig);
 //跨腿重复保护器
 u8 leg_repeat_protect(u8 id,u8 last_move_id,u8 last_last_move_id,float yaw,float yaw_trig);
 //矢量垂线方程

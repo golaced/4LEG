@@ -15,7 +15,7 @@ void READ_LEG_ID(LEG_STRUCT *in)
 {
 in->sys.id=0;
 }
-float off_local[2]={2.68,0};	
+float off_local[2]={2.35,0};	
 float k_z=0.968;
 u16 SET_PWM3_OFF=0;
 void leg_init( LEG_STRUCT *in,u8 id)
@@ -100,7 +100,7 @@ in->pos_tar_trig[2].x=in->sys.init_end_pos.x;
 in->pos_tar_trig[2].y=in->sys.init_end_pos.y;
 in->pos_tar_trig[2].z=in->sys.init_end_pos.z;
 
-in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.5;	
+in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.36;	
 in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.25;	
 in->sys.limit.z=(in->sys.l1+in->sys.l2+in->sys.l3)*0.925;	
 	
@@ -439,14 +439,36 @@ static u8 state;
 static float time;	
 //	if(!in->sys.use_ground_check)
 //   in->leg_ground=1;	
+	float spd_wx,spd_wy;
+	float x_temp=fabs(sin((90-brain.sys.yaw_trig)/57.3))*brain.tar_w*brain.global.center_stable_weight;
+	float y_temp=fabs(cos((90-brain.sys.yaw_trig)/57.3))*brain.tar_w*brain.global.center_stable_weight;
+	switch(id)
+	{
+	case 1:
+	spd_wx=x_temp;
+	spd_wy=-y_temp;
+	break;
+	case 2:
+	spd_wx=-x_temp;
+	spd_wy=-y_temp;
+	break;
+	case 3:
+	spd_wx=x_temp;
+	spd_wy=y_temp;
+	break;
+	case 4:
+	spd_wx=-x_temp;
+	spd_wy=y_temp;
+	break;
+	}
 //判断是否重合等
 	if(!in->err&&in->leg_ground){
 	 if(in->sys.leg_set_invert){	
-	in->pos_tar[2].x+=-spdx*dt;
-	in->pos_tar[2].y+=-spdy*dt;
+	in->pos_tar[2].x+=-(spdx+spd_wx)*dt;
+	in->pos_tar[2].y+=-(spdy+spd_wy)*dt;
 	 }else{
-	in->pos_tar[2].x+=-spdx*dt;
-	in->pos_tar[2].y+=-spdy*dt;
+	in->pos_tar[2].x+=-(spdx+spd_wx)*dt;
+	in->pos_tar[2].y+=-(spdy+spd_wy)*dt;
 	 }
 	in->pos_tar[2].x=LIMIT(in->pos_tar[2].x,-in->sys.limit.x,in->sys.limit.x);
 	in->pos_tar[2].y=LIMIT(in->pos_tar[2].y,-in->sys.limit.y,in->sys.limit.y);

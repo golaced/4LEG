@@ -409,6 +409,31 @@
           <WinNumber>1</WinNumber>
           <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\rate_delay_kuai</ItemText>
         </Ww>
+        <Ww>
+          <count>40</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>k_z</ItemText>
+        </Ww>
+        <Ww>
+          <count>41</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>en_off_trig</ItemText>
+        </Ww>
+        <Ww>
+          <count>42</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>k_trig1</ItemText>
+        </Ww>
+        <Ww>
+          <count>43</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.tar_w</ItemText>
+        </Ww>
+        <Ww>
+          <count>44</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>brain.spd_yaw</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
@@ -460,6 +485,11 @@
           <count>9</count>
           <WinNumber>2</WinNumber>
           <ItemText>off_local</ItemText>
+        </Ww>
+        <Ww>
+          <count>10</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>k_rad</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>

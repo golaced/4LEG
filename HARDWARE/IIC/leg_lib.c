@@ -35,7 +35,7 @@ u8 trig_list_l[5]=		 {0,3,2,4,1};
 float yaw_in=To_180_degrees(yaw);
 float yaw_temp=yaw_trig;
 u8 temp_id;
-				if(id==last_move_id)//id==last_last_move_id)
+				if(id==last_move_id||id==last_last_move_id)
 				{
 				  for(i=1;i<5;i++){
 					if(yaw_in>yaw_temp&&yaw_in<90+yaw_temp)
@@ -70,6 +70,28 @@ u8 temp_id;
 				}else	
         return id;
 }
+
+//跨腿重复保护器
+u8 leg_repeat_protect1(u8 id,u8 last_move_id,u8 last_last_move_id,float yaw,float yaw_trig){
+u8 i;	
+u8 trig_list_f[5]=		 {0,1,4,3,2};
+u8 trig_list_r[5]=		 {0,2,3,1,4};
+u8 trig_list_b[5]=		 {0,4,1,2,3};
+u8 trig_list_l[5]=		 {0,3,2,4,1};	
+float yaw_in=To_180_degrees(yaw);
+float yaw_temp=yaw_trig;
+u8 temp_id;
+				if(id==last_move_id||id==last_last_move_id)
+				{
+				  for(i=1;i<5;i++)
+					 {
+					   if(i!=last_move_id||i!=last_last_move_id)
+						 return id=i;
+					 }
+				}else	
+        return id;
+}
+
 //点沿矢量对称缩放
 void resize_point_with_arrow(float x,float y,float cx,float cy,float yaw,float k,float *nx,float *ny)
 {

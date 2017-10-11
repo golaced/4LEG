@@ -183,22 +183,26 @@ void brain_task(void *pdata)
 	if(cnt_soft_rst>10/0.02)
 	{brain.rst_all_soft=0;cnt_soft_rst=0;}
 	
-	float spd,spdy,spdx,yaw=0;
+	float spd,spdy,spdx,yaw=0,w_rad;
 	 spdy=my_deathzoom((Rc_Get_PWM.PITCH-1500)*k_rc_spd,0.1);//cm
 	 spdx=my_deathzoom((Rc_Get_PWM.ROLL-1500)*k_rc_spd,0.1);//cm
-	 
+	 w_rad=my_deathzoom((Rc_Get_PWM.YAW-1500)*0.001*4/3,0.1);//rad.cm
 	 spd=LIMIT(sqrt(pow(spdx,2)+pow(spdy,2)),0,6);
 	 if(spd>0){
 	 yaw=fast_atan2(spdx,spdy)*57.3;
 	  if(brain.rst_all_soft>0)
 			brain.rst_all_soft=0;
 	 }
+	 brain.spd_yaw=yaw;
+	 brain.tar_w=w_rad;
+	 if(brain.tar_w!=0&&spd==0)
+		 brain.spd=0.1;
+	 else{
 	 if(Rc_Get_PWM.AUX2>1500)
 	 brain.spd=0.1;	 
 	 else
 	 brain.spd=spd;
-	 brain.spd_yaw=yaw;
-	 
+   }
   }else
 	{
 	Rc_Get_PWM.THROTTLE=1500;

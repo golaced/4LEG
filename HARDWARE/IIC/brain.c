@@ -67,15 +67,19 @@ in->sys.center_off_when_move[Xr]=0;//-0.2;
 in->sys.center_off_when_move[Yr]=0;//-0.88;
 in->sys.leg_t=0.5;
 in->sys.leg_h=3.68;
-in->sys.desire_time=0.7;//0.76;
+#if USE_LEG_TRIG_DELAY
+in->sys.desire_time=0.4;//0.7;//0.76;
+#else
+in->sys.desire_time=0.8;//0.7;//0.76;
+#endif
 in->sys.leg_move_min_dt=in->sys.desire_time*0.68;//35 ;
 
 in->sys.k_spd_to_range=2;
 
 in->sys.yaw_dead=10;
 
-in->sys.down_h=0.88;
-in->sys.down_t=0.2;
+in->sys.down_h=0;//0.88;
+in->sys.down_t=0;//0.2;
 in->sys.in_rst_check=1.618;
 
 leg[1].sys.id=1;
@@ -409,7 +413,7 @@ u8 i,cnt,id,id_star,leg_move_pass_cnt;
 u8 leg_out_cnt[3]={0};//flag of state robot	
 u8 out_range_id[4];
 u8 loss_center_id[4];	
-static u8 last_move_leg,leg_flag;
+static u8 leg_flag;
 	for(i=1;i<5;i++){//cnt_leg_situation
 	if(leg[i].need_move==1)//out range leg
 	{
