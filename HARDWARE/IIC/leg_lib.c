@@ -85,7 +85,7 @@ u8 temp_id;
 				{
 				  for(i=1;i<5;i++)
 					 {
-					   if(i!=last_move_id||i!=last_last_move_id)
+					   if(i!=last_move_id&&i!=last_last_move_id)
 						 return id=i;
 					 }
 				}else	

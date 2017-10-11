@@ -3,7 +3,7 @@
 <title>Static Call Graph - [..\OBJ\UCOSII-3.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image ..\OBJ\UCOSII-3.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060183: Last Updated: Wed Oct 11 11:19:44 2017
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060183: Last Updated: Wed Oct 11 21:44:08 2017
 <BR><P>
 <H3>Maximum Stack Usage =        952 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -315,7 +315,7 @@ Global Symbols
 <LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Get_Cycle_T
 </UL>
 
-<P><STRONG><a name="[60]"></a>brain_task</STRONG> (Thumb, 2122 bytes, Stack size 72 bytes, ucos_task.o(.text))
+<P><STRONG><a name="[60]"></a>brain_task</STRONG> (Thumb, 2332 bytes, Stack size 72 bytes, ucos_task.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 952 + Unknown Stack Size
 <LI>Call Chain = brain_task &rArr; leg_task1 &rArr; center_control_global &rArr; check_point_to_trig &rArr; cal_dis_of_points &rArr; __hardfp_pow &rArr; sqrt &rArr; _dsqrt &rArr; __fpl_dnaninf
 </UL>
@@ -3040,12 +3040,8 @@ Global Symbols
 <LI><a href="#[1d1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_leg_need_move_global
 </UL>
 
-<P><STRONG><a name="[19a]"></a>leg_repeat_protect</STRONG> (Thumb, 514 bytes, Stack size 72 bytes, leg_lib.o(.text))
-<BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = leg_repeat_protect
-</UL>
-<BR>[Calls]<UL><LI><a href="#[197]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;To_180_degrees
-</UL>
-<BR>[Called By]<UL><LI><a href="#[1d1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_leg_need_move_global
+<P><STRONG><a name="[19a]"></a>leg_repeat_protect</STRONG> (Thumb, 514 bytes, Stack size 72 bytes, leg_lib.o(.text), UNUSED)
+<BR><BR>[Calls]<UL><LI><a href="#[197]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;To_180_degrees
 </UL>
 
 <P><STRONG><a name="[19b]"></a>leg_repeat_protect1</STRONG> (Thumb, 122 bytes, Stack size 72 bytes, leg_lib.o(.text), UNUSED)
@@ -3353,7 +3349,7 @@ Global Symbols
 
 <P><STRONG><a name="[2c0]"></a>READ_LEG_ID</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, leg.o(.text), UNUSED)
 
-<P><STRONG><a name="[79]"></a>leg_init</STRONG> (Thumb, 1256 bytes, Stack size 56 bytes, leg.o(.text))
+<P><STRONG><a name="[79]"></a>leg_init</STRONG> (Thumb, 1252 bytes, Stack size 56 bytes, leg.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 88<LI>Call Chain = leg_init &rArr; __aeabi_dmul
 </UL>
 <BR>[Calls]<UL><LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_f2d
@@ -3412,7 +3408,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[1c4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_publish
 </UL>
 
-<P><STRONG><a name="[1bf]"></a>curve_cal</STRONG> (Thumb, 404 bytes, Stack size 128 bytes, leg.o(.text))
+<P><STRONG><a name="[1bf]"></a>curve_cal</STRONG> (Thumb, 428 bytes, Stack size 128 bytes, leg.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 392<LI>Call Chain = curve_cal &rArr; __hardfp_pow &rArr; sqrt &rArr; _dsqrt &rArr; __fpl_dnaninf
 </UL>
 <BR>[Calls]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_pow
@@ -3424,7 +3420,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[1c1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;cal_pos_tar_from_curve
 </UL>
 
-<P><STRONG><a name="[1c0]"></a>cal_curve_from_pos</STRONG> (Thumb, 1500 bytes, Stack size 200 bytes, leg.o(.text))
+<P><STRONG><a name="[1c0]"></a>cal_curve_from_pos</STRONG> (Thumb, 1478 bytes, Stack size 200 bytes, leg.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 464<LI>Call Chain = cal_curve_from_pos &rArr; __hardfp_pow &rArr; sqrt &rArr; _dsqrt &rArr; __fpl_dnaninf
 </UL>
 <BR>[Calls]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_pow
@@ -3444,7 +3440,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[1c2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_follow_curve
 </UL>
 
-<P><STRONG><a name="[1c2]"></a>leg_follow_curve</STRONG> (Thumb, 546 bytes, Stack size 64 bytes, leg.o(.text))
+<P><STRONG><a name="[1c2]"></a>leg_follow_curve</STRONG> (Thumb, 542 bytes, Stack size 64 bytes, leg.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 528<LI>Call Chain = leg_follow_curve &rArr; cal_curve_from_pos &rArr; __hardfp_pow &rArr; sqrt &rArr; _dsqrt &rArr; __fpl_dnaninf
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1c1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;cal_pos_tar_from_curve
@@ -3471,7 +3467,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_drive
 </UL>
 
-<P><STRONG><a name="[1c6]"></a>leg_ground_check</STRONG> (Thumb, 60 bytes, Stack size 0 bytes, leg.o(.text))
+<P><STRONG><a name="[1c6]"></a>leg_ground_check</STRONG> (Thumb, 62 bytes, Stack size 0 bytes, leg.o(.text))
 <BR><BR>[Called By]<UL><LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_drive
 </UL>
 
@@ -3516,7 +3512,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_task1
 </UL>
 
-<P><STRONG><a name="[1c8]"></a>find_leg_need_move</STRONG> (Thumb, 918 bytes, Stack size 88 bytes, brain.o(.text), UNUSED)
+<P><STRONG><a name="[1c8]"></a>find_leg_need_move</STRONG> (Thumb, 926 bytes, Stack size 88 bytes, brain.o(.text), UNUSED)
 <BR><BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fast_atan2
 <LI><a href="#[197]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;To_180_degrees
 <LI><a href="#[15c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;RNG_Get_RandomRange
@@ -3697,7 +3693,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_task1
 </UL>
 
-<P><STRONG><a name="[1d2]"></a>center_control_global</STRONG> (Thumb, 8522 bytes, Stack size 360 bytes, brain_g.o(.text))
+<P><STRONG><a name="[1d2]"></a>center_control_global</STRONG> (Thumb, 7994 bytes, Stack size 360 bytes, brain_g.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 848<LI>Call Chain = center_control_global &rArr; check_point_to_trig &rArr; cal_dis_of_points &rArr; __hardfp_pow &rArr; sqrt &rArr; _dsqrt &rArr; __fpl_dnaninf
 </UL>
 <BR>[Calls]<UL><LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;my_deathzoom
@@ -3712,10 +3708,8 @@ Global Symbols
 <LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrt
 <LI><a href="#[1a3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sin
 <LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_pow
-<LI><a href="#[186]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_fabs
 <LI><a href="#[1a4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cos
 <LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_f2d
-<LI><a href="#[7f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_cdrcmple
 <LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_dmul
 <LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_cdcmple
 <LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_ddiv
@@ -3727,7 +3721,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_task1
 </UL>
 
-<P><STRONG><a name="[1d9]"></a>leg_tar_est_global</STRONG> (Thumb, 4494 bytes, Stack size 168 bytes, brain_g.o(.text))
+<P><STRONG><a name="[1d9]"></a>leg_tar_est_global</STRONG> (Thumb, 4596 bytes, Stack size 168 bytes, brain_g.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 352<LI>Call Chain = leg_tar_est_global &rArr; __hardfp_sin &rArr; __ieee754_rem_pio2 &rArr; __aeabi_dmul
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;limit_move_range_tangle
@@ -3748,28 +3742,25 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[1d1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_leg_need_move_global
 </UL>
 
-<P><STRONG><a name="[1d1]"></a>check_leg_need_move_global</STRONG> (Thumb, 2568 bytes, Stack size 176 bytes, brain_g.o(.text))
+<P><STRONG><a name="[1d1]"></a>check_leg_need_move_global</STRONG> (Thumb, 2456 bytes, Stack size 176 bytes, brain_g.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 840<LI>Call Chain = check_leg_need_move_global &rArr; cal_jiao_of_range_and_line_tangle &rArr; check_point_to_tangle &rArr; check_point_front_arrow &rArr; __hardfp_tan &rArr; __kernel_tan &rArr; __kernel_poly &rArr; __aeabi_dmul
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;cal_jiao_of_range_and_line_tangle
 <LI><a href="#[1ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_in_move_range_tangle
 <LI><a href="#[1db]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;conver_body_to_global
-<LI><a href="#[19a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_repeat_protect
 <LI><a href="#[199]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_leg_near_init
 <LI><a href="#[198]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;cal_dis_of_points
 <LI><a href="#[197]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;To_180_degrees
 <LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_f2d
 <LI><a href="#[7f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_cdrcmple
-<LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_cdcmple
 <LI><a href="#[7e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_ui2d
 <LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_ddiv
-<LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_d2f
 <LI><a href="#[1d9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_tar_est_global
 </UL>
 <BR>[Called By]<UL><LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_task1
 </UL>
 
-<P><STRONG><a name="[1dc]"></a>planner_leg</STRONG> (Thumb, 1256 bytes, Stack size 144 bytes, brain_g.o(.text), UNUSED)
+<P><STRONG><a name="[1dc]"></a>planner_leg</STRONG> (Thumb, 1294 bytes, Stack size 144 bytes, brain_g.o(.text), UNUSED)
 <BR><BR>[Calls]<UL><LI><a href="#[1b3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;cal_area_trig
 <LI><a href="#[1a6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_cross_arrow90_line
 <LI><a href="#[1a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_cross_arrow_line
@@ -3809,11 +3800,11 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;IMUupdate
 </UL>
 
-<P><STRONG><a name="[1df]"></a>initFirstOrderFilter</STRONG> (Thumb, 524 bytes, Stack size 0 bytes, fliter.o(.text))
+<P><STRONG><a name="[1df]"></a>initFirstOrderFilter</STRONG> (Thumb, 530 bytes, Stack size 0 bytes, fliter.o(.text))
 <BR><BR>[Called By]<UL><LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;firstOrderFilter
 </UL>
 
-<P><STRONG><a name="[84]"></a>firstOrderFilter</STRONG> (Thumb, 82 bytes, Stack size 4 bytes, fliter.o(.text))
+<P><STRONG><a name="[84]"></a>firstOrderFilter</STRONG> (Thumb, 90 bytes, Stack size 4 bytes, fliter.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = firstOrderFilter
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1df]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;initFirstOrderFilter
@@ -4167,7 +4158,6 @@ Global Symbols
 <LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;cycle_cal_oldx
 <LI><a href="#[184]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU6050_Data_Offset
 <LI><a href="#[1d9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_tar_est_global
-<LI><a href="#[1d2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;center_control_global
 <LI><a href="#[1d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_tar_est
 <LI><a href="#[1c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;att_control
 <LI><a href="#[1c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;find_leg_need_move
@@ -4502,7 +4492,6 @@ Global Symbols
 <LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Data_Receive_Anl
 <LI><a href="#[1e4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;my_cos
 <LI><a href="#[1d9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_tar_est_global
-<LI><a href="#[1d1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_leg_need_move_global
 <LI><a href="#[1d2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;center_control_global
 <LI><a href="#[1d0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;cal_pos_global
 <LI><a href="#[1d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_tar_est
@@ -4686,7 +4675,6 @@ Global Symbols
 <LI><a href="#[1e2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mx_sin
 <LI><a href="#[1d9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_tar_est_global
 <LI><a href="#[1cf]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;state_clear
-<LI><a href="#[1d1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_leg_need_move_global
 <LI><a href="#[1d2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;center_control_global
 <LI><a href="#[1d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_tar_est
 <LI><a href="#[1d7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;cal_deng_from_spd
@@ -4792,7 +4780,6 @@ Global Symbols
 <LI><a href="#[1e3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;my_sin
 <LI><a href="#[1d9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_tar_est_global
 <LI><a href="#[1d1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_leg_need_move_global
-<LI><a href="#[1d2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;center_control_global
 <LI><a href="#[1d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;leg_tar_est
 <LI><a href="#[1d7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;cal_deng_from_spd
 <LI><a href="#[1d4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_leg_need_move

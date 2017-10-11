@@ -1,9 +1,13 @@
 #include "include.h"
-u8 trig_list_f[5]=		 {0,1,4,3,2};
+//u8 trig_list_f[5]=		 {0,1,4,3,2};
+//u8 trig_list_r[5]=		 {0,2,3,1,4};
+//u8 trig_list_b[5]=		 {0,4,1,2,3};
+//u8 trig_list_l[5]=		 {0,3,2,4,1};
+
+u8 trig_list_f[5]=		 {0,1,4,2,3};
 u8 trig_list_r[5]=		 {0,2,3,1,4};
-u8 trig_list_b[5]=		 {0,4,1,2,3};
+u8 trig_list_b[5]=		 {0,4,1,3,2};
 u8 trig_list_l[5]=		 {0,3,2,4,1};
-	
 void state_clear(void)
 {
  u8 i;
@@ -114,7 +118,7 @@ for(i=1;i<5;i++){
 } 
 }	
 
-
+float limit_deng=12;
 float k_acc_control[2]={-0.1,-0.076};
 //重心控制
 float center_control_out[2];
@@ -333,7 +337,8 @@ void center_control_global(float dt)//????PID  GLOBAL
 	}
 
 	float size_k;
-	size_k=LIMIT(1-(1-brain.sys.leg_local[1].x/brain.sys.leg_local[1].y)*2*fabs(sin(brain.spd_yaw/57.3)),0,1);	
+	size_k=1;//LIMIT(1-(1-brain.sys.leg_local[1].x/brain.sys.leg_local[1].y)*2*fabs(sin(brain.spd_yaw/57.3)),0,1);	
+	
 	resize_point_with_arrow(tar_x,tar_y,brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,brain.spd_yaw,size_k,&center_tar_x,&center_tar_y);
 	
 			
@@ -341,16 +346,16 @@ void center_control_global(float dt)//????PID  GLOBAL
 	brain.global.tar_center[Yr]=brain.tar_center[Yr]=center_tar_y;
 
 	ero[Xr]=my_deathzoom((brain.tar_center[Xr]-brain.global.end_pos_global[0].x
-	+k_acc_control[Xr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(brain.now_acc[Xr],0.3)),0.001);
+	+k_acc_control[Xr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(LIMIT(brain.now_acc[Xr],-2,2),0.3)),0.001);
   ero[Yr]=my_deathzoom((brain.tar_center[Yr]-brain.global.end_pos_global[0].y
-	+k_acc_control[Yr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(brain.now_acc[Yr],0.3)),0.001);
+	+k_acc_control[Yr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(LIMIT(brain.now_acc[Yr],-2,2),0.3)),0.001);
 	float ero1[2];
 	ero1[Xr]=my_deathzoom((brain.tar_center[Xr]-(brain.global.end_pos_global[0].x+sin(brain.spd_yaw/57.3)*spd_use*dt)),0.001);
   ero1[Yr]=my_deathzoom((brain.tar_center[Yr]-(brain.global.end_pos_global[0].y+cos(brain.spd_yaw/57.3)*spd_use*dt)),0.001);
 	
 	
 	center_control_out[Xr]=ero[Xr]*brain.sys.k_center_c[Xr];
-	center_control_out[Yr]=ero[Yr]*brain.sys.k_center_c[Yr]+brain.now_acc[Yr];
+	center_control_out[Yr]=ero[Yr]*brain.sys.k_center_c[Yr];
   
 	float dis_ero=sqrt(pow(ero1[Xr],2)+pow(ero1[Yr],2));
 	brain.global.center_stable_weight=LIMIT((brain.sys.leg_local[1].x/2-LIMIT(dis_ero,0,brain.sys.leg_local[1].x/2))/(brain.sys.leg_local[1].x/2),0,1);
@@ -362,8 +367,8 @@ void center_control_global(float dt)//????PID  GLOBAL
   //output
 	for(i=1;i<5;i++){
 	if((leg[i].control_mode||brain.control_mode)&&leg[i].leg_ground&&!leg[i].sys.leg_ground_force){	
-	leg[i].deng[Xr]=LIMIT(center_control_out[Xr],-8.8,8.8);
-	leg[i].deng[Yr]=LIMIT(center_control_out[Yr],-8.8,8.8);	}
+	leg[i].deng[Xr]=LIMIT(center_control_out[Xr],-limit_deng,limit_deng);
+	leg[i].deng[Yr]=LIMIT(center_control_out[Yr],-limit_deng,limit_deng);	}
 	}	
 	
   //att set ?
@@ -374,6 +379,8 @@ void center_control_global(float dt)//????PID  GLOBAL
 }
 u8 last_move_id,last_last_move_id;
 u16 out_range_move[5];
+ float set_max=1.618;//2
+float min_spd=0.368;
 static u8 stop_leg;
 //判断机器人需要跨腿的ID // GLOBAL
 void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt)
@@ -451,11 +458,11 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
  } 
 //计算超限衰减值
  float max_out_range=brain.global.dis_leg_out[1];
- float set_max=2;
+
  for(i=1;i<5;i++)
  if(brain.global.dis_leg_out[i]>max_out_range) 
  {max_out_range=brain.global.dis_leg_out[i];}
-  brain.global.out_value=LIMIT(1-LIMIT(max_out_range,0,set_max)/set_max,0.1,1);
+  brain.global.out_value=LIMIT(1-LIMIT(max_out_range,0,set_max)/set_max,min_spd,1);
  
 //............................................................................................................
  //----------.......................跨腿触发条件:重心越过 两交点  .......................................
@@ -491,7 +498,7 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
    brain.leg_move_state=S_IDLE;
 	#endif
   static float center_now[2];
-  static u8 leg_flag;
+  static u8 leg_flag=1;
   static u16 cnt;
   u8 temp; 
 	switch(brain.leg_move_state)
@@ -503,7 +510,8 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
 		 float yaw_in=To_180_degrees(in->spd_yaw);
 		 float yaw_temp=in->sys.yaw_trig;
  
-			 if(brain.rst_all_soft){	 
+			 if(brain.rst_all_soft){	
+          leg_flag=1;				 
          for(i=1;i<5;i++)
 				   if(cal_dis_of_points(leg[i].pos_now[2].x,leg[i].pos_now[2].y,
 		        leg[i].sys.init_end_pos.x,leg[i].sys.init_end_pos.y)>brain.sys.in_rst_check)
@@ -524,7 +532,7 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
 				 
 				 id_need_to_move=LIMIT(id_need_to_move,1,4);
 					 
-				 if(brain.global.dis_leg_out[id_need_to_move]>0)
+				 if(brain.global.dis_leg_out[id_need_to_move]>0&&0)
 				 { out_range_move[id_need_to_move]=0;
 					 temp=id_need_to_move;
 				 }else{
@@ -547,8 +555,8 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
 				}
 
 				 //	姿态倾斜  缺
-				 
-				 in->move_id=leg_repeat_protect(temp, last_move_id, last_last_move_id,brain.spd_yaw,brain.sys.yaw_trig);
+				 in->move_id=temp;
+				 //in->move_id=leg_repeat_protect(temp, last_move_id, last_last_move_id,brain.spd_yaw,brain.sys.yaw_trig);
 				 last_last_move_id=last_move_id;
 				 last_move_id=in->move_id;
 				 
@@ -798,6 +806,8 @@ leg->pos_tar_trig[2].z=leg->sys.init_end_pos.z*h_k2;
  leg->pos_tar_trig[2].x,leg->pos_tar_trig[2].y
  ,in->sys.min_range,in->sys.max_range
  ,&leg->pos_tar_trig[2].x,&leg->pos_tar_trig[2].y);
+
+leg->pos_tar_trig[2].z+=RANDOM;
 
 if(brain.rst_all_soft>0)
 {

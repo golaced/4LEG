@@ -15,7 +15,7 @@ void READ_LEG_ID(LEG_STRUCT *in)
 {
 in->sys.id=0;
 }
-float off_local[2]={2.35,0};	
+float off_local[2]={2.35,0.0};	
 float k_z=0.968;
 u16 SET_PWM3_OFF=0;
 void leg_init( LEG_STRUCT *in,u8 id)
@@ -32,7 +32,7 @@ in->sys.off_local[1]=off_local[1];
 switch(in->sys.id){
 case 1:	
 in->sys.leg_set_invert=1;
-in->sys.PWM_OFF[0]=1850;//570;	
+in->sys.PWM_OFF[0]=1566;//570;	
 in->sys.PWM_OFF[1]=870;//1870;	
 in->sys.PWM_OFF[2]=1500+SET_PWM3_OFF;//1600		
 in->sys.PWM_OFF[3]=1380;
@@ -101,7 +101,7 @@ in->pos_tar_trig[2].y=in->sys.init_end_pos.y;
 in->pos_tar_trig[2].z=in->sys.init_end_pos.z;
 
 in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.36;	
-in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.25;	
+in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.5;//0.25;	
 in->sys.limit.z=(in->sys.l1+in->sys.l2+in->sys.l3)*0.925;	
 	
 in->sys.limit_min.z=(in->sys.l3-(in->sys.l2-in->sys.l1))*1.05;
@@ -120,7 +120,7 @@ in->sys.PWM_MAX[2]=2500-DL;
 switch(in->sys.id){
 case 1:
 in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
-in->sys.PWM_PER_DEGREE[1]=12.64;
+in->sys.PWM_PER_DEGREE[1]=11.34;//12.64;
 in->sys.PWM_PER_DEGREE[2]=11.34;//9.34;
 break;
 case 2:

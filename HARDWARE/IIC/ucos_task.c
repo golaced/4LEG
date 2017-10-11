@@ -110,6 +110,7 @@ void leg4_task(void *pdata)
 
 //========================外环  任务函数============================路径规划
 float k_rc_spd=0.014;
+float k_z_c= 0.008;
 OS_STK BRAIN_TASK_STK[BRAIN_STK_SIZE];
 float test[5]={1,1,4};
 float k_rc[2]={0.015,0.015};
@@ -187,14 +188,14 @@ void brain_task(void *pdata)
 	 spdy=my_deathzoom((Rc_Get_PWM.PITCH-1500)*k_rc_spd,0.1);//cm
 	 spdx=my_deathzoom((Rc_Get_PWM.ROLL-1500)*k_rc_spd,0.1);//cm
 	 w_rad=my_deathzoom((Rc_Get_PWM.YAW-1500)*0.001*4/3,0.1);//rad.cm
-	 spd=LIMIT(sqrt(pow(spdx,2)+pow(spdy,2)),0,6);
+	 spd=LIMIT(sqrt(pow(spdx,2)+pow(spdy,2)),0,2);
 	 if(spd>0){
 	 yaw=fast_atan2(spdx,spdy)*57.3;
 	  if(brain.rst_all_soft>0)
 			brain.rst_all_soft=0;
 	 }
 	 brain.spd_yaw=yaw;
-	 brain.tar_w=w_rad;
+	 brain.tar_w=LIMIT(w_rad,-1,1);
 	 if(brain.tar_w!=0&&spd==0)
 		 brain.spd=0.1;
 	 else{
@@ -210,7 +211,7 @@ void brain_task(void *pdata)
 	Rc_Get_PWM.PITCH=1500;
 	Rc_Get_PWM.YAW=1500;
 	}
-	
+	brain.tar_w+=LIMIT(mpu6050_fc.Gyro_deg.z*k_z_c,-1,1);brain.tar_w=LIMIT(brain.tar_w,-1,1);
 	static u8 state_spd_rst;
 	switch(state_spd_rst){
 		case 0:

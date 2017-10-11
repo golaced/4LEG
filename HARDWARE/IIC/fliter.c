@@ -191,7 +191,7 @@ void simple_3d_trans(_xyz_f_t *ref, _xyz_f_t *in, _xyz_f_t *out) //Ð¡·¶Î§ÄÚÕýÈ·¡
 
 
 float ACC_HIGHPASS_TAU        = 4.0;
-float ACC_LOWPASS_TAU        = 0.05;
+float ACC_LOWPASS_TAU        = 0.1;
 float ACC_LOWPASS_SAMPLE_TIME =0.005f;
 float ACC_LOWPASS_A        ;
 float ACC_LOWPASS_GX1      ;
@@ -215,7 +215,7 @@ firstOrderFilterData_t firstOrderFilters[NUMBER_OF_FIRST_ORDER_FILTERS];
 
 void initFirstOrderFilter(float T)
 { 
-
+  ACC_LOWPASS_SAMPLE_TIME=T;
 	ACC_LOWPASS_A       =    (2.0f * ACC_LOWPASS_TAU / ACC_LOWPASS_SAMPLE_TIME );
 	ACC_LOWPASS_GX1    =     (1.0f / (1.0f + ACC_LOWPASS_A));
 	ACC_LOWPASS_GX2    =     ACC_LOWPASS_GX1;
@@ -258,7 +258,7 @@ float firstOrderFilter(float input, struct firstOrderFilterData *filterParameter
 {   static u8 init; 
     float output;
     if(!init){init=1;initFirstOrderFilter(T);}
-		
+		initFirstOrderFilter(T);
     output = filterParameters->gx1 * input +
              filterParameters->gx2 * filterParameters->previousInput -
              filterParameters->gx3 * filterParameters->previousOutput;

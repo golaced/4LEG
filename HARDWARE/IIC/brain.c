@@ -34,7 +34,7 @@ in->sys.leg_local[4].z=0;
 
 in->area_of_leg[1]=(leg[1].sys.init_end_pos.x+W/2)*(leg[1].sys.init_end_pos.y+L/2)*4;
 	
-in->sys.min_range=0.707*leg[1].sys.l3*0.1;//7.8 4.742556
+in->sys.min_range=0.707*leg[1].sys.l3*0.3;//7.8 4.742556
 in->sys.max_range=0.707*leg[1].sys.l2*0.78;//6.3 3.830526
 in->sys.leg_move_range[Yr]=MAX(in->sys.max_range, in->sys.min_range);//cm		
 in->sys.leg_move_range[Xr]=W/4*0.88;//cm	
@@ -68,7 +68,7 @@ in->sys.center_off_when_move[Yr]=0;//-0.88;
 in->sys.leg_t=0.5;
 in->sys.leg_h=3.68;
 #if USE_LEG_TRIG_DELAY
-in->sys.desire_time=0.4;//0.7;//0.76;
+in->sys.desire_time=0.468;//0.7;//0.76;
 #else
 in->sys.desire_time=0.8;//0.7;//0.76;
 #endif
