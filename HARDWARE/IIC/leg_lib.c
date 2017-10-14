@@ -105,10 +105,17 @@ if(k==1)
 }else{	
 line_function_from_arrow( cx, cy, yaw, &kc,&bc);
 line_function90_from_arrow(x, y, yaw, &kp_90,&bp_90);
-cross_point_of_lines(kc,bc,kp_90,bp_90,&cro_x,&cro_y);	
-	
-*nx=cro_x+(cro_x-x)*k;	
-*ny=cro_y+(cro_y-y)*k;	
+cross_point_of_lines(kc,bc,kp_90,bp_90,&cro_x,&cro_y);
+float dis=cal_dis_of_points(x,y,cro_x,cro_y)*(1-k);	
+u8 flag=check_point_front_arrow( cx, cy, x, y, yaw+90);
+float yaw1;
+if(flag)
+yaw1=yaw+90;
+else
+yaw1=yaw-90;
+
+*nx=x+sin(yaw1/57.3)*dis;
+*ny=y+cos(yaw1/57.3)*dis;	
 }	
 }
 
@@ -171,7 +178,7 @@ u8 check_point_front_arrow(float x,float y,float cx,float cy,float yaw)
 	int flag[2];
 	flag[0]=kc_90*cx_t+bc_90-cy_t;
 	flag[1]=kc_90*x+bc_90-y;
-	if(flag[0]*flag[1]>0)
+	if((flag[0]>=0&&flag[1]>=0)||(flag[0]<0&&flag[1]<0))
 	return 1;
 	else 
   return 0;
