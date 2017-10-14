@@ -119,7 +119,8 @@ for(i=1;i<5;i++){
 }	
 
 float limit_deng=12;
-float k_acc_control[2]={-0.1,-0.076};
+float k_acc_control[2]={-0.076,-0.076};
+float k_spd_control[2]={0.25,0.15};
 //ÖØÐÄ¿ØÖÆ
 float center_control_out[2];
 void center_control_global(float dt)//????PID  GLOBAL
@@ -346,8 +347,10 @@ void center_control_global(float dt)//????PID  GLOBAL
 	brain.global.tar_center[Yr]=brain.tar_center[Yr]=center_tar_y;
 
 	ero[Xr]=my_deathzoom((brain.tar_center[Xr]-brain.global.end_pos_global[0].x
+	+k_spd_control[Xr]*my_deathzoom(LIMIT(brain.now_spd[Xr],-0.66,0.66),0.01)
 	+k_acc_control[Xr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(LIMIT(brain.now_acc[Xr],-2,2),0.3)),0.001);
   ero[Yr]=my_deathzoom((brain.tar_center[Yr]-brain.global.end_pos_global[0].y
+	+k_spd_control[Yr]*my_deathzoom(LIMIT(brain.now_spd[Yr],-0.66,0.66),0.01)
 	+k_acc_control[Yr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(LIMIT(brain.now_acc[Yr],-2,2),0.3)),0.001);
 	float ero1[2];
 	ero1[Xr]=my_deathzoom((brain.tar_center[Xr]-(brain.global.end_pos_global[0].x+sin(brain.spd_yaw/57.3)*spd_use*dt)),0.001);
@@ -728,7 +731,7 @@ u8 en_off_trig=1;
 float h_k2=1.0;
 float k_off=0.2;
 float k_trig1=2;
-float k_rad=6;
+float k_rad=1.6;
 void leg_tar_est_global(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt)
 {
 u8 id=leg->sys.id;
@@ -765,8 +768,16 @@ else
 off_y=LIMIT(leg->pos_now[2].y-leg->sys.init_end_pos.y,-leg->sys.off_local[1],0)*fabs(sin(tar_yaw/57.3));	
 
 float spd_wx,spd_wy;
-float x_temp=fabs(sin((90-brain.sys.yaw_trig)/57.3))*brain.tar_w;
-float y_temp=fabs(cos((90-brain.sys.yaw_trig)/57.3))*brain.tar_w;
+float tar_w;
+float min=1.45;
+if(brain.tar_w<min&&brain.tar_w>0)
+	tar_w=min;
+else if(brain.tar_w>-min&&brain.tar_w<0)
+	tar_w=-min;
+else
+	tar_w=brain.tar_w;
+float x_temp=fabs(sin((90-brain.sys.yaw_trig)/57.3))*tar_w*k_rad;
+float y_temp=fabs(cos((90-brain.sys.yaw_trig)/57.3))*tar_w*k_rad;
 	switch(id)
 	{
 	case 1:
@@ -789,12 +800,14 @@ float y_temp=fabs(cos((90-brain.sys.yaw_trig)/57.3))*brain.tar_w;
 	
 if(brain.spd>0.68)
 spd=LIMIT(spd,brain.spd*2,10);
-if(spd_wx>0.18)
-spd_wx=LIMIT(spd_wx,spd_wx*k_rad,10);
-if(spd_wy>0.18)
-spd_wy=LIMIT(spd_wy,spd_wy*k_rad,10);
-tar_x=LIMIT(sin(tar_yaw/ 57.3f)*LIMIT((spd+spd_wx)*off_k*in->sys.k_spd_to_range,-8,8),-in->sys.leg_move_range[Xr],in->sys.leg_move_range[Xr]);
-tar_y=LIMIT(cos(tar_yaw/ 57.3f)*LIMIT((spd+spd_wy)*off_k*in->sys.k_spd_to_range,-8,8),-in->sys.leg_move_range[Yr],in->sys.leg_move_range[Yr]);
+//if(spd_wx>0.18)
+//spd_wx=LIMIT(spd_wx,spd_wx*k_rad,10);
+//if(spd_wy>0.18)
+//spd_wy=LIMIT(spd_wy,spd_wy*k_rad,10);
+
+
+tar_x=spd_wx+LIMIT(sin(tar_yaw/ 57.3f)*LIMIT((spd)*off_k*in->sys.k_spd_to_range,-8,8),-in->sys.leg_move_range[Xr],in->sys.leg_move_range[Xr]);
+tar_y=spd_wy+LIMIT(cos(tar_yaw/ 57.3f)*LIMIT((spd)*off_k*in->sys.k_spd_to_range,-8,8),-in->sys.leg_move_range[Yr],in->sys.leg_move_range[Yr]);
 leg->pos_tar_trig[2].x=leg->sys.init_end_pos.x*k_trig1+tar_x+RANDOM+off_x*cos(tar_yaw/ 57.3f)*en_off_trig;
 leg->pos_tar_trig[2].y=leg->sys.init_end_pos.y*k_trig1+tar_y+RANDOM+off_y*sin(tar_yaw/ 57.3f)*en_off_trig;
 leg->pos_tar_trig[2].z=leg->sys.init_end_pos.z*h_k2;

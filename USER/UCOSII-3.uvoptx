@@ -222,7 +222,7 @@
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>leg</ItemText>
+          <ItemText>leg,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
@@ -434,6 +434,36 @@
           <WinNumber>1</WinNumber>
           <ItemText>brain.spd_yaw</ItemText>
         </Ww>
+        <Ww>
+          <count>45</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>limit_deng</ItemText>
+        </Ww>
+        <Ww>
+          <count>46</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>min_spd</ItemText>
+        </Ww>
+        <Ww>
+          <count>47</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>set_max</ItemText>
+        </Ww>
+        <Ww>
+          <count>48</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.leg_move_range1</ItemText>
+        </Ww>
+        <Ww>
+          <count>49</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>k_z_c</ItemText>
+        </Ww>
+        <Ww>
+          <count>50</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>Yaw</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
@@ -505,6 +535,26 @@
           <count>13</count>
           <WinNumber>2</WinNumber>
           <ItemText>brain.global.dis_leg_out</ItemText>
+        </Ww>
+        <Ww>
+          <count>14</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>brain.now_acc</ItemText>
+        </Ww>
+        <Ww>
+          <count>15</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>ACC_LOWPASS_TAU</ItemText>
+        </Ww>
+        <Ww>
+          <count>16</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>min_spd</ItemText>
+        </Ww>
+        <Ww>
+          <count>17</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>set_max</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>

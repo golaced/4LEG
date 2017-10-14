@@ -15,7 +15,7 @@ void READ_LEG_ID(LEG_STRUCT *in)
 {
 in->sys.id=0;
 }
-float off_local[2]={2.35,0.0};	
+float off_local[2]={2.25,0.68};//{2.35,0.0};	
 float k_z=0.968;
 u16 SET_PWM3_OFF=0;
 void leg_init( LEG_STRUCT *in,u8 id)
@@ -100,9 +100,9 @@ in->pos_tar_trig[2].x=in->sys.init_end_pos.x;
 in->pos_tar_trig[2].y=in->sys.init_end_pos.y;
 in->pos_tar_trig[2].z=in->sys.init_end_pos.z;
 
-in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.36;	
-in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*0.98*0.5;//0.25;	
-in->sys.limit.z=(in->sys.l1+in->sys.l2+in->sys.l3)*0.925;	
+in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*cos(25/57.3)/2;	
+in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*cos(25/57.3)/2;//0.25;	
+in->sys.limit.z=(in->sys.l1+in->sys.l2*cos(30/57.3)+in->sys.l3)*cos(30/57.3);	
 	
 in->sys.limit_min.z=(in->sys.l3-(in->sys.l2-in->sys.l1))*1.05;
 
@@ -471,7 +471,8 @@ static float time;
 	in->pos_tar[2].y+=-(spdy+spd_wy)*dt;
 	 }
 	in->pos_tar[2].x=LIMIT(in->pos_tar[2].x,-in->sys.limit.x,in->sys.limit.x);
-	in->pos_tar[2].y=LIMIT(in->pos_tar[2].y,-in->sys.limit.y,in->sys.limit.y);
+	in->pos_tar[2].y=LIMIT(in->pos_tar[2].y,-in->sys.limit.y,in->sys.limit.y);	 
+	limit_range_leg(in->pos_tar[2].x,in->pos_tar[2].y,in->sys.limit.x,in->sys.limit.y,&in->pos_tar[2].x,&in->pos_tar[2].y);
  // if(brain.spd==0||fabs(brain.att[0])>36||fabs(brain.att[1])>36)
 	in->pos_tar[2].z=LIMIT(in->pos_tar_trig[2].z+att_control_out[id],-in->sys.limit.z,in->sys.limit.z);	 
 //  else	

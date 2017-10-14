@@ -271,6 +271,40 @@ void conver_body_to_global(float bx,float by,float *gx,float *gy)
  *gy=by+brain.sys.leg_local[1].y-leg[4].pos_now[2].y+brain.sys.off_cor[Yr];
 }
 
+
+void limit_range_leg(float x,float y,float min,float max,float *xout,float *yout)
+{
+  u8 flag;
+	float yaw;
+	float jiaodiao[2][2]={0};
+	float temp;
+	float k;
+	float dis[2];
+   flag=in_circle(0,0,min,max,x,y);
+   if(flag==1){
+		 *xout=x;
+	   *yout=y;
+	 }else 
+	 {
+	   k=y/(x+0.00001);
+	
+	 //计算速度直线与椭圆交点
+	 float temp=sqrt(pow(min,2)/(1+pow(min*k/max,2)));
+	 //判断速度方向交点符号
+	 jiaodiao[0][Xr]=temp; 
+	 jiaodiao[1][Xr]=-temp; 
+	 jiaodiao[0][Yr]=k*jiaodiao[0][Xr];
+	 jiaodiao[1][Yr]=k*jiaodiao[1][Xr];
+	 dis[0]=cal_dis_of_points(x,y,jiaodiao[0][Xr],jiaodiao[0][Yr]);
+   dis[1]=cal_dis_of_points(x,y,jiaodiao[1][Xr],jiaodiao[1][Yr]);
+	 if(dis[0]<dis[1])
+	 {*xout=jiaodiao[0][Xr];*yout=jiaodiao[0][Yr];}
+	 else
+	 {*xout=jiaodiao[1][Xr];*yout=jiaodiao[1][Yr];}
+	 }
+}	
+
+
 //移动区域限幅度 方框
 void limit_move_range_tangle(u8 id,float cx,float cy,float x,float y,float min,float max,float *outx,float *outy)
 {

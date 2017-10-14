@@ -215,6 +215,7 @@ u8 check_point_to_tangle(float x,float y,float yaw,float x1,float y1,float x2,fl
 //一个点在三角形内部
 u8 inTrig(float x, float y,float x1,float y1,float x2,float y2,float x3,float y3);
 float cal_steady_s(float cx,float cy,float x1,float y1,float x2,float y2,float x3, float y3 );
+void limit_range_leg(float x,float y,float min,float max,float *xout,float *yout);
 u8 segmentsIntr(POS b,POS c,POS d,POS a,float *x,float *y);
 //一个点在四边形内部
 u8 inTrig2(float x, float y,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4);
