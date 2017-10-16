@@ -7,6 +7,9 @@
 #define DENG_LIMIT_TEST 0
 #define USE_LEG_TRIG_DELAY 1
 #define USE_SIMPLE_CENTER 0
+#define HORIZON_USE_FORWARD_CENTER 1
+
+
 #define Xs 0
 #define Ys 1
 #define Zs 2
@@ -75,7 +78,7 @@ typedef struct
 { u8 leg_connect,control_angle;
 	u16 leg_loss_cnt,dt_leg_min_trig_cnt,no_control_cnt;
 	float att_off[2],k_spd_to_range,kp_center[2],k_center_fp,move_range_k,k_center_c[2];
-	float desire_time,min_range,max_range,off_cor[2],down_h,down_t,yaw_dead;
+	float desire_time,desire_time_init,min_range,max_range,off_cor[2],down_h,down_t,yaw_dead;
 	POS leg_local[5];
 	u8 leg_use_ground;
 	u8 init_mode;
@@ -106,7 +109,7 @@ typedef struct
 	u8 force_stop,loss_center,ground_leg_num,can_move_leg;	
 	u8 leg_move[5],leg_out_range[5],way;	
 	BRAIN_GLOBAL global;
-	float tar_att_force[3],tar_att[3],att[3],tar_w,spd,spd_d,spd_yaw;
+	float tar_att_force[3],tar_att[3],att[3],tar_w,tar_h,spd,spd_d,spd_yaw;
   u8 center_stable,move_id,leg_move_state;
 	float area_of_leg[2];
 	POS center;
@@ -147,6 +150,7 @@ void cal_deng_from_spd(BRAIN_STRUCT *in);
 void cal_target_of_center_move(BRAIN_STRUCT *in);
 void leg_tar_est(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt);
 void att_control(float dt);
+void fall_treat(float dt,float *out);
 extern float center_control_out[2],att_control_out[5];;
 #define Xr 0
 #define Yr 1

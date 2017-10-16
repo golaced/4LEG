@@ -114,8 +114,8 @@ yaw1=yaw+90;
 else
 yaw1=yaw-90;
 
-*nx=x+sin(yaw1/57.3)*dis;
-*ny=y+cos(yaw1/57.3)*dis;	
+*nx=x+sin(yaw1*ANGLE_TO_RADIAN)*dis;
+*ny=y+cos(yaw1*ANGLE_TO_RADIAN)*dis;	
 }	
 }
 
@@ -132,7 +132,7 @@ void line_function_from_arrow(float x,float y,float yaw,float *k,float *b)
 { 
 	float tyaw=90-yaw+0.000011;
 	float k_temp=0;
-  *k=k_temp=tan(tyaw/57.3);
+  *k=k_temp=tan(tyaw*ANGLE_TO_RADIAN);
   *b=y-k_temp*x;
 }	
 
@@ -141,7 +141,7 @@ void line_function90_from_arrow(float x,float y,float yaw,float *k,float *b)
 { 
 	float tyaw=90-yaw+0.000011;
 	float k_temp=0;
-  *k=k_temp=-1/tan(tyaw/57.3);
+  *k=k_temp=-1/tan(tyaw*ANGLE_TO_RADIAN);
   *b=y-k_temp*x;
 }	
 
@@ -172,13 +172,13 @@ u8 cross_point_of_lines(float k1,float b1,float k2,float b2,float *x,float *y)
 u8 check_point_front_arrow(float x,float y,float cx,float cy,float yaw)
 { 
   float tyaw=90-yaw+0.000011;
-	float kc_90=-1/tan(tyaw/57.3);
+	float kc_90=-1/tan(tyaw*ANGLE_TO_RADIAN);
 	float bc_90=cy-kc_90*cx;
-	float cx_t=cx+sin(yaw/57.3)*1,cy_t=cy+cos(yaw/57.3)*1;
+	float cx_t=cx+sin(yaw*ANGLE_TO_RADIAN)*1,cy_t=cy+cos(yaw*ANGLE_TO_RADIAN)*1;
 	int flag[2];
 	flag[0]=kc_90*cx_t+bc_90-cy_t;
 	flag[1]=kc_90*x+bc_90-y;
-	if((flag[0]>=0&&flag[1]>=0)||(flag[0]<0&&flag[1]<0))
+	if((flag[0]>0&&flag[1]>0)||(flag[0]<0&&flag[1]<0))
 	return 1;
 	else 
   return 0;
@@ -200,7 +200,7 @@ u8 check_points_same_side(float x1,float y1,float x2,float y2,float k,float b)
 u8 check_cross_arrow_line(float cx,float cy,float yaw,float k,float b,float *x,float *y)
 { 
   float tyaw=90-yaw+0.000011;
-	float kc=tan(tyaw/57.3);
+	float kc=tan(tyaw*ANGLE_TO_RADIAN);
 	float bc=cy-kc*cx;
 	float cro_x,cro_y;
 	u8 flag;	
@@ -223,7 +223,7 @@ u8 check_cross_arrow_line(float cx,float cy,float yaw,float k,float b,float *x,f
 u8 check_cross_arrow90_line(float cx,float cy,float yaw,float k,float b,float *x,float *y)
 { 
   float tyaw=90-yaw+0.000011;
-	float kc=tan(tyaw/57.3);
+	float kc=tan(tyaw*ANGLE_TO_RADIAN);
 	float kc_90=-1/(kc+0.00001);
 	float bc_90=cy-kc_90*cx;
 	float cro_x,cro_y;
@@ -745,7 +745,7 @@ u8 check_point_to_trig(float x,float y,float yaw,float x1,float y1,float x2,floa
 void cal_jiao_of_tuo_and_line(float cx,float cy,float d_short,float d_long,float yaw,float *jiao1_x,float *jiao1_y,float *jiao2_x,float *jiao2_y)
 {
    float tyaw=90-yaw+0.000011;
-	 float tan_yaw=tan(tyaw/57.3);
+	 float tan_yaw=tan(tyaw*ANGLE_TO_RADIAN);
 	 float jiaodiao[2][2]={0};
 	 //计算速度直线与椭圆交点
 	 float temp=sqrt(pow(d_short,2)/(1+pow(d_short*tan_yaw/d_long,2)));

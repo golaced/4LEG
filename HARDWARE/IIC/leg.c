@@ -15,7 +15,7 @@ void READ_LEG_ID(LEG_STRUCT *in)
 {
 in->sys.id=0;
 }
-float off_local[2]={2.25,0.68};//{2.35,0.0};	
+float off_local[2]={2.35,0.68};//{2.35,0.0};	
 float k_z=0.968;
 u16 SET_PWM3_OFF=0;
 void leg_init( LEG_STRUCT *in,u8 id)
@@ -100,8 +100,8 @@ in->pos_tar_trig[2].x=in->sys.init_end_pos.x;
 in->pos_tar_trig[2].y=in->sys.init_end_pos.y;
 in->pos_tar_trig[2].z=in->sys.init_end_pos.z;
 
-in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*cos(25/57.3)/2;	
-in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*cos(25/57.3)/2;//0.25;	
+in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25/57.3);	
+in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25/57.3);//0.25;	
 in->sys.limit.z=(in->sys.l1+in->sys.l2*cos(30/57.3)+in->sys.l3)*cos(30/57.3);	
 	
 in->sys.limit_min.z=(in->sys.l3-(in->sys.l2-in->sys.l1))*1.05;
@@ -375,6 +375,7 @@ u8 id=in->sys.id;
 static u16 ground_mask[5];	
 static u8 state[5];
 static float time[5],delay[5];	
+static float temp_h;
 //判断是否重合等
 	
 switch(state[id])
@@ -390,6 +391,7 @@ break;
 case 1://有时间和轨迹计算每一时间的曲线坐标
 if(*en){
 in->pos_tar[2].z=in->pos_now[2].z+down_h;
+temp_h=in->pos_now[2].z;
 {state[id]=2;}
 
 }
@@ -401,13 +403,13 @@ if(time[id]>down_t)
 {
 state[id]=3;
 time[id]=0;		
-in->pos_tar[2].z=in->sys.init_end_pos.z-1.61*down_h;
+in->pos_tar[2].z=temp_h-1.61*down_h;
 }
 }
 break;///////////////
 case 3:
 if(*en){
-in->pos_tar[2].z=in->sys.init_end_pos.z-1.61*down_h;	
+in->pos_tar[2].z=temp_h-1.61*down_h;	
 cal_curve_from_pos(in,desire_time);	
 time[id]+=dt;
 state[id]=4;
@@ -473,12 +475,9 @@ static float time;
 	in->pos_tar[2].x=LIMIT(in->pos_tar[2].x,-in->sys.limit.x,in->sys.limit.x);
 	in->pos_tar[2].y=LIMIT(in->pos_tar[2].y,-in->sys.limit.y,in->sys.limit.y);	 
 	limit_range_leg(in->pos_tar[2].x,in->pos_tar[2].y,in->sys.limit.x,in->sys.limit.y,&in->pos_tar[2].x,&in->pos_tar[2].y);
- // if(brain.spd==0||fabs(brain.att[0])>36||fabs(brain.att[1])>36)
-	in->pos_tar[2].z=LIMIT(in->pos_tar_trig[2].z+att_control_out[id],-in->sys.limit.z,in->sys.limit.z);	 
-//  else	
-//  in->pos_tar[2].z+=LIMIT(att_control_out[id],-1.6,1.6)*dt;	 
-	
-	in->pos_tar[2].z=LIMIT(in->pos_tar[2].z,-in->sys.limit.z,in->sys.limit.z);
+	 
+	in->pos_tar[2].z=LIMIT(in->pos_tar[2].z+att_control_out[id]+(brain.tar_h-in->pos_now[2].z)*dt*1.618,in->sys.limit_min.z,in->sys.limit.z);	 
+	in->pos_tar[2].z=LIMIT(in->pos_tar[2].z,in->sys.limit_min.z,in->sys.limit.z);
 	
 	}
 }	
@@ -643,7 +642,7 @@ void leg_drive(LEG_STRUCT * in,float dt)
 		//着地
 		leg_ground_check(in);
 		//蹬
-		if(!in->curve_trig&&(fabs(in->deng[1])>0||fabs(in->deng[0])>0||(att_control_out[0]!=0)))
+		if(!in->curve_trig)//&&(fabs(in->deng[1])>0||fabs(in->deng[0])>0||(att_control_out[0]!=0)))
 		cal_pos_tar_for_deng(in,in->deng[0],in->deng[1],dt);	
 		//输出	
 	  leg_publish(in);

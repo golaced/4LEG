@@ -109,7 +109,7 @@ void leg4_task(void *pdata)
 }		
 
 //========================外环  任务函数============================路径规划
-float k_rc_spd=0.014;
+float k_rc_spd=0.005;
 float k_z_c= 0.008;
 OS_STK BRAIN_TASK_STK[BRAIN_STK_SIZE];
 float test[5]={1,1,4};
@@ -171,7 +171,7 @@ void brain_task(void *pdata)
 	else
 	 brain.power_all=brain.control_mode=0;
 	static u16 cnt_soft_rst;
-	//brain.sys.desire_time=LIMIT(0.5+(Rc_Get_PWM.AUX4-1500)/1000.,0.2,2);
+	brain.sys.desire_time=LIMIT(0.5+(Rc_Get_PWM.AUX4-1500)/1000.,0.2,2);
 	if(flag&&Rc_Get_PWM.AUX1<1500)
 	{flag=0;brain.rst_all_soft=1;cnt_soft_rst=0;}
 //	if(brain.rst_all_soft>0)
@@ -188,13 +188,23 @@ void brain_task(void *pdata)
 	 spdy=my_deathzoom((Rc_Get_PWM.PITCH-1500)*k_rc_spd,0.1);//cm
 	 spdx=my_deathzoom((Rc_Get_PWM.ROLL-1500)*k_rc_spd,0.1);//cm
 	 w_rad=my_deathzoom((Rc_Get_PWM.YAW-1500)*0.001*4,0.4);//rad.cm
-	 spd=LIMIT(sqrt(pow(spdx,2)+pow(spdy,2)),0,2);
+	 spd=LIMIT(sqrt(pow(spdx,2)+pow(spdy,2)),0,2)*brain.sys.desire_time_init/brain.sys.desire_time*10/7;
+	 
 	 if(spd>0){
 	 yaw=fast_atan2(spdx,spdy)*57.3;
 	  if(brain.rst_all_soft>0)
 			brain.rst_all_soft=0;
 	 }
-	 brain.spd_yaw=yaw;
+	 if(yaw>60&&yaw<90+60)//r
+	{brain.spd_yaw=90;}
+	else if(yaw<-60&&yaw>-90-60)//l
+	{brain.spd_yaw=-90;}
+	else if((yaw<60&&yaw>=0)||(yaw>-60&&yaw<0))//f
+	{brain.spd_yaw=0;}
+	else//b
+	{brain.spd_yaw=180;}
+	
+	 //brain.spd_yaw=yaw;
 	 brain.tar_w=LIMIT(w_rad,-2,2);
 	 if(brain.tar_w!=0&&spd==0)
 		 brain.spd=0.1;
@@ -204,6 +214,10 @@ void brain_task(void *pdata)
 	 else
 	 brain.spd=spd;
    }
+	 
+	 	brain.tar_h=LIMIT(leg[1].sys.init_end_pos.z-(Rc_Get_PWM.THROTTLE-1000)/1000.*(leg[1].sys.init_end_pos.z-leg[1].sys.limit_min.z)    
+	,leg[1].sys.limit_min.z,leg[1].sys.init_end_pos.z);
+	 
   }else
 	{
 	Rc_Get_PWM.THROTTLE=1500;
@@ -211,7 +225,7 @@ void brain_task(void *pdata)
 	Rc_Get_PWM.PITCH=1500;
 	Rc_Get_PWM.YAW=1500;
 	}
-	brain.tar_w+=LIMIT(mpu6050_fc.Gyro_deg.z*k_z_c,-1,1);brain.tar_w=LIMIT(brain.tar_w,-2,2);
+	brain.tar_w+=LIMIT(my_deathzoom(mpu6050_fc.Gyro_deg.z,6)*k_z_c,-1,1);brain.tar_w=LIMIT(brain.tar_w,-1.169,1.169);
 	static u8 state_spd_rst;
 	switch(state_spd_rst){
 		case 0:
