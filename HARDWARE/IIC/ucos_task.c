@@ -110,13 +110,15 @@ void leg4_task(void *pdata)
 
 //========================外环  任务函数============================路径规划
 float k_rc_spd=0.005;
-float k_z_c= 0.008;
+float k_z_c= 0.16;
 OS_STK BRAIN_TASK_STK[BRAIN_STK_SIZE];
 float test[5]={1,1,4};
 float k_rc[2]={0.015,0.015};
+float Yaw_set;
+float kp_yaw=0.68;
 void brain_task(void *pdata)
 {	static u8 cnt,cnt1,cnt2,init,rc_update;	
-	float T;
+	float T;float spd,spdy,spdx,yaw=0,w_rad;
 	u16 temps;
 	leg_init(&leg[1],1);
 	leg_init(&leg[2],2);
@@ -184,10 +186,10 @@ void brain_task(void *pdata)
 	if(cnt_soft_rst>10/0.02)
 	{brain.rst_all_soft=0;cnt_soft_rst=0;}
 	
-	float spd,spdy,spdx,yaw=0,w_rad;
+	
 	 spdy=my_deathzoom((Rc_Get_PWM.PITCH-1500)*k_rc_spd,0.1);//cm
 	 spdx=my_deathzoom((Rc_Get_PWM.ROLL-1500)*k_rc_spd,0.1);//cm
-	 w_rad=my_deathzoom((Rc_Get_PWM.YAW-1500)*0.001*4,0.4);//rad.cm
+	 w_rad=my_deathzoom((Rc_Get_PWM.YAW-1500)*0.001*20,1);//rad.cm
 	 spd=LIMIT(sqrt(pow(spdx,2)+pow(spdy,2)),0,2)*brain.sys.desire_time_init/brain.sys.desire_time*10/7;
 	 
 	 if(spd>0){
@@ -195,6 +197,14 @@ void brain_task(void *pdata)
 	  if(brain.rst_all_soft>0)
 			brain.rst_all_soft=0;
 	 }
+//	#if HORIZON_USE_FORWARD_CENTER
+//  if((yaw<30&&yaw>=0)||(yaw>-30&&yaw<0))
+//	{brain.spd_yaw=0;}
+//	else if((yaw>180-30&&yaw>=0)||(yaw<-180+30&&yaw<0))//b
+//	{brain.spd_yaw=180;}
+//	else
+//	 brain.spd_yaw=yaw;	
+//  #else	 
 	 if(yaw>60&&yaw<90+60)//r
 	{brain.spd_yaw=90;}
 	else if(yaw<-60&&yaw>-90-60)//l
@@ -203,10 +213,9 @@ void brain_task(void *pdata)
 	{brain.spd_yaw=0;}
 	else//b
 	{brain.spd_yaw=180;}
-	
-	 //brain.spd_yaw=yaw;
-	 brain.tar_w=LIMIT(w_rad,-2,2);
-	 if(brain.tar_w!=0&&spd==0)
+	//#endif
+	 brain.tar_w_set=w_rad;
+	 if(w_rad!=0&&spd==0)
 		 brain.spd=0.1;
 	 else{
 	 if(Rc_Get_PWM.AUX2>1500)
@@ -225,7 +234,18 @@ void brain_task(void *pdata)
 	Rc_Get_PWM.PITCH=1500;
 	Rc_Get_PWM.YAW=1500;
 	}
-	brain.tar_w+=LIMIT(my_deathzoom(mpu6050_fc.Gyro_deg.z,6)*k_z_c,-1,1);brain.tar_w=LIMIT(brain.tar_w,-1.169,1.169);
+	
+	if(w_rad!=0)
+	Yaw_set=Yaw;
+	else if(brain.spd!=0)
+	brain.tar_w_set=my_deathzoom(Yaw_set-Yaw,1)*kp_yaw;
+  else 
+	brain.tar_w_set=0;
+	
+	if((brain.tar_w_set!=0&&w_rad!=0)||brain.spd>0)
+	brain.tar_w=LIMIT(my_deathzoom(brain.tar_w_set-mpu6050_fc.Gyro_deg.z,0.1)*k_z_c,-10,10);
+	else
+	brain.tar_w=0;
 	static u8 state_spd_rst;
 	switch(state_spd_rst){
 		case 0:

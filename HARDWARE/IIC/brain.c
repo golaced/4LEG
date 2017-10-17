@@ -32,17 +32,17 @@ in->sys.leg_local[4].x=-W/2;
 in->sys.leg_local[4].y=-L/2;
 in->sys.leg_local[4].z=0;	
 
-in->area_of_leg[1]=(leg[1].sys.init_end_pos.x+W/2)*(leg[1].sys.init_end_pos.y+L/2)*4;
+in->global.area_of_leg[1]=in->area_of_leg[1]=W*L;
 	
 in->sys.min_range=0.707*leg[1].sys.l3*0.3;//7.8 4.742556
 in->sys.max_range=0.707*leg[1].sys.l2*0.78;//6.3 3.830526
 in->sys.leg_move_range[Yr]=MAX(in->sys.max_range, in->sys.min_range);//cm		
 in->sys.leg_move_range[Xr]=W/4*0.88;//cm	
 //for leg 1
-in->sys.leg_move_range1[1]=0.707*leg[1].sys.l2*0.7;
+in->sys.leg_move_range1[1]=0.707*leg[1].sys.l2*0.9;
 in->sys.leg_move_range1[2]=sin(22/57.3)*(leg[1].sys.l2+leg[1].sys.l3);
-in->sys.leg_move_range1[3]=0.707*leg[1].sys.l3*0.3/2;
-in->sys.leg_move_range1[4]=MIN(0.707*(leg[1].sys.l2+leg[1].sys.l3)*0.618,W/2*0.268);
+in->sys.leg_move_range1[3]=0.707*leg[1].sys.l3*0.3/1.618;
+in->sys.leg_move_range1[4]=MIN(0.707*(leg[1].sys.l2+leg[1].sys.l3)*0.618,W/2*0.268)/1.618;
 
 in->sys.kp_center[0]=0.8;
 in->sys.kp_center[1]=0.6;
@@ -66,8 +66,12 @@ in->sys.center_off1.y=0;
 in->sys.center_off_when_move[Xr]=0;//-0.2;
 in->sys.center_off_when_move[Yr]=0;//-0.88;
 in->sys.leg_t=0.5;
-in->sys.leg_h=3.68;
-#if USE_LEG_TRIG_DELAY
+in->sys.leg_h[1]=4.68;
+in->sys.leg_h[2]=3.68;
+in->sys.leg_h[3]=3.68;
+in->sys.leg_h[4]=4.68;
+
+#if USE_LEG_TRIG_DELAY // BEST TIM 0.4
 in->sys.desire_time=0.6;//0.7;//0.76;
 #else
 in->sys.desire_time=0.8;//0.7;//0.76;
@@ -81,7 +85,7 @@ in->sys.yaw_dead=10;
 
 in->sys.down_h=0;//0.88;
 in->sys.down_t=0;//0.2;
-in->sys.in_rst_check=1.618;
+in->sys.in_rst_check=1.8;
 
 leg[1].sys.id=1;
 leg[2].sys.id=2;
@@ -98,6 +102,116 @@ in->sys.down_t=in->sys.down_h=0;
 #endif
 }	
 
+
+//-------------------------------------------------Fail Reset------------------------------------------------------
+float reset_deng=45;
+float reset_sita[3]={10,125,0};//15};
+float reset_sita1[3]={45,85,-8};
+float reset_sita2[3]={45,85,-8};
+void fall_reset(float dt)
+{ u8 i;
+  static u8 state,no_move;
+	static u16 cnt[3];
+	int flag;
+	switch(state)
+	{
+	  case 0:	 
+			 if(brain.fall!=0)
+			 {brain.sys.control_angle=1;
+			  cnt[0]=cnt[1]=cnt[2]=0;			 
+				leg[1].sita_force[0]=reset_sita[0];leg[1].sita_force[1]=reset_sita[1];leg[1].sita_force[2]=reset_sita[2];leg[1].sita_force[3]=0;//reset_sita[2];
+				leg[2].sita_force[0]=reset_sita[0];leg[2].sita_force[1]=reset_sita[1];leg[2].sita_force[2]=-reset_sita[2];leg[2].sita_force[3]=0;//reset_sita[2];
+				leg[3].sita_force[0]=reset_sita[0];leg[3].sita_force[1]=reset_sita[1];leg[3].sita_force[2]=-reset_sita[2];leg[3].sita_force[3]=0;//reset_sita[2];
+				leg[4].sita_force[0]=reset_sita[0];leg[4].sita_force[1]=reset_sita[1];leg[4].sita_force[2]=reset_sita[2];leg[4].sita_force[3]=0;//reset_sita[2];
+				state=1;	
+			 }
+		break;
+	  case 1:
+			 if(cnt[0]++>2/dt)
+			 {state=2;cnt[0]=cnt[1]=0;no_move=0;}
+		break;
+	  case 2:
+			 if((brain.att[1]>10)&&no_move)
+				 state=3;
+			 else if((brain.att[1]<-10)&&no_move)
+		     state=13;
+			 else if(ABS(brain.att[1])<10)
+				 state=23;
+
+				if(fabs(mpu6050_fc.Gyro_deg.x)<44&&fabs(mpu6050_fc.Gyro_deg.y)<44)
+				 cnt[1]++;
+				else
+				 cnt[1]=0;	
+				if(cnt[1]>3/dt)
+					no_move=1;
+		break;
+		case 3://left1
+		   leg[3].sita_force[3]-=(leg[3].sita_force[3]-reset_deng)*dt*1.618;
+		   leg[4].sita_force[3]-=(leg[3].sita_force[3]-reset_deng)*dt*1.618;
+		   if(fabs(fabs(leg[3].sita_force[3])-fabs(reset_deng))<1)
+			 {state=33;cnt[0]=0;}	 			 
+			 if(ABS(brain.att[1])<10)
+				 state=33;
+		break;
+		case 4://left2
+		   leg[3].pos_tar[2].z-=(leg[3].pos_tar[2].z-leg[1].sys.limit_min.z*1.618)*dt*1.618;
+		   leg[4].pos_tar[2].z-=(leg[4].pos_tar[2].z-leg[1].sys.limit_min.z*1.618)*dt*1.618;
+		   if(fabs(fabs(leg[3].pos_tar[2].z)-fabs(leg[1].sys.limit_min.z*1.618))<0.61)
+			 {state=33;cnt[0]=0;}
+			 
+			 if(ABS(brain.att[1])<10)
+				 state=33;
+		break;	 		 
+	  case 13://right
+			 leg[1].sita_force[3]-=(leg[1].sita_force[3]-reset_deng)*dt*1.618;
+		   leg[2].sita_force[3]-=(leg[2].sita_force[3]-reset_deng)*dt*1.618;
+		   if(fabs(fabs(leg[1].sita_force[3])-fabs(reset_deng))<1)
+			 {state=33;cnt[0]=0;}	 			 
+			 if(ABS(brain.att[1])<10)
+				 state=33;
+		break;
+			 
+		case 33://»Øµ½òéËõ×´Ì¬	 
+				//leg[1].sita_force[0]=reset_sita[0];leg[1].sita_force[1]=reset_sita[1];
+				leg[1].sita_force[2]=reset_sita[2];
+				//leg[2].sita_force[0]=reset_sita[0];leg[2].sita_force[1]=reset_sita[1];
+				leg[2].sita_force[2]=-reset_sita[2];
+				//leg[3].sita_force[0]=reset_sita[0];leg[3].sita_force[1]=reset_sita[1];
+				leg[3].sita_force[2]=-reset_sita[2];
+				//leg[4].sita_force[0]=reset_sita[0];leg[4].sita_force[1]=reset_sita[1];
+				leg[4].sita_force[2]=reset_sita[2];	
+        if(cnt[0]++>0.2/dt)
+			 {state=34;cnt[0]=0;}		
+		break;
+	  case 34:
+			 if(ABS(brain.att[1])<10)
+			 { state=23;
+				 
+			  }		
+			 else 
+				 state=0;
+		break;
+		case 23:
+		   brain.sys.control_angle=0;
+		    for(i=1;i<5;i++)
+		   {
+				if(i==1||i==2)
+					flag=1;
+				else 
+					flag=1;
+				leg[i].pos_tar[2].x=leg[i].sys.init_end_pos.x*flag+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;//+off_x*cos(tar_yaw/ 57.3f);
+				leg[i].pos_tar[2].y=leg[i].sys.init_end_pos.y+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;//+off_y*sin(tar_yaw/ 57.3f);
+				leg[i].pos_tar[2].z=leg[i].sys.limit_min.z*1.234;
+			 }
+		   
+			 if(cnt[0]++>2/dt)
+			 {state=0;
+		    brain.tar_h=leg[1].sys.init_end_pos.z;
+        brain.fall=0;				
+			 }	
+		break;
+	}
+}
 
 u8 per_stop=10;
 void leg_task1(float dt)//$%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -527,90 +641,4 @@ void trot_center_control(float dt)
 	
   //att set ?
 	 reg_flag=brain.leg_move_state;
-}
-//-------------------------------------------------Fail Reset------------------------------------------------------
-float reset_deng=30;
-float reset_sita[3]={10,125,15};
-float reset_sita1[3]={45,85,-8};
-float reset_sita2[3]={45,85,-8};
-void fall_reset(float dt)
-{ u8 i;
-  static u8 state;
-	static u16 cnt[3];
-	int flag;
-	switch(state)
-	{
-	  case 0:	 
-			 if(brain.fall!=0)
-			 {brain.sys.control_angle=1;
-			  cnt[0]=cnt[1]=cnt[2]=0;			 
-				leg[1].sita_force[0]=reset_sita[0];leg[1].sita_force[1]=reset_sita[1];leg[1].sita_force[2]=reset_sita[2];
-				leg[2].sita_force[0]=reset_sita[0];leg[2].sita_force[1]=reset_sita[1];leg[2].sita_force[2]=-reset_sita[2];
-				leg[3].sita_force[0]=reset_sita[0];leg[3].sita_force[1]=reset_sita[1];leg[3].sita_force[2]=-reset_sita[2];
-				leg[4].sita_force[0]=reset_sita[0];leg[4].sita_force[1]=reset_sita[1];leg[4].sita_force[2]=reset_sita[2];
-				state=1;	
-			 }
-		break;
-	  case 1:
-			 if(cnt[0]++>2/dt)
-			 {state=2;cnt[0]=0;}
-		break;
-	  case 2:
-//			 if((brain.att[1]>10))
-//				 state=3;
-//			 else if((brain.att[1]<-10))
-//		     state=13;
-//			 else if(ABS(brain.att[1])<10)
-//				 state=23;
-			  if(ABS(brain.att[1])<10)
-				 state=23;
-		break;
-		case 3://left
-			 leg[3].sita_force[2]=reset_deng;
-		   leg[4].sita_force[2]=-reset_deng;
-		     if(cnt[0]++>0.5/dt)
-			 {state=33;cnt[0]=0;}  
-		break;
-	  case 13://right
-			  leg[1].sita_force[2]=-reset_deng;
-		    leg[2].sita_force[2]=reset_deng;		  
-		     if(cnt[0]++>0.5/dt)
-			 {state=33;cnt[0]=0;}
-		break;
-			 
-		case 33:	 
-	  	  leg[1].sita_force[0]=reset_sita[0];leg[1].sita_force[1]=reset_sita[1];leg[1].sita_force[2]=reset_sita[2];
-				leg[2].sita_force[0]=reset_sita[0];leg[2].sita_force[1]=reset_sita[1];leg[2].sita_force[2]=-reset_sita[2];
-				leg[3].sita_force[0]=reset_sita[0];leg[3].sita_force[1]=reset_sita[1];leg[3].sita_force[2]=-reset_sita[2];
-				leg[4].sita_force[0]=reset_sita[0];leg[4].sita_force[1]=reset_sita[1];leg[4].sita_force[2]=reset_sita[2];	
-        if(cnt[0]++>2/dt)
-			 {state=34;cnt[0]=0;}		
-		break;
-	  case 34:
-			 if(ABS(brain.att[1])<10)
-			 { state=23;
-				 
-			  }		
-			 else 
-				 state=0;
-		break;
-		case 23:
-		   brain.sys.control_angle=0;
-		    for(i=1;i<5;i++)
-		   {
-				if(i==1||i==2)
-					flag=1;
-				else 
-					flag=1;
-				leg[i].pos_tar[2].x=leg[i].sys.init_end_pos.x*flag+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;//+off_x*cos(tar_yaw/ 57.3f);
-				leg[i].pos_tar[2].y=leg[i].sys.init_end_pos.y+(float)RNG_Get_RandomRange(-1000,1000)/1000000.;//+off_y*sin(tar_yaw/ 57.3f);
-				leg[i].pos_tar[2].z=leg[i].sys.init_end_pos.z*1;
-			 }
-			 if(cnt[0]++>2/dt)
-			 {state=0;
-		    
-        brain.fall=0;				
-			 }	
-		break;
-	}
 }

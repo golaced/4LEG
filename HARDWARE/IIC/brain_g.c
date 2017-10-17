@@ -118,11 +118,13 @@ for(i=1;i<5;i++){
    brain.global.leg_ground_center_trig[Xr]=(float)(x[0]+x[1]+x[2])/3.;
    brain.global.leg_ground_center_trig[Yr]=(float)(y[0]+y[1]+y[2])/3.;
 } 
+
+  brain.global.area_value=LIMIT(brain.area_of_leg[0]/brain.area_of_leg[1],0,1);
 }	
 float k_size=0.0068;
 float size_k;
-float limit_deng=7.0;//12;
-float k_acc_control[2]={-0.036,-0.036};
+float limit_deng=11.1111;//8.0;//12;
+float k_acc_control[2]={0.1,-0.07};
 float k_spd_control[2]={0.25,0.15};
 //重心控制
 float center_control_out[2];
@@ -170,7 +172,7 @@ void center_control_global(float dt)//????PID  GLOBAL
 	//size_k=1;
 	yaw_use=brain.spd_yaw;
 	#if HORIZON_USE_FORWARD_CENTER
-	  if((brain.spd_yaw==90||brain.spd_yaw==-90)&&brain_ground_leg_num==3)
+	  if((brain.spd_yaw!=0&&brain.spd_yaw!=180)&&brain_ground_leg_num==3)
 	  {
 			size_k=1;
 			yaw_use=0;
@@ -390,12 +392,12 @@ void center_control_global(float dt)//????PID  GLOBAL
 	brain.center_stable=0;
 	
 	float fall_con[4];
-	fall_treat(dt,&fall_con[0]);
+	fall_treat1(dt,&fall_con[0]);
   //output
 	for(i=1;i<5;i++){
 	if((leg[i].control_mode||brain.control_mode)&&leg[i].leg_ground&&!leg[i].sys.leg_ground_force){	
-	leg[i].deng[Xr]=LIMIT(center_control_out[Xr],-limit_deng,limit_deng)+fall_con[i-1];
-	leg[i].deng[Yr]=LIMIT(center_control_out[Yr],-limit_deng,limit_deng);	}
+	leg[i].deng[Xr]=LIMIT(center_control_out[Xr],-limit_deng*brain.global.area_value,limit_deng*brain.global.area_value)+fall_con[i-1];
+	leg[i].deng[Yr]=LIMIT(center_control_out[Yr],-limit_deng*brain.global.area_value,limit_deng*brain.global.area_value);	}
 	}	
 	
   //att set ?
@@ -404,11 +406,13 @@ void center_control_global(float dt)//????PID  GLOBAL
 	
 	 reg_flag=brain.leg_move_state;
 }
+
 u8 last_move_id,last_last_move_id;
 u16 out_range_move[5];
- float set_max=1.618;//2
-float min_spd=0.368;
+float set_max=2.618;//2
+float min_spd=0.321;
 static u8 stop_leg;
+float set_trig_value=0.9;
 //判断机器人需要跨腿的ID // GLOBAL
 void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt)
 { u8 i,j;
@@ -557,11 +561,20 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
 				 }
 				 most_out=brain.global.dis_leg_out[1];
 				 //
+				 static u8 way_reg;
+				 u8 way_change;
+				 static u16 cnt_way_change;
+				 if(brain.way!=way_reg)
+				 { cnt_way_change=0;way_change=1;}
+				 if(cnt_way_change++>3*brain.sys.desire_time)
+				 way_change=0;
+				 way_reg=brain.way;
+				 
 				 for(i=1;i<5;i++)
 				   if(brain.global.dis_leg_out[i]>most_out&&i!=last_move_id&&i!=last_last_move_id)
 					 {id_need_to_move=i;most_out=brain.global.dis_leg_out[i];}
- 
-				 if(brain.global.dis_leg_out[id_need_to_move]>0&&id_need_to_move>0&&1)
+         way_change=1;
+				 if(brain.global.dis_leg_out[id_need_to_move]>0&&id_need_to_move>0&&way_change&&1)
 				 { out_range_move[id_need_to_move]=0;
 					 temp=id_need_to_move;
 				 }else{
@@ -625,7 +638,7 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
 		 }
 		break;
     case S_LEG_TRIG:
-			if(brain.global.center_stable_weight>0.9&&brain.ground_leg_num==4)
+			if(brain.global.center_stable_weight>set_trig_value&&brain.ground_leg_num==4)
 			{
 			brain.leg_move_state=S_LEG_TRIG_LEAVE_GROUND_CHECK;		 
 			leg_tar_est_global(&brain,&leg[brain.move_id],0,0,0,1,dt);	
@@ -763,7 +776,7 @@ u8 planner_leg(u8 last_move_id,u8 last_last_move_id)
 u8 en_off_trig=0;
 float h_k2=1.0;
 float k_off=0.2;
-float k_trig1=2;
+float k_trig1=2.68;//2;
 float k_rad=1.6;
 float k_trig=2;
 void leg_tar_est_global(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt)
@@ -840,8 +853,8 @@ spd=LIMIT(spd,brain.spd*k_trig,10);
 //spd_wy=LIMIT(spd_wy,spd_wy*k_rad,10);
 
 
-tar_x=spd_wx+sin(tar_yaw*ANGLE_TO_RADIAN)*LIMIT((spd)*off_k*in->sys.k_spd_to_range,-18,18);//,-in->sys.leg_move_range[Xr],in->sys.leg_move_range[Xr]);
-tar_y=spd_wy+cos(tar_yaw*ANGLE_TO_RADIAN)*LIMIT((spd)*off_k*in->sys.k_spd_to_range,-18,18);//,-in->sys.leg_move_range[Yr],in->sys.leg_move_range[Yr]);
+tar_x=spd_wx+sin(tar_yaw*ANGLE_TO_RADIAN)*LIMIT((spd)*off_k*in->sys.k_spd_to_range,-2*brain.sys.leg_move_range1[1],2*brain.sys.leg_move_range1[1]);//,-in->sys.leg_move_range[Xr],in->sys.leg_move_range[Xr]);
+tar_y=spd_wy+cos(tar_yaw*ANGLE_TO_RADIAN)*LIMIT((spd)*off_k*in->sys.k_spd_to_range,-2*brain.sys.leg_move_range1[1],2*brain.sys.leg_move_range1[1]);//,-in->sys.leg_move_range[Yr],in->sys.leg_move_range[Yr]);
 leg->pos_tar_trig[2].x=leg->sys.init_end_pos.x*k_trig1+tar_x+RANDOM+off_x*cos(tar_yaw*ANGLE_TO_RADIAN)*en_off_trig;
 leg->pos_tar_trig[2].y=leg->sys.init_end_pos.y*k_trig1+tar_y+RANDOM+off_y*sin(tar_yaw*ANGLE_TO_RADIAN)*en_off_trig;
 leg->pos_tar_trig[2].z=brain.tar_h*h_k2;//leg->sys.init_end_pos.z*h_k2;
@@ -859,8 +872,8 @@ leg->pos_tar_trig[2].z+=RANDOM;
 if(brain.rst_all_soft>0)
 {
 brain.rst_all_soft++;
-leg->pos_tar_trig[2].x=leg->sys.init_end_pos.x*k_trig1+RANDOM;//+off_x*cos(tar_yaw/ 57.3f);
-leg->pos_tar_trig[2].y=leg->sys.init_end_pos.y*k_trig1+RANDOM;//+off_y*sin(tar_yaw/ 57.3f);
+leg->pos_tar_trig[2].x=leg->sys.init_end_pos.x*k_trig1+RANDOM+off_x*cos(tar_yaw/ 57.3f)*en_off_trig;
+leg->pos_tar_trig[2].y=leg->sys.init_end_pos.y*k_trig1+RANDOM+off_y*sin(tar_yaw/ 57.3f)*en_off_trig;
 leg->pos_tar_trig[2].z=brain.tar_h;//leg->sys.init_end_pos.z*1;
 }
 if(brain.rst_all_soft>4)
@@ -868,7 +881,7 @@ brain.rst_all_soft=0;
 }
 
 //侧翻简单控制
-float k_fall=1.86;
+float k_fall=1.6;
 float k_add=0.5;
 void fall_treat(float dt,float *out)
 { static u8 state;
@@ -894,6 +907,42 @@ void fall_treat(float dt,float *out)
 		//leg[2].pos_tar[2].x+=k_add*dt;	
 		}		
 		
+	}
+	else 
+	{
+		out[0]=out[1]=out[2]=out[3]=0;
+	}
+	
+}
+
+
+//侧翻简单控制
+float dead_1[2]={3,3};
+float k_fall1[3]={0.6,0.1};
+float flt_fall1;
+void fall_treat1(float dt,float *out)
+{ static u8 state;
+	float fall_control[4];
+	if(fabs(brain.att[1])>dead_1[0]&&fabs(mpu6050_fc.Gyro_deg.x)>dead_1[1]&&brain.fall==0){
+	
+	  out[0]=my_deathzoom(LIMIT(brain.att[1],-20,20),1)*k_fall1[0]+(LIMIT(mpu6050_fc.Gyro_deg.x,-33,33)*k_fall1[1]);	
+		out[1]=my_deathzoom(LIMIT(brain.att[1],-20,20),1)*k_fall1[0]+(LIMIT(mpu6050_fc.Gyro_deg.x,-33,33)*k_fall1[1]);	
+		out[2]=(my_deathzoom(LIMIT(brain.att[1],-20,20),1)*k_fall1[0]+(LIMIT(mpu6050_fc.Gyro_deg.x,-33,33)*k_fall1[1]));		
+		out[3]=(my_deathzoom(LIMIT(brain.att[1],-20,20),1)*k_fall1[0]+(LIMIT(mpu6050_fc.Gyro_deg.x,-33,33)*k_fall1[1]));	
+   if(brain.att[1]<0)//r
+		{
+		out[0]=-fabs(out[0]);	
+		out[1]=-fabs(out[1]);		
+		out[2]=0;	
+		out[3]=0;	
+		}	
+		else//l
+		{
+		out[2]=fabs(out[2]);	
+		out[3]=fabs(out[3]);		
+		out[0]=0;	
+		out[1]=0;		
+		}		
 	}
 	else 
 	{

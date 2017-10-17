@@ -39,16 +39,16 @@ typedef struct
 	u8 pwm_id[4];
 	u16 PWM_OFF[4];
 	u16 PWM_INIT[3];
-	u16 PWM_MIN[3],PWM_MAX[3];
+	u16 PWM_MIN[4],PWM_MAX[4];
 	float PWM_OUT[4];
-	float PWM_PER_DEGREE[3];
+	float PWM_PER_DEGREE[4];
 	u8 use_ground_check;
 	u8 leg_set_invert,leg_ground_cnt;
 	float pos_tar_reg[3],off_local[2];
 	u8 en_pwm_out;
 	u16 leg_loss_cnt;
 	float desire_time;
-	int sita_flag[3];
+	int sita_flag[4];
 	float dsita[3];
 	float dsita_tar[3];
 	float init_sita[3];
@@ -66,7 +66,7 @@ typedef struct
 	u8 curve_trig,control_mode;
 	POS pos_now[3],pos_now_brain[3];
 	POS pos_tar[3],pos_tar_trig[3];
-	float sita[3],sita_force[3];
+	float sita[4],sita_force[4];
 	 //0->openloop 1->closeloop	
 	float leg_end_force[4],leg_meme_angle[4];
 	float deng[3];
@@ -87,7 +87,7 @@ typedef struct
 	u8 err,rst;
 	float center_off_when_move[2];
 	float leg_t,tar_spd[3],in_rst_check;
-	float leg_h;	
+	float leg_h[5];	
 	float leg_move_range[2],leg_move_range1[5],leg_move_min_dt;//cm
 	float yaw_trig;
 	POS off_leg[5],center_off,center_off1,center_scale;
@@ -98,6 +98,7 @@ typedef struct
 	POS end_pos_global[5],body_coner[5],ZMP;
 	float steady_value,out_value;
 	float center_stable_weight;
+	float area_value;
 	float area_of_leg[2],dis_leg_out[5];
 	double leg_ground_center[3],leg_ground_center_trig[3],leg_ground_center_trig_init[3],tar_center[2];
 }BRAIN_GLOBAL;
@@ -109,7 +110,7 @@ typedef struct
 	u8 force_stop,loss_center,ground_leg_num,can_move_leg;	
 	u8 leg_move[5],leg_out_range[5],way;	
 	BRAIN_GLOBAL global;
-	float tar_att_force[3],tar_att[3],att[3],tar_w,tar_h,spd,spd_d,spd_yaw;
+	float tar_att_force[3],tar_att[3],att[3],tar_w,tar_w_set,tar_h,spd,spd_d,spd_yaw;
   u8 center_stable,move_id,leg_move_state;
 	float area_of_leg[2];
 	POS center;
@@ -151,6 +152,7 @@ void cal_target_of_center_move(BRAIN_STRUCT *in);
 void leg_tar_est(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt);
 void att_control(float dt);
 void fall_treat(float dt,float *out);
+void fall_treat1(float dt,float *out);
 extern float center_control_out[2],att_control_out[5];;
 #define Xr 0
 #define Yr 1

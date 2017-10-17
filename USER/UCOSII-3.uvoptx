@@ -212,47 +212,47 @@
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>brain,0x0A</ItemText>
+          <ItemText>leg</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.global,0x0A</ItemText>
+          <ItemText>gx_use</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>leg,0x0A</ItemText>
+          <ItemText>gy_use</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\leg[1].pos_now_brain[2]</ItemText>
+          <ItemText>id_f</ItemText>
         </Ww>
         <Ww>
           <count>4</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\leg[2].pos_now_brain[2]</ItemText>
+          <ItemText>leg_end_use</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\leg[3].pos_now_brain[2]</ItemText>
+          <ItemText>flag,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>6</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\leg[4].pos_now_brain[2]</ItemText>
+          <ItemText>brain.spd</ItemText>
         </Ww>
         <Ww>
           <count>7</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.spd_yaw</ItemText>
+          <ItemText>brain</ItemText>
         </Ww>
         <Ww>
           <count>8</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.spd</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.leg_move_range1</ItemText>
         </Ww>
         <Ww>
           <count>9</count>
@@ -267,259 +267,134 @@
         <Ww>
           <count>11</count>
           <WinNumber>1</WinNumber>
-          <ItemText>leg_end_use</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.spd_yaw</ItemText>
         </Ww>
         <Ww>
           <count>12</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.global.end_pos_global</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.spd</ItemText>
         </Ww>
         <Ww>
           <count>13</count>
           <WinNumber>1</WinNumber>
-          <ItemText>id_f,0x0A</ItemText>
+          <ItemText>en_off_trig</ItemText>
         </Ww>
         <Ww>
           <count>14</count>
           <WinNumber>1</WinNumber>
-          <ItemText>gx_use</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.global</ItemText>
         </Ww>
         <Ww>
           <count>15</count>
           <WinNumber>1</WinNumber>
-          <ItemText>gy_use</ItemText>
+          <ItemText>Rc_Get_PWM,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>16</count>
           <WinNumber>1</WinNumber>
-          <ItemText>tar_x</ItemText>
+          <ItemText>k_rc_spd</ItemText>
         </Ww>
         <Ww>
           <count>17</count>
           <WinNumber>1</WinNumber>
-          <ItemText>tar_y</ItemText>
+          <ItemText>k_trig</ItemText>
         </Ww>
         <Ww>
           <count>18</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ero</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.tar_h</ItemText>
         </Ww>
         <Ww>
           <count>19</count>
           <WinNumber>1</WinNumber>
-          <ItemText>k_size</ItemText>
+          <ItemText>mpu6050_fc</ItemText>
         </Ww>
         <Ww>
           <count>20</count>
           <WinNumber>1</WinNumber>
-          <ItemText>size_k</ItemText>
+          <ItemText>kp_att</ItemText>
         </Ww>
         <Ww>
           <count>21</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.leg_move_range1[2]</ItemText>
+          <ItemText>flt</ItemText>
         </Ww>
         <Ww>
           <count>22</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.sys.leg_move_range1</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.att</ItemText>
         </Ww>
         <Ww>
           <count>23</count>
           <WinNumber>1</WinNumber>
-          <ItemText>brain</ItemText>
+          <ItemText>k_fall</ItemText>
         </Ww>
         <Ww>
           <count>24</count>
           <WinNumber>1</WinNumber>
-          <ItemText>brain.tar_w</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.tar_w</ItemText>
         </Ww>
         <Ww>
           <count>25</count>
           <WinNumber>1</WinNumber>
-          <ItemText>mpu6050_fc.Gyro_deg.z</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.tar_w_set</ItemText>
         </Ww>
         <Ww>
           <count>26</count>
           <WinNumber>1</WinNumber>
-          <ItemText>k_trig</ItemText>
+          <ItemText>k_z_c</ItemText>
         </Ww>
         <Ww>
           <count>27</count>
           <WinNumber>1</WinNumber>
-          <ItemText>k_z_c</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/mpu6050.c\mpu6050_fc.Gyro_deg.z</ItemText>
         </Ww>
         <Ww>
           <count>28</count>
           <WinNumber>1</WinNumber>
-          <ItemText>trig_list_t,0x0A</ItemText>
+          <ItemText>k_fall1</ItemText>
         </Ww>
         <Ww>
           <count>29</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\leg[1].sys.limit</ItemText>
+          <ItemText>dead_1</ItemText>
         </Ww>
         <Ww>
           <count>30</count>
           <WinNumber>1</WinNumber>
-          <ItemText>brain.min_st</ItemText>
+          <ItemText>mpu6050_fc.Gyro_deg.x</ItemText>
         </Ww>
         <Ww>
           <count>31</count>
           <WinNumber>1</WinNumber>
-          <ItemText>en_off_trig</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.area_of_leg</ItemText>
         </Ww>
         <Ww>
           <count>32</count>
           <WinNumber>1</WinNumber>
-          <ItemText>limit_deng</ItemText>
-        </Ww>
-        <Ww>
-          <count>33</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>kp_att</ItemText>
-        </Ww>
-        <Ww>
-          <count>34</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>mpu6050_fc.Gyro_deg.x</ItemText>
+          <ItemText>\\UCOSII_3\../HARDWARE/IIC/leg.c\brain.min_st</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
           <count>0</count>
           <WinNumber>2</WinNumber>
-          <ItemText>leg_out_cnt,0x0A</ItemText>
+          <ItemText>line_test</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>2</WinNumber>
-          <ItemText>buf</ItemText>
+          <ItemText>sita_test</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>2</WinNumber>
-          <ItemText>att_control_out_ki</ItemText>
+          <ItemText>k_acc_control</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>2</WinNumber>
-          <ItemText>line_test</ItemText>
-        </Ww>
-        <Ww>
-          <count>4</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>leg_dt</ItemText>
-        </Ww>
-        <Ww>
-          <count>5</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>OSCPUUsage,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>6</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>cpuusage,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>7</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>sita_test</ItemText>
-        </Ww>
-        <Ww>
-          <count>8</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>mpu6050_fc</ItemText>
-        </Ww>
-        <Ww>
-          <count>9</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>off_local</ItemText>
-        </Ww>
-        <Ww>
-          <count>10</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>k_rad</ItemText>
-        </Ww>
-        <Ww>
-          <count>11</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>k_acc_control</ItemText>
-        </Ww>
-        <Ww>
-          <count>12</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>out_range_move,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>13</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>brain.global.dis_leg_out</ItemText>
-        </Ww>
-        <Ww>
-          <count>14</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>brain.now_acc</ItemText>
-        </Ww>
-        <Ww>
-          <count>15</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>ACC_LOWPASS_TAU</ItemText>
-        </Ww>
-        <Ww>
-          <count>16</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>min_spd</ItemText>
-        </Ww>
-        <Ww>
-          <count>17</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>set_max</ItemText>
-        </Ww>
-        <Ww>
-          <count>18</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>flag,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>19</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>range_out</ItemText>
-        </Ww>
-        <Ww>
-          <count>20</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>brain.global.dis_leg_out</ItemText>
-        </Ww>
-        <Ww>
-          <count>21</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>out_range_move,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>22</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>k_fall</ItemText>
-        </Ww>
-        <Ww>
-          <count>23</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>k_add</ItemText>
-        </Ww>
-        <Ww>
-          <count>24</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>brain.att[1]</ItemText>
-        </Ww>
-        <Ww>
-          <count>25</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>mpu6050_fc.Gyro_deg.y</ItemText>
-        </Ww>
-        <Ww>
-          <count>26</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>mpu6050_fc.Gyro_deg.x</ItemText>
+          <ItemText>limit_deng</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>

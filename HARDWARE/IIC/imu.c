@@ -277,7 +277,7 @@ void IMUupdate(float half_T,float gx, float gy, float gz, float ax, float ay, fl
 // 			//限制纠正范围+-360，配合+-180度取值函数
 // 		}
 	}
-
+   yaw_correct=0;
 	
 	ref.g.x = (gx - reference_v.x *yaw_correct) *ANGLE_TO_RADIAN + ( Kp*(ref.err.x + ref.err_Int.x) ) ;     //IN RADIAN
 	ref.g.y = (gy - reference_v.y *yaw_correct) *ANGLE_TO_RADIAN + ( Kp*(ref.err.y + ref.err_Int.y) ) ;		  //IN RADIAN
