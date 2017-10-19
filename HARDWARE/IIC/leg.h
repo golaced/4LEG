@@ -8,7 +8,7 @@
 #define USE_LEG_TRIG_DELAY 1
 #define USE_SIMPLE_CENTER 0
 #define HORIZON_USE_FORWARD_CENTER 1
-
+#define TWO_LEG_TEST 0
 
 #define Xs 0
 #define Ys 1
@@ -96,16 +96,17 @@ typedef struct
 typedef struct 
 { 
 	POS end_pos_global[5],body_coner[5],ZMP;
+	POS fake_tar_pos;
 	float steady_value,out_value;
 	float center_stable_weight;
-	float area_value;
-	float area_of_leg[2],dis_leg_out[5];
+	float area_value,min_width_value;
+	float area_of_leg[3],dis_leg_out[5];
 	double leg_ground_center[3],leg_ground_center_trig[3],leg_ground_center_trig_init[3],tar_center[2];
 }BRAIN_GLOBAL;
 
 typedef struct 
 { u8 control_mode,power_all,rst_all,rst_all_soft,tabu;
-	int fall;
+	int fall,trot_gait;
 	float steady_value,min_st[2];
 	u8 force_stop,loss_center,ground_leg_num,can_move_leg;	
 	u8 leg_move[5],leg_out_range[5],way;	
@@ -153,6 +154,7 @@ void leg_tar_est(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_ta
 void att_control(float dt);
 void fall_treat(float dt,float *out);
 void fall_treat1(float dt,float *out);
+void fall_treat_tro(float dt,float *out);
 extern float center_control_out[2],att_control_out[5];;
 #define Xr 0
 #define Yr 1
@@ -161,6 +163,8 @@ extern u8 trig_list_f[5];
 extern u8 trig_list_r[5];
 extern u8 trig_list_b[5];
 extern u8 trig_list_l[5];
+extern u8 trig_list_tr[5];
+extern u8 trig_list_tl[5];
 u8 planner_leg(u8 last_move_id,u8 last_last_move_id);
 void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
 void center_control_global(float dt);//中心控制PID  GLOBAL
@@ -168,7 +172,11 @@ void state_clear(void);
 void get_leg_tar_trig(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
 void fall_reset(float dt);
 void cal_pos_global(float dt);
-void leg_tar_est_global(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt);
+//点与球体的交点
+void arrow_check_to_bow(float cx,float cy,float cz,float rx,float ry,float rz,float *x,float *y,float *z);
+//计算点矢量两侧对称点
+void two_point_between_arror(float cx,float cy,float yaw,float *x1,float *y1,float *x2,float *y2,float dis);
+void leg_tar_est_global(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt,u8 fake);
 //计算三角形重心坐标
 void cal_center_of_trig(float x1,float y1,float x2,float y2,float x3,float x4,float *cx,float *cy);
 //点到直线距离
@@ -230,3 +238,8 @@ void find_closet_point(u8*min_id,float x, float y,float x1,float y1,float x2,flo
 //转换腿局部坐标系到全局机体坐标系
 void conver_legpos_to_barin(BRAIN_STRUCT *in,LEG_STRUCT * inl,u8 id);
 float cal_steady_s4(float cx,float cy,float x1,float y1,float x2,float y2,float x3, float y3 ,float x4,float y4 );
+
+
+void center_control_global_tro(float dt);
+void check_leg_need_move_global_tro(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
+void leg_tar_est_global_tro(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt);

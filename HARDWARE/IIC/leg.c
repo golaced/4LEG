@@ -47,7 +47,7 @@ in->sys.pwm_id[3]=11;
 break;
 case 2:	
 in->sys.leg_set_invert=0;
-in->sys.PWM_OFF[0]=666;	
+in->sys.PWM_OFF[0]=586;	
 in->sys.PWM_OFF[1]=1960;	
 in->sys.PWM_OFF[2]=1510+SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1380;
@@ -63,7 +63,7 @@ break;
 case 3:	
 in->sys.leg_set_invert=1;	
 in->sys.PWM_OFF[0]=1060;	
-in->sys.PWM_OFF[1]=1880;//1540;	
+in->sys.PWM_OFF[1]=1900;//1540;	
 in->sys.PWM_OFF[2]=1510-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1416;
 in->sys.sita_flag[0]=1;
@@ -106,7 +106,7 @@ in->pos_tar_trig[2].z=in->sys.init_end_pos.z;
 
 in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25/57.3);	
 in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25/57.3);//0.25;	
-in->sys.limit.z=(in->sys.l1+in->sys.l2*cos(30/57.3)+in->sys.l3)*cos(30/57.3);	
+in->sys.limit.z=(in->sys.l1+in->sys.l2*cos(30/57.3)+in->sys.l3*cos(30/57.3));	
 	
 in->sys.limit_min.z=(in->sys.l3-(in->sys.l2-in->sys.l1))*1.05;
 
@@ -129,7 +129,7 @@ in->sys.PWM_PER_DEGREE[2]=11.34;//9.34;
 in->sys.PWM_PER_DEGREE[3]=9.34;
 break;
 case 2:
-in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
+in->sys.PWM_PER_DEGREE[0]=11.34;//9.34;//7.8;//9.1;		
 in->sys.PWM_PER_DEGREE[1]=11.34;//9.34;
 in->sys.PWM_PER_DEGREE[2]=11.34;//9.34;
 in->sys.PWM_PER_DEGREE[3]=9.34;
@@ -171,16 +171,30 @@ u8 pos_range_check(LEG_STRUCT * in,float x,float y,float z)
  else
 	 return 1;
 }
-
+float flt_leg=0.1618;	
 //从位置结算关节角度 
 void cal_sita_from_pos(LEG_STRUCT * in,float x_i,float y_i,float z_i,u8 out)
 { 
 u8 id=in->sys.id;	
 u8 ero;	
-static float sita_reg[5][3];
+	if(id==1&&in->curve_trig)
+	id=1;
+	
+static float sita_reg[5][3],sita5_reg[5];
 float x=LIMIT(x_i,-in->sys.limit.x,in->sys.limit.x);	
 float y=LIMIT(y_i,-in->sys.limit.y,in->sys.limit.y);
 float z=LIMIT(z_i,-in->sys.limit.z,in->sys.limit.z);	
+float x1,y1,z1;	
+if(in->curve_trig){
+arrow_check_to_bow(x_i,y_i,z_i,in->sys.limit.x,in->sys.limit.y,in->sys.limit.z,&x1,&y1,&z1);	
+
+x=(x_i*(1-flt_leg)+x1*flt_leg);
+y=(y_i*(1-flt_leg)+y1*flt_leg);
+z=(z_i*(1-flt_leg)+z1*flt_leg);	
+}	
+if(id==1&&in->curve_trig)
+	id=1;
+
 	if(pos_range_check(in,x,y,z))	
 	{
 	in->err=0;
@@ -199,9 +213,11 @@ float z=LIMIT(z_i,-in->sys.limit.z,in->sys.limit.z);
 	float sita5=acos(LIMIT(temp,-1,1))*RtA;
 	if(isnan(sita5))
 		ero=1;
-	in->sita[1]=(180-sita5);             
+	in->sita[1]=LIMIT(180-sita5,0.5,179.5);  
 	temp=(l2*l2+l4*l4-l3*l3)/(2*l2*l4);
 	in->sita[0]=180-acos(y/l4)*RtA-acos(LIMIT(temp,-1,1))*RtA;//*cos(in->sita[2]*AtR);
+  if(id==1)
+	id=1;
 	//protect	
 	if(isnan(in->sita[0]))
 	in->sita[0]=sita_reg[id][0];
@@ -228,7 +244,7 @@ float z=LIMIT(z_i,-in->sys.limit.z,in->sys.limit.z);
 	float d2=cos(in->sita[2]*AtR)*l3;
 	in->pos_now[1].x=(l1+h1)*sin(in->sita[2]*AtR);in->pos_now[1].y=-cos(in->sita[0]*AtR)*d1;in->pos_now[1].z=cos(in->sita[2]*AtR)*(l1+h1);
 	in->pos_now[2].x=(l1+h1+h2)*sin(in->sita[2]*AtR);in->pos_now[2].y=-cos(in->sita[0]*AtR)*d1+cos((180-in->sita[0]-in->sita[1])*AtR)*d2;in->pos_now[2].z=cos(in->sita[2]*AtR)*(l1+h1+h2);	
-
+  //in->pos_now[2].x=x;in->pos_now[2].y=y;in->pos_now[2].z=z;
 	if(in->sys.leg_set_invert)
 		for(u8 i=0;i<3;i++)
 	   {
@@ -277,13 +293,14 @@ return temp;
 }
 
 //计算二次曲线系数
-float c0[3]; //x y z
-float c3[3];
-float c4[3];
-float c5[3];
-float c6[3];
+float c0[5][3]; //x y z
+float c3[5][3];
+float c4[5][3];
+float c5[5][3];
+float c6[5][3];
 void cal_curve_from_pos(LEG_STRUCT * in,float desire_time)
 {
+u8 id=in->sys.id;	
 float pos_now[3];
 float pos_tar[3];
 pos_now[Xs]=in->pos_now[2].x;
@@ -316,7 +333,7 @@ pos_tar[Zs]=in->pos_tar_trig[2].z;
 	int i;
 	for(i=0;i<3;i++)
 	{
-		c0[i]=p0[i];
+		c0[id][i]=p0[i];
 		p1_p0[i]=p1[i]-p0[i];
 		p0_p2[i]=p0[i]-p2[i];
 	}
@@ -333,19 +350,19 @@ pos_tar[Zs]=in->pos_tar_trig[2].z;
 
 	float temp1=0;temp1=1/(t1_3*pow((t1-t2),3)*t2_3);
 	for(i=0;i<3;i++)
-	{	c3[i]=-1*temp1*(t2_6*(p1_p0[i])+5*t1_4*t2_2*3*(p0_p2[i])
+	{	c3[id][i]=-1*temp1*(t2_6*(p1_p0[i])+5*t1_4*t2_2*3*(p0_p2[i])
 		+2*t1_6*5*(p0_p2[i])-3*t1_5*t2*8*(p0_p2[i]));
 
-    c4[i]=temp1/t2*(3*t2_6*(p1_p0[i])+15*t1_3*t2_3*(p0_p2[i])
+    c4[id][i]=temp1/t2*(3*t2_6*(p1_p0[i])+15*t1_3*t2_3*(p0_p2[i])
     		-27*t1_5*t2*(p0_p2[i])+t1_6*15*(p0_p2[i]));
 
-	c5[i]=-temp1/t2_2*3*(
+	c5[id][i]=-temp1/t2_2*3*(
 			t2_6*(p1_p0[i])
 			+2*t1_6*(p0_p2[i])
 			+t1_3*t2_3*8*(p0_p2[i])
 			-t1_4*t2_2*9*(p0_p2[i]));
 
-	c6[i]=temp1/t2_2*
+	c6[id][i]=temp1/t2_2*
 	(t2_5*(p1_p0[i])
 			+6*t1_5*(p0_p2[i])
 			+10*t1_3*t2_2*(p0_p2[i])
@@ -355,10 +372,11 @@ pos_tar[Zs]=in->pos_tar_trig[2].z;
 //读出规划曲线各采样三维位置
 void  cal_pos_tar_from_curve(LEG_STRUCT * in,float time_now,float dt)
 {
+u8 id=in->sys.id;	
 float cal_curve[3];	
 u8 i;
 for(i=0;i<3;i++)
-cal_curve[i]=curve_cal(c0[i],c3[i],c4[i],c5[i],c6[i],time_now);
+cal_curve[i]=curve_cal(c0[id][i],c3[id][i],c4[id][i],c5[id][i],c6[id][i],time_now);
 	
 
 in->pos_tar[2].x=cal_curve[Xs];
@@ -427,9 +445,14 @@ break;
 case 4:
 if(*en){
 cal_pos_tar_from_curve(in,time[id],dt);
+#if TWO_LEG_TEST
+if(time[id]<desire_time/2)	
+time[id]+=dt;
+#else	
 time[id]+=dt;
 if(time[id]>desire_time)	
 {state[id]=5;}
+#endif
 }
 break;
 case 5:
@@ -473,6 +496,9 @@ static float time;
 	spd_wy=y_temp;
 	break;
 	}
+	if(brain.ground_leg_num!=4&&brain.trot_gait)
+  spd_wy=spd_wx=0;
+	
 //判断是否重合等
 	if(!in->err&&in->leg_ground){
 	 if(in->sys.leg_set_invert){	
@@ -487,7 +513,8 @@ static float time;
 	limit_range_leg(in->pos_tar[2].x,in->pos_tar[2].y,in->sys.limit.x,in->sys.limit.y,&in->pos_tar[2].x,&in->pos_tar[2].y);
 	 
 	 
-	in->pos_tar[2].z=LIMIT(in->pos_tar[2].z+att_control_out[id]+(brain.tar_h-brain.global.end_pos_global[0].z)*dt*1.618,in->sys.limit_min.z,in->sys.limit.z);	 
+	//in->pos_tar[2].z=LIMIT(in->pos_tar[2].z+att_control_out[id]+(brain.tar_h-brain.global.end_pos_global[0].z)*dt*1.618,in->sys.limit_min.z,in->sys.limit.z);	 
+	in->pos_tar[2].z=LIMIT(att_control_out[id]+brain.tar_h,in->sys.limit_min.z,in->sys.limit.z);	 
 	in->pos_tar[2].z=LIMIT(in->pos_tar[2].z,in->sys.limit_min.z,in->sys.limit.z);
 	
 	}

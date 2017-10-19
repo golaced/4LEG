@@ -172,6 +172,7 @@ void brain_task(void *pdata)
 	{brain.power_all=brain.control_mode=1;flag=1;}
 	else
 	 brain.power_all=brain.control_mode=0;
+	brain.power_all=1;
 	static u16 cnt_soft_rst;
 	brain.sys.desire_time=LIMIT(0.5+(Rc_Get_PWM.AUX4-1500)/1000.,0.2,2);
 	if(flag&&Rc_Get_PWM.AUX1<1500)
@@ -235,7 +236,7 @@ void brain_task(void *pdata)
 	Rc_Get_PWM.YAW=1500;
 	}
 	
-	if(w_rad!=0)
+	if(w_rad!=0||(fabs(Yaw_set-Yaw)>35))
 	Yaw_set=Yaw;
 	else if(brain.spd!=0)
 	brain.tar_w_set=my_deathzoom(Yaw_set-Yaw,1)*kp_yaw;
@@ -243,9 +244,10 @@ void brain_task(void *pdata)
 	brain.tar_w_set=0;
 	
 	if((brain.tar_w_set!=0&&w_rad!=0)||brain.spd>0)
-	brain.tar_w=LIMIT(my_deathzoom(brain.tar_w_set-mpu6050_fc.Gyro_deg.z,0.1)*k_z_c,-10,10);
+	brain.tar_w=LIMIT(my_deathzoom(brain.tar_w_set-mpu6050_fc.Gyro_deg.z,0.1)*k_z_c,-10,10)*brain.global.area_value* brain.global.min_width_value;
 	else
 	brain.tar_w=0;
+	
 	static u8 state_spd_rst;
 	switch(state_spd_rst){
 		case 0:
@@ -267,6 +269,10 @@ void brain_task(void *pdata)
 	brain.rst_all_soft=1;
 	rc_update=Rc_Get_SBUS.update;
 		
+	//test
+//	float x,y,z;
+//	arrow_check_to_bow(-2,-2,-2,1,&x,&y,&z);
+	
 	leg_task1(T);
 	leg_drive(&leg[1],T);
 	leg_drive(&leg[2],T);

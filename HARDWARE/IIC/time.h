@@ -30,5 +30,5 @@ uint32_t micros(void);
 #define GET_T_LEG2 2
 #define GET_T_LEG3 3
 #define GET_T_LEG4 4
-
+#define GET_T_TRIG 5
 #endif

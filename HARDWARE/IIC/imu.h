@@ -16,7 +16,7 @@ typedef struct
 	xyz_f_t g;
 	
 }ref_t;
-
+int madgwick_update_new(float ax,float ay,float az, float wx,float wy,float wz, float mx,float my ,float mz,float *rol,float *pit,float *yaw,float T)							;
 extern xyz_f_t reference_v;
 extern float reference_vr[3];
 void IMUupdate(float half_T,float gx, float gy, float gz, float ax, float ay, float az,float *rol,float *pit,float *yaw);

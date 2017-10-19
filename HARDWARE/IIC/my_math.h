@@ -24,7 +24,7 @@
 #define LIMIT( x,min,max ) ( (x) < (min)  ? (min) : ( (x) > (max) ? (max) : (x) ) )
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
-
+float my_atan(float x, float y);
 float my_abs(float f);
 REAL fast_atan2(REAL y, REAL x);
 float my_pow(float a);

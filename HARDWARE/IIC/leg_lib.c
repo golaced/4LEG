@@ -119,6 +119,43 @@ yaw1=yaw-90;
 }	
 }
 
+//点与球体的交点
+void arrow_check_to_bow(float cx,float cy,float cz,float rx,float ry,float rz,float *x,float *y,float *z)
+{
+  float yaw[3];
+  u8 flag[3];
+	float k[3],b[3];
+	float jiao1[3][3],jiao2[3][3];
+	float jiaon[3][3]={0};
+	float dis[2];
+	flag[0]=in_circle(0,0,rx,ry,cx,cy);
+	flag[1]=in_circle(0,0,rz,ry,cz,cy);
+	flag[2]=in_circle(0,0,rx,rz,cx,cz);
+	
+	if(flag[0]&&flag[1]&&flag[2]){
+  *x=cx;
+	*y=cy;
+  *z=cz; 		
+	}
+  else
+  {
+	//xy
+  limit_range_leg( cx, cy,rx,ry,&jiaon[0][Xr],&jiaon[0][Yr]);
+	//xz
+	limit_range_leg( cx, cz,rx,rz,&jiaon[1][Xr],&jiaon[1][Zr]);
+  //yz		
+  limit_range_leg( cy, cz,ry,rz,&jiaon[2][Yr],&jiaon[2][Zr]);
+		
+	*x=(jiaon[0][Xr]+jiaon[1][Xr])/2;
+	*y=(jiaon[0][Yr]+jiaon[2][Yr])/2;	
+	*z=(jiaon[2][Zr]+jiaon[1][Zr])/2;	
+//	*x=jiaon[0][Xr];
+//	*y=jiaon[0][Yr];
+//	*z=jiaon[2][Zr];
+	}		
+}
+
+
 //两点求直线方程
 void line_function_from_two_point(float x1,float y1,float x2,float y2,float *k,float *b)
 { 
@@ -250,6 +287,7 @@ float cal_dis_of_points(float x1,float y1,float x2,float y2)
 {
 return sqrt(pow(x1-x2,2)+pow(y1-y2,2));
 }	
+
 //判断一个点在椭圆内部
 u8 in_circle(float cx,float cy,float d_short,float d_long,float x,float y)
 {
@@ -277,6 +315,19 @@ void conver_body_to_global(float bx,float by,float *gx,float *gy)
  *gx=bx+brain.sys.leg_local[1].x-leg[4].pos_now[2].x+brain.sys.off_cor[Xr];
  *gy=by+brain.sys.leg_local[1].y-leg[4].pos_now[2].y+brain.sys.off_cor[Yr];
 }
+
+//计算点矢量两侧对称点
+void two_point_between_arror(float cx,float cy,float yaw,float *x1,float *y1,float *x2,float *y2,float dis)
+{
+  float k_90,b_90;
+  float jiao[2][2];
+	line_function90_from_arrow(cx,cy,yaw,&k_90,&b_90);
+	cal_jiao_of_tuo_and_line(cx,cy,yaw+90,dis,dis,&jiao[0][Xr],&jiao[0][Yr],&jiao[1][Xr],&jiao[1][Yr]); 
+	*x1=jiao[0][Xr];
+  *y1=jiao[0][Yr];
+  *x2=jiao[1][Xr];
+  *y2=jiao[1][Yr];
+}	
 
 
 void limit_range_leg(float x,float y,float min,float max,float *xout,float *yout)
