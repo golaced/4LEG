@@ -34,8 +34,9 @@ u8 trig_list_b[5]=		 {0,4,1,2,3};
 u8 trig_list_l[5]=		 {0,3,2,4,1};	
 float yaw_in=To_180_degrees(yaw);
 float yaw_temp=yaw_trig;
+u8 out;
 u8 temp_id;
-				if(id==last_move_id||id==last_last_move_id)
+				if(id==last_move_id)
 				{
 				  for(i=1;i<5;i++){
 					if(yaw_in>yaw_temp&&yaw_in<90+yaw_temp)
@@ -51,24 +52,33 @@ u8 temp_id;
 				  }
 					if(i>=4)
 						if(yaw_in>yaw_temp&&yaw_in<90+yaw_temp)
-						return trig_list_r[1];
+						out= trig_list_r[1];
 						else if(yaw_in<-yaw_temp&&yaw_in>-90-yaw_temp)
-						return trig_list_l[1];
+						out= trig_list_l[1];
 						else if((yaw_in<yaw_temp&&yaw_in>=0)||(yaw_in>-yaw_temp&&yaw_in<0))
-						return trig_list_f[1];
+						out= trig_list_f[1];
 						else
-						return trig_list_b[1];
+						out= trig_list_b[1];
 					else
 						if(yaw_in>yaw_temp&&yaw_in<90+yaw_temp)
-						return trig_list_r[i+1];
+						out= trig_list_r[i+1];
 						else if(yaw_in<-yaw_temp&&yaw_in>-90-yaw_temp)
-						return trig_list_l[i+1];
+						out= trig_list_l[i+1];
 						else if((yaw_in<yaw_temp&&yaw_in>=0)||(yaw_in>-yaw_temp&&yaw_in<0))
-						return trig_list_f[i+1];
+						out= trig_list_f[i+1];
 						else
-						return trig_list_b[i+1];
+						out= trig_list_b[i+1];
 				}else	
-        return id;
+        out=id;
+				
+			if(out==last_move_id)
+			for(i=1;i<5;i++)
+			{
+			if(i!=last_move_id)
+			{out=i;break;}
+			}
+				
+			return out;	
 }
 
 //跨腿重复保护器
@@ -118,9 +128,73 @@ yaw1=yaw-90;
 *ny=y+cos(yaw1*ANGLE_TO_RADIAN)*dis;	
 }	
 }
-
+//跨脚范围修正
+void limit_trig_pos_of_leg(float cx,float cy,float cz,float rx,float ry,float rz,float *x,float *y,float *z)
+{
+ u8 flag[3];
+ float k[3],b[3];
+ float dis[2];
+ float jiaodiaoxy[3][3]={0};
+ float jiaodiaoxz[3][3]={0};
+ float jiaodiaoyz[3][3]={0};	
+ 
+	flag[0]=in_circle(0,0,rx,ry,cx,cy);
+	flag[1]=in_circle(0,0,rz,ry,cz,cy);
+	flag[2]=in_circle(0,0,rx,rz,cx,cz);
+ if(flag[0]&&flag[1]&&flag[2])
+ {
+  *x=cx;
+	*y=cy;
+  *z=cz;
+ }else
+ {
+ //xy
+   k[0]=cy/(cx+0.00001);
+	 //计算速度直线与椭圆交点
+	 float temp=sqrt(pow(rx,2)/(1+pow(rx*k[0]/ry,2)));
+	 //判断速度方向交点符号
+	 jiaodiaoxy[0][Xr]=temp; 
+	 jiaodiaoxy[1][Xr]=-temp; 
+	 jiaodiaoxy[0][Yr]=k[0]*jiaodiaoxy[0][Xr];
+	 jiaodiaoxy[1][Yr]=k[0]*jiaodiaoxy[1][Xr];
+	 dis[0]=cal_dis_of_points(cx,cy,jiaodiaoxy[0][Xr],jiaodiaoxy[0][Yr]);
+   dis[1]=cal_dis_of_points(cx,cy,jiaodiaoxy[1][Xr],jiaodiaoxy[1][Yr]);
+	 if(dis[0]<dis[1])
+	 {jiaodiaoxy[2][Xr]=jiaodiaoxy[0][Xr];jiaodiaoxy[2][Yr]=jiaodiaoxy[0][Yr];}
+	 else
+	 {jiaodiaoxy[2][Xr]=jiaodiaoxy[1][Xr];jiaodiaoxy[2][Yr]=jiaodiaoxy[1][Yr];}
+	//xz 
+   cal_jiao_of_tuo_and_line(cx,cz,rx,rz,90,&jiaodiaoxz[0][Xr],&jiaodiaoxz[0][Zr],&jiaodiaoxz[1][Xr],&jiaodiaoxz[1][Zr]);
+	 dis[0]=cal_dis_of_points(cx,cz,jiaodiaoxz[0][Xr],jiaodiaoxz[0][Zr]);
+   dis[1]=cal_dis_of_points(cx,cz,jiaodiaoxz[1][Xr],jiaodiaoxz[1][Zr]);
+	 if(dis[0]<dis[1])
+	 {jiaodiaoxz[2][Xr]=jiaodiaoxz[0][Xr];jiaodiaoxz[2][Zr]=jiaodiaoxz[0][Zr];}
+	 else
+	 {jiaodiaoxz[2][Xr]=jiaodiaoxz[1][Xr];jiaodiaoxz[2][Zr]=jiaodiaoxz[1][Zr];}
+	//yz 
+	 cal_jiao_of_tuo_and_line(cy,cz,ry,rz,90,&jiaodiaoyz[0][Yr],&jiaodiaoyz[0][Zr],&jiaodiaoyz[1][Yr],&jiaodiaoyz[1][Zr]);
+	 dis[0]=cal_dis_of_points(cy,cz,jiaodiaoyz[0][Yr],jiaodiaoyz[0][Zr]);
+   dis[1]=cal_dis_of_points(cy,cz,jiaodiaoyz[1][Yr],jiaodiaoyz[1][Zr]);
+	 if(dis[0]<dis[1])
+	 {jiaodiaoyz[2][Yr]=jiaodiaoyz[0][Yr];jiaodiaoyz[2][Zr]=jiaodiaoyz[0][Zr];}
+	 else
+	 {jiaodiaoyz[2][Yr]=jiaodiaoyz[1][Yr];jiaodiaoyz[2][Zr]=jiaodiaoyz[1][Zr];}
+	
+  if(fabs(jiaodiaoxz[2][Xr])<fabs(jiaodiaoxy[2][Xr]))	 
+	*x=jiaodiaoxz[2][Xr];
+	else
+	*x=jiaodiaoxy[2][Xr];	
+	
+	if(fabs(jiaodiaoyz[2][Yr])<fabs(jiaodiaoxy[2][Yr]))	 
+	*y=jiaodiaoyz[2][Yr];
+	else
+	*y=jiaodiaoxy[2][Yr];	
+	
+	*z=(jiaodiaoxz[2][Zr]+jiaodiaoyz[2][Zr])/2;	
+ }
+}
 //点与球体的交点
-void arrow_check_to_bow(float cx,float cy,float cz,float rx,float ry,float rz,float *x,float *y,float *z)
+u8 arrow_check_to_bow(float cx,float cy,float cz,float rx,float ry,float rz,float *x,float *y,float *z)
 {
   float yaw[3];
   u8 flag[3];
@@ -135,7 +209,8 @@ void arrow_check_to_bow(float cx,float cy,float cz,float rx,float ry,float rz,fl
 	if(flag[0]&&flag[1]&&flag[2]){
   *x=cx;
 	*y=cy;
-  *z=cz; 		
+  *z=cz;
+  return 1; 		
 	}
   else
   {
@@ -152,6 +227,7 @@ void arrow_check_to_bow(float cx,float cy,float cz,float rx,float ry,float rz,fl
 //	*x=jiaon[0][Xr];
 //	*y=jiaon[0][Yr];
 //	*z=jiaon[2][Zr];
+	 return 0;	
 	}		
 }
 
@@ -200,6 +276,9 @@ u8 cross_point_of_lines(float k1,float b1,float k2,float b2,float *x,float *y)
 		return 0;}
 	float x_temp;
 	*x=x_temp=(b1-b2)/(k2-k1+0.00001);
+//	if(fabs(k1)>10000&&fabs(b1)>10000)
+//  *y=0;
+//  else	
 	*y=k1*x_temp+b1;
 	
 	return 1;
@@ -212,7 +291,7 @@ u8 check_point_front_arrow(float x,float y,float cx,float cy,float yaw)
 	float kc_90=-1/tan(tyaw*ANGLE_TO_RADIAN);
 	float bc_90=cy-kc_90*cx;
 	float cx_t=cx+sin(yaw*ANGLE_TO_RADIAN)*1,cy_t=cy+cos(yaw*ANGLE_TO_RADIAN)*1;
-	int flag[2];
+	float flag[2];
 	flag[0]=kc_90*cx_t+bc_90-cy_t;
 	flag[1]=kc_90*x+bc_90-y;
 	if((flag[0]>0&&flag[1]>0)||(flag[0]<0&&flag[1]<0))
@@ -224,7 +303,7 @@ u8 check_point_front_arrow(float x,float y,float cx,float cy,float yaw)
 //判断两点在线同一侧
 u8 check_points_same_side(float x1,float y1,float x2,float y2,float k,float b)
 { 
-	int flag[2];
+	float flag[2];
 	flag[0]=k*x1+b-y1;
 	flag[1]=k*x2+b-y2;
 	if(flag[0]*flag[1]>0)
@@ -406,7 +485,7 @@ void limit_move_range_tangle(u8 id,float cx,float cy,float x,float y,float min,f
 }	
 
 //判断点在移动区域内部tangle
-u8 check_in_move_range_tangle(u8 id,float x,float y,float cx,float cy,float min,float max)
+u8 check_in_move_range_tangle(u8 id,float x,float y,float cx,float cy,float min,float max,float *min_dis)
 {
 		float tangle[4][2];
 		u8 flag[3];
@@ -445,6 +524,9 @@ u8 check_in_move_range_tangle(u8 id,float x,float y,float cx,float cy,float min,
 	 flag[0]=inTrig2(x,y,tangle[0][Xr],tangle[0][Yr],tangle[1][Xr],tangle[1][Yr]
 													 ,tangle[2][Xr],tangle[2][Yr],tangle[3][Xr],tangle[3][Yr]); 
 	 
+	 *min_dis=get_min_dis_arrow_to_tangle(x,y,tangle[0][Xr],tangle[0][Yr],tangle[1][Xr],tangle[1][Yr]
+											 ,tangle[2][Xr],tangle[2][Yr],tangle[3][Xr],tangle[3][Yr]);
+		
 	 if(flag[0])
 	  return 1;
 	 else 
@@ -457,15 +539,6 @@ u8 check_in_move_range(u8 id,float x,float y,float cx,float cy,float min,float m
 		float tangle[4][2];
 		float tar_x,tar_y;
 		u8 flag[3];
-	 //test 
-//	 id=1;
-//	 x=2;
-//	 y=2;
-//	 cx=0;
-//	 cy=0;
-//	 min=1;
-//	 max=2;
-	 //
 	
 	  float cx1=x-cx,cy1=y-cy;
 	 switch (id)
@@ -674,6 +747,27 @@ float length[5];
 	 *jiao1_y=jiaodiao[0][Yr];
 	 *jiao2_x=jiaodiao[1][Xr];
 	 *jiao2_y=jiaodiao[1][Yr]; 
+}
+//点矢与方框最短距离
+float get_min_dis_arrow_to_tangle(float x,float y,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4)
+{
+	u8 i;
+	float k[4],b[4];
+	line_function_from_two_point(x1,y1,x2,y2,&k[0],&b[0]);
+	line_function_from_two_point(x2,y2,x3,y3,&k[1],&b[1]);
+	line_function_from_two_point(x3,y3,x4,y4,&k[2],&b[2]);
+	line_function_from_two_point(x4,y4,x1,y1,&k[3],&b[3]);
+  float dis[4];
+  dis[0]=dis_point_to_line(x,y,k[0],b[0]);
+  dis[1]=dis_point_to_line(x,y,k[1],b[1]);
+	dis[2]=dis_point_to_line(x,y,k[2],b[2]);
+	dis[3]=dis_point_to_line(x,y,k[3],b[3]);
+	float min_dis=dis[0];
+  for(i=0;i<4;i++)	
+	  if(dis[i]<min_dis)
+	     min_dis=dis[i];
+		
+	return min_dis;
 }
 
 //点矢量与四边形交点

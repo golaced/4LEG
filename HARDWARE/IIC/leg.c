@@ -11,15 +11,33 @@ BRAIN_STRUCT brain;
 //%    /  \\                                       ||
 //%   / 2  \\    l3                                ||
 //%          O                                     OO
+#define DJ_MG995 9.34
+#define DJ_MG956 9.34
+#define DJ_MG955 9.34
+#define DJ_MG954 5.7
+#define DJ_MG355 11.34
+#define DJ_6221MG 12.64
+#define DJ_DSERVO 11.34
+
+float off_local[2]={2.68,0.680};//{2.35,0.0};	
+float k_z=0.968;
+#if TIRG_CURVE_USE_BAI
+float flt_leg=0;//0.8;//.1618;	
+#else
+float flt_leg=0.8;//0.8;//.1618;	
+#endif
+u16 SET_PWM3_OFF=0;
+
 void READ_LEG_ID(LEG_STRUCT *in)
 {
 in->sys.id=0;
 }
-float off_local[2]={2.68,0.680};//{2.35,0.0};	
-float k_z=0.968;
-u16 SET_PWM3_OFF=0;
+
 void leg_init( LEG_STRUCT *in,u8 id)
 {
+static u8 init;
+if(!init)
+	init=1;
 	
 in->sys.id=id;
 in->leg_ground=1;
@@ -32,7 +50,7 @@ in->sys.off_local[1]=off_local[1];
 switch(in->sys.id){
 case 1:	
 in->sys.leg_set_invert=1;
-in->sys.PWM_OFF[0]=1566;//570;	
+in->sys.PWM_OFF[0]=1730;//570;	
 in->sys.PWM_OFF[1]=870;//1870;	
 in->sys.PWM_OFF[2]=1500+SET_PWM3_OFF;//1600		
 in->sys.PWM_OFF[3]=1380;
@@ -48,7 +66,7 @@ break;
 case 2:	
 in->sys.leg_set_invert=0;
 in->sys.PWM_OFF[0]=586;	
-in->sys.PWM_OFF[1]=1960;	
+in->sys.PWM_OFF[1]=1980;	
 in->sys.PWM_OFF[2]=1510+SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1380;
 in->sys.sita_flag[0]=1;
@@ -63,7 +81,7 @@ break;
 case 3:	
 in->sys.leg_set_invert=1;	
 in->sys.PWM_OFF[0]=1060;	
-in->sys.PWM_OFF[1]=1900;//1540;	
+in->sys.PWM_OFF[1]=2000;//1540;	
 in->sys.PWM_OFF[2]=1510-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1416;
 in->sys.sita_flag[0]=1;
@@ -77,7 +95,7 @@ in->sys.pwm_id[3]=4;
 break;
 case 4:	
 in->sys.leg_set_invert=0;	
-in->sys.PWM_OFF[0]=1530;	
+in->sys.PWM_OFF[0]=1480;	
 in->sys.PWM_OFF[1]=720;	
 in->sys.PWM_OFF[2]=1390-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1360;
@@ -104,9 +122,9 @@ in->pos_tar_trig[2].x=in->sys.init_end_pos.x;
 in->pos_tar_trig[2].y=in->sys.init_end_pos.y;
 in->pos_tar_trig[2].z=in->sys.init_end_pos.z;
 
-in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25/57.3);	
-in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25/57.3);//0.25;	
-in->sys.limit.z=(in->sys.l1+in->sys.l2*cos(30/57.3)+in->sys.l3*cos(30/57.3));	
+in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25*ANGLE_TO_RADIAN);	
+in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25*ANGLE_TO_RADIAN);//0.25;	
+in->sys.limit.z=(in->sys.l1+in->sys.l2*cos(30*ANGLE_TO_RADIAN)+in->sys.l3*cos(30*ANGLE_TO_RADIAN));	
 	
 in->sys.limit_min.z=(in->sys.l3-(in->sys.l2-in->sys.l1))*1.05;
 
@@ -123,28 +141,28 @@ in->sys.PWM_MAX[2]=2500-DL;
 in->sys.PWM_MAX[3]=2500-DL;	
 switch(in->sys.id){
 case 1:
-in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
-in->sys.PWM_PER_DEGREE[1]=11.34;//12.64;
-in->sys.PWM_PER_DEGREE[2]=11.34;//9.34;
-in->sys.PWM_PER_DEGREE[3]=9.34;
+in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;
+in->sys.PWM_PER_DEGREE[1]=DJ_6221MG;
+in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
+in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 case 2:
-in->sys.PWM_PER_DEGREE[0]=11.34;//9.34;//7.8;//9.1;		
-in->sys.PWM_PER_DEGREE[1]=11.34;//9.34;
-in->sys.PWM_PER_DEGREE[2]=11.34;//9.34;
-in->sys.PWM_PER_DEGREE[3]=9.34;
+in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;	
+in->sys.PWM_PER_DEGREE[1]=DJ_DSERVO;
+in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
+in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 case 3:
-in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
-in->sys.PWM_PER_DEGREE[1]=9.34;
-in->sys.PWM_PER_DEGREE[2]=11.34;//9.34;
-in->sys.PWM_PER_DEGREE[3]=9.34;
+in->sys.PWM_PER_DEGREE[0]=DJ_MG956;
+in->sys.PWM_PER_DEGREE[1]=DJ_MG954;
+in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
+in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 case 4:
-in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
-in->sys.PWM_PER_DEGREE[1]=12.64;
-in->sys.PWM_PER_DEGREE[2]=11.34;
-in->sys.PWM_PER_DEGREE[3]=9.34;
+in->sys.PWM_PER_DEGREE[0]=DJ_MG954;//7.8;//9.1;		
+in->sys.PWM_PER_DEGREE[1]=DJ_6221MG;
+in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
+in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 default:
 in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
@@ -171,7 +189,7 @@ u8 pos_range_check(LEG_STRUCT * in,float x,float y,float z)
  else
 	 return 1;
 }
-float flt_leg=0.1618;	
+
 //从位置结算关节角度 
 void cal_sita_from_pos(LEG_STRUCT * in,float x_i,float y_i,float z_i,u8 out)
 { 
@@ -185,13 +203,15 @@ float x=LIMIT(x_i,-in->sys.limit.x,in->sys.limit.x);
 float y=LIMIT(y_i,-in->sys.limit.y,in->sys.limit.y);
 float z=LIMIT(z_i,-in->sys.limit.z,in->sys.limit.z);	
 float x1,y1,z1;	
-if(in->curve_trig){
+if(in->curve_trig&&flt_leg>0){
 arrow_check_to_bow(x_i,y_i,z_i,in->sys.limit.x,in->sys.limit.y,in->sys.limit.z,&x1,&y1,&z1);	
 
 x=(x_i*(1-flt_leg)+x1*flt_leg);
 y=(y_i*(1-flt_leg)+y1*flt_leg);
 z=(z_i*(1-flt_leg)+z1*flt_leg);	
 }	
+
+
 if(id==1&&in->curve_trig)
 	id=1;
 
@@ -378,20 +398,23 @@ u8 i;
 for(i=0;i<3;i++)
 cal_curve[i]=curve_cal(c0[id][i],c3[id][i],c4[id][i],c5[id][i],c6[id][i],time_now);
 	
-
 in->pos_tar[2].x=cal_curve[Xs];
 in->pos_tar[2].y=cal_curve[Ys];
-in->pos_tar[2].z=cal_curve[Zs];
-	
-//if(in->sys.leg_set_invert){	
-//in->pos_tar[2].x+=-in->deng[Xr]*dt;
-//in->pos_tar[2].y+=-in->deng[Yr]*dt;
-//}else{
-//in->pos_tar[2].x+=-in->deng[Xr]*dt;
-//in->pos_tar[2].y+=-in->deng[Yr]*dt;
-//}
-
+in->pos_tar[2].z=cal_curve[Zs];	
 }	
+
+void leg_curve_bai(LEG_STRUCT * in,float sx,float sy,float sz,float tx,float ty,float tz,float h,float time_now,float dt,float T)
+{
+float sita=(2*3.1415926/(T/dt))*(time_now/dt);
+in->pos_tar[2].x=(tx-sx)*(sita-sin(sita))/(2*3.1415926)+sx;
+in->pos_tar[2].y=(ty-sy)*(sita-sin(sita))/(2*3.1415926)+sy;
+float off_h=0;
+//if(tz>sz)
+off_h=(tz-sz)	;
+//off_h=0;
+in->pos_tar[2].z=-(h+off_h)*(1-cos(sita))/(2)+sz;
+}	
+
 
 float rate_delay_kuai=0.066;
 float delay_time_kuai=0.66;
@@ -403,6 +426,7 @@ static u16 ground_mask[5];
 static u8 state[5];
 static float time[5],delay[5];	
 static float temp_h;
+static float pos_str[5][3],pos_tar[5][3];
 //判断是否重合等
 	
 switch(state[id])
@@ -437,14 +461,28 @@ break;///////////////
 case 3:
 if(*en){
 in->pos_tar[2].z=temp_h-1.61*down_h;	
+#if !TIRG_CURVE_USE_BAI
 cal_curve_from_pos(in,desire_time);	
+#else	
+pos_str[id][Xs]=in->pos_now[2].x;
+pos_str[id][Ys]=in->pos_now[2].y;
+pos_str[id][Zs]=in->pos_now[2].z;
+pos_tar[id][Xs]=in->pos_tar_trig[2].x;
+pos_tar[id][Ys]=in->pos_tar_trig[2].y;
+pos_tar[id][Zs]=in->pos_tar_trig[2].z;	
+#endif
 time[id]+=dt;
 state[id]=4;
 }
 break;
 case 4:
 if(*en){
+#if !TIRG_CURVE_USE_BAI
 cal_pos_tar_from_curve(in,time[id],dt);
+#else
+leg_curve_bai(in,pos_str[id][Xr],pos_str[id][Yr],pos_str[id][Zr],pos_tar[id][Xr],pos_tar[id][Yr],pos_tar[id][Zr],in->sys.leg_up_high
+	,time[id],dt,desire_time);
+#endif
 #if TWO_LEG_TEST
 if(time[id]<desire_time/2)	
 time[id]+=dt;
@@ -471,9 +509,8 @@ void  cal_pos_tar_for_deng(LEG_STRUCT * in,float spdx,float spdy,float dt)
 u8 id=in->sys.id;
 static u8 state;
 static float h[5];
-static float time;	
-//	if(!in->sys.use_ground_check)
-//   in->leg_ground=1;	
+static float time;
+static float reg[5][3];	
 	float spd_wx,spd_wy;
 	float x_temp=fabs(sin((90-brain.sys.yaw_trig)/57.3))*brain.tar_w*brain.global.center_stable_weight;
 	float y_temp=fabs(cos((90-brain.sys.yaw_trig)/57.3))*brain.tar_w*brain.global.center_stable_weight;
@@ -508,15 +545,33 @@ static float time;
 	in->pos_tar[2].x+=-(spdx+spd_wx)*dt;
 	in->pos_tar[2].y+=-(spdy+spd_wy)*dt;
 	 }
+	 
+	//protect	
+	if(isnan(in->pos_tar[2].x))
+	in->pos_tar[2].x=reg[id][0];
+	if(isnan(in->pos_tar[2].y))
+	in->pos_tar[2].y=reg[id][1];
+	if(isnan(in->pos_tar[2].z))
+	in->pos_tar[2].z=reg[id][2];
+
+	if(!isnan(in->pos_tar[2].x))
+	reg[id][0]=in->pos_tar[2].x;
+	if(!isnan(in->pos_tar[2].y))
+	reg[id][1]=in->pos_tar[2].y;
+	if(!isnan(in->pos_tar[2].z))
+	reg[id][2]=in->pos_tar[2].z; 
+
+	 
 	in->pos_tar[2].x=LIMIT(in->pos_tar[2].x,-in->sys.limit.x,in->sys.limit.x);
 	in->pos_tar[2].y=LIMIT(in->pos_tar[2].y,-in->sys.limit.y,in->sys.limit.y);	 
 	limit_range_leg(in->pos_tar[2].x,in->pos_tar[2].y,in->sys.limit.x,in->sys.limit.y,&in->pos_tar[2].x,&in->pos_tar[2].y);
 	 
 	 
-	//in->pos_tar[2].z=LIMIT(in->pos_tar[2].z+att_control_out[id]+(brain.tar_h-brain.global.end_pos_global[0].z)*dt*1.618,in->sys.limit_min.z,in->sys.limit.z);	 
+	//in->pos_tar[2].z=LIMIT(in->pos_now[2].z+att_control_out[id]-(brain.tar_h-brain.global.end_pos_global[0].z)*dt*1.618,in->sys.limit_min.z,in->sys.limit.z);	 
 	in->pos_tar[2].z=LIMIT(att_control_out[id]+brain.tar_h,in->sys.limit_min.z,in->sys.limit.z);	 
 	in->pos_tar[2].z=LIMIT(in->pos_tar[2].z,in->sys.limit_min.z,in->sys.limit.z);
 	
+	 
 	}
 }	
 
@@ -686,5 +741,19 @@ void leg_drive(LEG_STRUCT * in,float dt)
 		in->sys.pos_tar_reg[2]=in->pos_tar_trig[2].z;
 		//
 }
+
+//--------------------------------------------------VMC control-----------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 
 
