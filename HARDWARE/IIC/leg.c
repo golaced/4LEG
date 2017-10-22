@@ -19,7 +19,7 @@ BRAIN_STRUCT brain;
 #define DJ_6221MG 12.64
 #define DJ_DSERVO 11.34
 
-float off_local[2]={2.68,0.680};//{2.35,0.0};	
+float off_local[2]={2,0.680};//{2.35,0.0};	
 float k_z=0.968;
 #if TIRG_CURVE_USE_BAI
 float flt_leg=0;//0.8;//.1618;	
@@ -109,36 +109,6 @@ in->sys.pwm_id[2]=2;
 in->sys.pwm_id[3]=3;
 break;
 }
-int flag[2]={1,1};
-if(in->sys.id==3||in->sys.id==4)
-	flag[0]=-1;
-if(in->sys.id==2||in->sys.id==4)
-	flag[1]=-1;
-in->sys.init_end_pos.x=in->pos_tar[2].x=in->sys.pos_tar_trig_test[2].x=in->sys.off_local[0]*flag[0];	
-in->sys.init_end_pos.y=in->pos_tar[2].y=in->sys.pos_tar_trig_test[2].y=in->sys.off_local[1]*flag[1];		
-in->sys.init_end_pos.z=in->pos_tar[2].z=in->sys.pos_tar_trig_test[2].z=(in->sys.l1+in->sys.l2+in->sys.l3)*0.88*k_z;
-	
-in->pos_tar_trig[2].x=in->sys.init_end_pos.x;
-in->pos_tar_trig[2].y=in->sys.init_end_pos.y;
-in->pos_tar_trig[2].z=in->sys.init_end_pos.z;
-
-in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25*ANGLE_TO_RADIAN);	
-in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25*ANGLE_TO_RADIAN);//0.25;	
-in->sys.limit.z=(in->sys.l1+in->sys.l2*cos(30*ANGLE_TO_RADIAN)+in->sys.l3*cos(30*ANGLE_TO_RADIAN));	
-	
-in->sys.limit_min.z=(in->sys.l3-(in->sys.l2-in->sys.l1))*1.05;
-
-in->sys.desire_time=0.4;
-
-int DL=88;
-in->sys.PWM_MIN[0]=500+DL;	
-in->sys.PWM_MIN[1]=500+DL;
-in->sys.PWM_MIN[2]=500+DL;
-in->sys.PWM_MIN[3]=500+DL;
-in->sys.PWM_MAX[0]=2500-DL;
-in->sys.PWM_MAX[1]=2500-DL;	
-in->sys.PWM_MAX[2]=2500-DL;	
-in->sys.PWM_MAX[3]=2500-DL;	
 switch(in->sys.id){
 case 1:
 in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;
@@ -169,9 +139,39 @@ in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;
 in->sys.PWM_PER_DEGREE[1]=9.34;
 in->sys.PWM_PER_DEGREE[2]=9.34;	
 in->sys.PWM_PER_DEGREE[3]=9.34;
-
 break;
 }
+
+int flag[2]={1,1};
+if(in->sys.id==3||in->sys.id==4)
+	flag[0]=-1;
+if(in->sys.id==2||in->sys.id==4)
+	flag[1]=-1;
+in->sys.init_end_pos.x=in->pos_tar[2].x=in->sys.pos_tar_trig_test[2].x=in->sys.off_local[0]*flag[0];	
+in->sys.init_end_pos.y=in->pos_tar[2].y=in->sys.pos_tar_trig_test[2].y=in->sys.off_local[1]*flag[1];		
+in->sys.init_end_pos.z=in->pos_tar[2].z=in->sys.pos_tar_trig_test[2].z=(in->sys.l1+in->sys.l2+in->sys.l3)*0.88*k_z;
+	
+in->pos_tar_trig[2].x=in->sys.init_end_pos.x;
+in->pos_tar_trig[2].y=in->sys.init_end_pos.y;
+in->pos_tar_trig[2].z=in->sys.init_end_pos.z;
+
+in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25*ANGLE_TO_RADIAN);	
+in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25*ANGLE_TO_RADIAN);//0.25;	
+in->sys.limit.z=(in->sys.l1+in->sys.l2*cos(30*ANGLE_TO_RADIAN)+in->sys.l3*cos(30*ANGLE_TO_RADIAN));	
+	
+in->sys.limit_min.z=(in->sys.l3-(in->sys.l2-in->sys.l1))*1.15;
+
+in->sys.desire_time=0.4;
+
+int DL=88;
+in->sys.PWM_MIN[0]=500+DL;	
+in->sys.PWM_MIN[1]=500+DL;
+in->sys.PWM_MIN[2]=500+DL;
+in->sys.PWM_MIN[3]=500+DL;
+in->sys.PWM_MAX[0]=2500-DL;
+in->sys.PWM_MAX[1]=2500-DL;	
+in->sys.PWM_MAX[2]=2500-DL;	
+in->sys.PWM_MAX[3]=2500-DL;	
 in->sys.en_pwm_out=1;
 
 in->sys.leg_up_high=3;
@@ -301,7 +301,6 @@ void cal_pwm_from_sita(LEG_STRUCT * in)
 	+in->sys.sita_flag[i]*in->sita[i]*in->sys.PWM_PER_DEGREE[i],in->sys.PWM_MIN[i],in->sys.PWM_MAX[i]);
 	for(i=1;i<4;i++)
 	in->sys.PWM_OUT[i]=LIMIT(in->sys.PWM_OFF[i]+in->sys.sita_flag[i]*in->sita[i]*in->sys.PWM_PER_DEGREE[i],in->sys.PWM_MIN[i],in->sys.PWM_MAX[i]);
-	//in->sys.PWM_OUT[3]=LIMIT(in->sys.PWM_OFF[3],500,2500);
 }	
 
 //计算采样点曲线三维坐标
@@ -412,7 +411,7 @@ float off_h=0;
 //if(tz>sz)
 off_h=(tz-sz)	;
 //off_h=0;
-in->pos_tar[2].z=-(h+off_h)*(1-cos(sita))/(2)+sz;
+in->pos_tar[2].z=-(h+off_h)*(1-cos(sita))/2+sz;
 }	
 
 
@@ -436,7 +435,7 @@ if(*en){//由着地点规划当前轨迹
 //cal_curve_from_pos(in,desire_time);
 state[id]=1;	
 ground_mask[id]=time[id]=delay[id]=0;	
-	in->leg_ground=0;
+in->leg_ground=0;
 }
 break;
 case 1://有时间和轨迹计算每一时间的曲线坐标
@@ -444,7 +443,6 @@ if(*en){
 in->pos_tar[2].z=in->pos_now[2].z+down_h;
 temp_h=in->pos_now[2].z;
 {state[id]=2;}
-
 }
 break;
 case 2:
@@ -480,8 +478,8 @@ if(*en){
 #if !TIRG_CURVE_USE_BAI
 cal_pos_tar_from_curve(in,time[id],dt);
 #else
-leg_curve_bai(in,pos_str[id][Xr],pos_str[id][Yr],pos_str[id][Zr],pos_tar[id][Xr],pos_tar[id][Yr],pos_tar[id][Zr],in->sys.leg_up_high
-	,time[id],dt,desire_time);
+leg_curve_bai(in,pos_str[id][Xr],pos_str[id][Yr],pos_str[id][Zr],pos_tar[id][Xr],pos_tar[id][Yr],pos_tar[id][Zr]
+	,in->sys.leg_up_high,time[id],dt,desire_time-dt);
 #endif
 #if TWO_LEG_TEST
 if(time[id]<desire_time/2)	
@@ -512,8 +510,8 @@ static float h[5];
 static float time;
 static float reg[5][3];	
 	float spd_wx,spd_wy;
-	float x_temp=fabs(sin((90-brain.sys.yaw_trig)/57.3))*brain.tar_w*brain.global.center_stable_weight;
-	float y_temp=fabs(cos((90-brain.sys.yaw_trig)/57.3))*brain.tar_w*brain.global.center_stable_weight;
+	float x_temp=fabs(sin((90-brain.sys.yaw_trig)/57.3))*brain.tar_w;
+	float y_temp=fabs(cos((90-brain.sys.yaw_trig)/57.3))*brain.tar_w;
 	switch(id)
 	{
 	case 1:
@@ -533,8 +531,6 @@ static float reg[5][3];
 	spd_wy=y_temp;
 	break;
 	}
-	if(brain.ground_leg_num!=4&&brain.trot_gait)
-  spd_wy=spd_wx=0;
 	
 //判断是否重合等
 	if(!in->err&&in->leg_ground){
@@ -565,13 +561,10 @@ static float reg[5][3];
 	in->pos_tar[2].x=LIMIT(in->pos_tar[2].x,-in->sys.limit.x,in->sys.limit.x);
 	in->pos_tar[2].y=LIMIT(in->pos_tar[2].y,-in->sys.limit.y,in->sys.limit.y);	 
 	limit_range_leg(in->pos_tar[2].x,in->pos_tar[2].y,in->sys.limit.x,in->sys.limit.y,&in->pos_tar[2].x,&in->pos_tar[2].y);
-	 
-	 
+	  
 	//in->pos_tar[2].z=LIMIT(in->pos_now[2].z+att_control_out[id]-(brain.tar_h-brain.global.end_pos_global[0].z)*dt*1.618,in->sys.limit_min.z,in->sys.limit.z);	 
 	in->pos_tar[2].z=LIMIT(att_control_out[id]+brain.tar_h,in->sys.limit_min.z,in->sys.limit.z);	 
 	in->pos_tar[2].z=LIMIT(in->pos_tar[2].z,in->sys.limit_min.z,in->sys.limit.z);
-	
-	 
 	}
 }	
 
@@ -610,7 +603,7 @@ static u16 cnt[5];
 	}
 	in->sys.leg_up_high=brain.sys.leg_h[id];
 	in->sys.desire_time=brain.sys.desire_time;
-	if(brain.power_all)//&&in->sys.id!=1)
+	if(brain.power_all)
 		in->leg_power=1;
 	if(brain.control_mode)
 		in->control_mode=1;
@@ -633,8 +626,6 @@ static u16 cnt[5];
 		break;	
 	}
 
-	
-	
 	#if USE_BUS_DJ&&!USE_DJ_CONTROL_BOARD
 	if(in->leg_power==0){	
 		if(cnt[in->sys.id]++>1/0.02){cnt[in->sys.id]=0;
@@ -675,7 +666,6 @@ static u16 cnt[5];
 	
 	else{//----------------------not on control mode 强制测试摸个位置
 		in->pos_tar[2].x=in->sys.init_end_pos.x;in->pos_tar[2].y=in->sys.init_end_pos.y;in->pos_tar[2].z=in->sys.init_end_pos.z;
-		//in->leg_ground=1;
 		 if(in->sys.leg_set_invert)
 	{	
 	x_temp=-(in->sys.init_end_pos.x-in->sys.off_all.x);
@@ -694,12 +684,8 @@ static u16 cnt[5];
 	in->sita[0]=sita_test[0];in->sita[1]=sita_test[1];in->sita[2]=sita_test[2];in->sita[3]=sita_test[3];}
   cal_pwm_from_sita(in);//计算PWM由角度	
 	cal_sita_from_pos(in,x_temp,y_temp,z_temp,0);//从角度反推位置	
-	}
- 
-	
+	}	
 }
-
-
 
 void leg_drive(LEG_STRUCT * in,float dt)
 {  
@@ -719,8 +705,7 @@ void leg_drive(LEG_STRUCT * in,float dt)
 		in->pos_tar_trig[2].y=in->sys.init_end_pos.y;
 		in->pos_tar_trig[2].z=in->sys.init_end_pos.z+(float)RNG_Get_RandomRange(-1000,1000)/100000.;
 		}
-		
-
+	
 		if((in->pos_tar_trig[2].x!=in->sys.pos_tar_reg[0]||
 			 in->pos_tar_trig[2].y!=in->sys.pos_tar_reg[1]||
 			 in->pos_tar_trig[2].z!=in->sys.pos_tar_reg[2])&&!in->curve_trig)	
@@ -731,7 +716,7 @@ void leg_drive(LEG_STRUCT * in,float dt)
 		//着地
 		leg_ground_check(in);
 		//蹬
-		if(!in->curve_trig)//&&(fabs(in->deng[1])>0||fabs(in->deng[0])>0||(att_control_out[0]!=0)))
+		if(!in->curve_trig)
 		cal_pos_tar_for_deng(in,in->deng[0],in->deng[1],dt);	
 		//输出	
 	  leg_publish(in);
@@ -741,7 +726,6 @@ void leg_drive(LEG_STRUCT * in,float dt)
 		in->sys.pos_tar_reg[2]=in->pos_tar_trig[2].z;
 		//
 }
-
 //--------------------------------------------------VMC control-----------------------------
 
 

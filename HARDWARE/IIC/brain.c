@@ -112,7 +112,7 @@ in->sys.desire_time=0.8;//0.7;//0.76;
 in->sys.desire_time_init=in->sys.desire_time;
 in->sys.leg_move_min_dt=in->sys.desire_time*0.68;//35 ;
 
-in->sys.k_spd_to_range=2;
+in->sys.k_spd_to_range=1.618;
 
 in->sys.yaw_dead=10;
 
