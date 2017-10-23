@@ -1,5 +1,6 @@
 #include "include.h" 
 //--------------------------LEG_LIB---------------------------
+#define USE_LISENCE 1
 void cpuidGetId(void);
 //转换腿局部坐标系到全局机体坐标系
 void conver_legpos_to_barin(BRAIN_STRUCT *in,LEG_STRUCT * inl,u8 id)
@@ -24,6 +25,10 @@ u8 check_leg_near_init(float ero)
 	   dis[i]=cal_dis_of_points(leg[i].pos_now[2].x,leg[i].pos_now[2].y,
 		 leg[i].sys.init_end_pos.x,leg[i].sys.init_end_pos.y);
 	 }
+#if USE_LISENCE	 
+	if(license.state==0) 
+	  return 0xf;
+#endif	
   if(dis[1]<ero&&dis[2]<ero&&dis[3]<ero&&dis[4]<ero)
 	  return 1;
 	else 
@@ -81,7 +86,10 @@ u8 temp_id;
 			if(i!=last_move_id)
 			{out=i;break;}
 			}
-				
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
 			return out;	
 }
 
@@ -95,6 +103,11 @@ u8 trig_list_l[5]=		 {0,3,2,4,1};
 float yaw_in=To_180_degrees(yaw);
 float yaw_temp=yaw_trig;
 u8 temp_id;
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+
 				if(id==last_move_id||id==last_last_move_id)
 				{
 				  for(i=1;i<5;i++)
@@ -209,6 +222,10 @@ u8 arrow_check_to_bow(float cx,float cy,float cz,float rx,float ry,float rz,floa
 	flag[0]=in_circle(0,0,rx,ry,cx,cy);
 	flag[1]=in_circle(0,0,rz,ry,cz,cy);
 	flag[2]=in_circle(0,0,rx,rz,cx,cz);
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
 	
 	if(flag[0]&&flag[1]&&flag[2]){
   *x=cx;
@@ -275,6 +292,11 @@ u8 check_point_on_line(float x,float y,float k,float b,float err)
 //两直线交点
 u8 cross_point_of_lines(float k1,float b1,float k2,float b2,float *x,float *y)
 { 
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
 	if(ABS(k1-k2)<0.001){
 		*x=*y=0;
 		return 0;}
@@ -291,6 +313,11 @@ u8 cross_point_of_lines(float k1,float b1,float k2,float b2,float *x,float *y)
 //点在点矢量方向前
 u8 check_point_front_arrow(float x,float y,float cx,float cy,float yaw)
 { 
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
   float tyaw=90-yaw+0.000011;
 	float kc_90=-1/tan(tyaw*ANGLE_TO_RADIAN);
 	float bc_90=cy-kc_90*cx;
@@ -307,6 +334,11 @@ u8 check_point_front_arrow(float x,float y,float cx,float cy,float yaw)
 //判断两点在线同一侧
 u8 check_points_same_side(float x1,float y1,float x2,float y2,float k,float b)
 { 
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
 	float flag[2];
 	flag[0]=k*x1+b-y1;
 	flag[1]=k*x2+b-y2;
@@ -319,6 +351,11 @@ u8 check_points_same_side(float x1,float y1,float x2,float y2,float k,float b)
 //点矢量与直线交点
 u8 check_cross_arrow_line(float cx,float cy,float yaw,float k,float b,float *x,float *y)
 { 
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
   float tyaw=90-yaw+0.000011;
 	float kc=tan(tyaw*ANGLE_TO_RADIAN);
 	float bc=cy-kc*cx;
@@ -342,6 +379,11 @@ u8 check_cross_arrow_line(float cx,float cy,float yaw,float k,float b,float *x,f
 //点矢量垂线与直线交点
 u8 check_cross_arrow90_line(float cx,float cy,float yaw,float k,float b,float *x,float *y)
 { 
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
   float tyaw=90-yaw+0.000011;
 	float kc=tan(tyaw*ANGLE_TO_RADIAN);
 	float kc_90=-1/(kc+0.00001);
@@ -368,12 +410,22 @@ void cal_center_of_trig(float x1,float y1,float x2,float y2,float x3,float x4,fl
 //计算两点距离
 float cal_dis_of_points(float x1,float y1,float x2,float y2)
 {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
 return sqrt(pow(x1-x2,2)+pow(y1-y2,2));
 }	
 
 //判断一个点在椭圆内部
 u8 in_circle(float cx,float cy,float d_short,float d_long,float x,float y)
 {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
    float temp=pow(x-cx,2)/pow(d_short,2)+pow(y-cy,2)/pow(d_long,2);
    if(temp>1)//外面
 		 return 0;
@@ -384,6 +436,11 @@ u8 in_circle(float cx,float cy,float d_short,float d_long,float x,float y)
 //点到直线距离
 float dis_point_to_line(float x,float y,float k,float b)
 { 
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
   float k_90=-1/(k+0.000011);
 	float b_90=y-k_90*x;
 	float cx,cy;
@@ -452,7 +509,6 @@ void limit_move_range_tangle(u8 id,float cx,float cy,float x,float y,float min,f
   float tangle[4][2];
 	float length[5];
 	
-	
 	switch(id){
 	case 1:
 	length[1]=brain.sys.leg_move_range1[1];
@@ -491,6 +547,11 @@ void limit_move_range_tangle(u8 id,float cx,float cy,float x,float y,float min,f
 //判断点在移动区域内部tangle
 u8 check_in_move_range_tangle(u8 id,float x,float y,float cx,float cy,float min,float max,float *min_dis)
 {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
 		float tangle[4][2];
 		u8 flag[3];
 		float length[5];
@@ -540,6 +601,11 @@ u8 check_in_move_range_tangle(u8 id,float x,float y,float cx,float cy,float min,
 //判断点在移动区域内部
 u8 check_in_move_range(u8 id,float x,float y,float cx,float cy,float min,float max)
 {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
 		float tangle[4][2];
 		float tar_x,tar_y;
 		u8 flag[3];
@@ -745,6 +811,11 @@ void cal_jiao_of_range_and_line_tangle(u8 id,float cx,float cy,float min,float m
 //点矢与方框最短距离
 float get_min_dis_arrow_to_tangle(float x,float y,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4)
 {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
 	u8 i;
 	float k[4],b[4];
 	line_function_from_two_point(x1,y1,x2,y2,&k[0],&b[0]);
@@ -768,6 +839,11 @@ float get_min_dis_arrow_to_tangle(float x,float y,float x1,float y1,float x2,flo
 u8 check_point_to_tangle(float x,float y,float yaw,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4
 	,float *jiao1_x,float *jiao1_y,float *jiao2_x,float *jiao2_y)
 {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
 	u8 i,j=0;
   float k[4],b[4];
   float kc,bc;
@@ -825,6 +901,11 @@ u8 check_point_to_tangle(float x,float y,float yaw,float x1,float y1,float x2,fl
 u8 check_point_to_trig(float x,float y,float yaw,float x1,float y1,float x2,float y2,float x3,float y3
 	,float *jiao1_x,float *jiao1_y,float *jiao2_x,float *jiao2_y)
 {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
 	u8 i,j=0;
   float k[3],b[3];
   float kc,bc;
@@ -908,7 +989,7 @@ void cal_jiao_of_tuo_and_line(float cx,float cy,float d_short,float d_long,float
 
 static void swap(float *a, float *b)  
 {  
-    int     c;  
+    int   c;  
      c = *a;  
     *a = *b;  
     *b =  c;  
@@ -917,6 +998,11 @@ static void swap(float *a, float *b)
 //计算三角形面积
 float cal_area_trig(float ax,float ay,float bx,float by,float cx,float cy)
 {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
 float mx=cx-ax,my=cy-ay,nx=bx-ax,ny=by-ay;
 float Lm= sqrt(mx*mx+my*my),Ln= sqrt(nx*nx+ny*ny),cosA=(mx*nx+my*ny)/Lm/Ln;
 float sinA=sqrt(1-cosA*cosA);
@@ -929,6 +1015,11 @@ else
 
 //一个点在三角形内部
 u8 inTrig(float x, float y,float x1,float y1,float x2,float y2,float x3,float y3) {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
   POS a,b,c,p;
   p.x=x;p.y=y;
 	a.x=x1;a.y=y1;
@@ -949,6 +1040,11 @@ u8 inTrig(float x, float y,float x1,float y1,float x2,float y2,float x3,float y3
 //计算当前稳态余量
 float cal_steady_s(float cx,float cy,float x1,float y1,float x2,float y2,float x3, float y3 )
 {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
  float ST;
  float k[3],b[3];
  float D[3],temp;
@@ -983,6 +1079,11 @@ float cal_steady_s(float cx,float cy,float x1,float y1,float x2,float y2,float x
 //计算当前稳态余量4leg
 float cal_steady_s4(float cx,float cy,float x1,float y1,float x2,float y2,float x3, float y3 ,float x4,float y4 )
 {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
  float ST;
  float k[4],b[4];
  float D[4],temp;
@@ -1013,7 +1114,11 @@ float cal_steady_s4(float cx,float cy,float x1,float y1,float x2,float y2,float 
 //			 |                |
 //	a----------c   x			\/
 u8 segmentsIntr(POS b,POS c,POS d,POS a,float *x,float *y){  
-  
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+
 /** 1 解线性方程组, 求线段交点. **/  
 // 如果分母为0 则平行或共线, 不相交  
     float denominator = (b.y - a.y)*(d.x - c.x) - (a.x - b.x)*(c.y - d.y);  
@@ -1046,6 +1151,11 @@ u8 segmentsIntr(POS b,POS c,POS d,POS a,float *x,float *y){
 }  
 //一个点在四边形内部
 u8 inTrig2(float x, float y,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4) {
+#if USE_LISENCE	 
+if(license.state==0) 
+return 0xf;
+#endif		
+	
 	u8 in_tri1=0,in_tri2=0,in_line_t12=0,in_tri3=0,in_tri4=0;
 	in_tri1=inTrig(x,y, x1, y1, x2, y2, x3, y3);
   in_tri2=inTrig(x,y, x2, y2, x3, y3, x4, y4);
@@ -1106,24 +1216,28 @@ void find_closet_point(u8*min_id,float x, float y,float x1,float y1,float x2,flo
 #include <stdio.h>
 /*布尔型变量*/
 //--------------------------------------------------------------
-u8 license_check(char *data,char *key_lock,char * key_unlock,unsigned int num,u8 en);
-
 LIS license;
-char KEY_LOCK[9]={'1','2','3','4','5','6','7','8'}; 
-char KEY_UNLOCK[9]={'1','2','3','4','5','6','7','8'}; 
-char RX_BUF[125];
+char KEY_LOCK[9]={'3','2','3','8','3','2','6','6'}; 
+char KEY_UNLOCK[9]={'3','2','3','8','3','2','6','6'}; 
 void des_test(char *data,char *key_lock,char * key_unlock,unsigned int num);
+u8 license_check(char *data,char *key_lock,char * lisence,unsigned int num);
+void set_lisence(char *in)
+{ u8 i=0;
+  for(i=0;i<128;i++)
+   license.lisence[i]=in[i];
+}	
+
 void cpuidGetId(void)
-{  
+{  char RX_BUF[125]={0};
     license.id[0]= *(__IO u32*)(0x1FFF7A10);
     license.id[1]= *(__IO u32*)(0x1FFF7A14);
     license.id[2]= *(__IO u32*)(0x1FFF7A18);
 		RX_BUF[0]=license.id[0];
 		RX_BUF[1]=license.id[1];
 		RX_BUF[2]=license.id[2];
-	
-	  des_test(RX_BUF,KEY_LOCK,KEY_UNLOCK,125);
-	  license.state=license_check(RX_BUF,KEY_LOCK,KEY_UNLOCK,125,1);
+	  
+	  //des_test(RX_BUF,KEY_LOCK,KEY_UNLOCK,125);
+	  license.state=license_check(RX_BUF,KEY_LOCK,license.lisence,125);
 }
 
 
@@ -1301,7 +1415,7 @@ void des_test(char *data,char *key_lock,char * key_unlock,unsigned int num)
 }
 
 
-u8 license_check(char *data,char *key_lock,char * key_unlock,unsigned int num,u8 en)
+u8 license_check(char *data,char *key_lock,char * lisence,unsigned int num)
 {
      u8 i=0; 
     char MesHex[16]={0};         // 16个字符数组用于存放 64位16进制的密文
@@ -1318,7 +1432,7 @@ u8 license_check(char *data,char *key_lock,char * key_unlock,unsigned int num,u8
 		if(group_ero!=0)
     group++;
 		
-		for (i=0;i<8;i++){MyKey[i]=key_lock[i];YourKey[i]=key_unlock[i];}//copy key
+		for (i=0;i<8;i++){MyKey[i]=key_lock[i];}//copy key
 		
 		SetKey(MyKey);               // set key master
 
@@ -1343,18 +1457,9 @@ u8 license_check(char *data,char *key_lock,char * key_unlock,unsigned int num,u8
 		MesHex_OUT[k++]=MesHex[i];//out hex	
 			
     }
-    SetKey(YourKey);             // set key slave
-  	for(j=0;j<group;j++)//unlock
-		{
-			for (i=0;i<16;i++)
-			MesHexr[i]=MesHex_OUT[k1++];//out hex	
-       KickDes(MyMessage_OUT,MesHexr);                     // 解密输出到MyMessage   
-      for (i=0;i<8;i++)
-			MyMessage_Kick[l1++]=MyMessage_OUT[i];//copy group
-		}
-		
-		for(i=0;i<num;i++)
-		  if(MyMessage_Kick[i]!=MesHex_OUT[i])
+	
+		for(i=0;i<125;i++)
+		  if(lisence[i]!=MesHex_OUT[i])
 				 return 0;
 			
 		return 1;	

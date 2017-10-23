@@ -11,20 +11,21 @@ BRAIN_STRUCT brain;
 //%    /  \\                                       ||
 //%   / 2  \\    l3                                ||
 //%          O                                     OO
+//PWM gain of Pan
 #define DJ_MG995 9.34
 #define DJ_MG956 9.34
 #define DJ_MG955 9.34
-#define DJ_MG954 5.7
+#define DJ_MG945 5.7
 #define DJ_MG355 11.34
 #define DJ_6221MG 12.64
 #define DJ_DSERVO 11.34
 
-float off_local[2]={2,0.680};//{2.35,0.0};	
+float off_local[2]={2,0.680};
 float k_z=0.968;
 #if TIRG_CURVE_USE_BAI
-float flt_leg=0;//0.8;//.1618;	
+float flt_leg=0;
 #else
-float flt_leg=0.8;//0.8;//.1618;	
+float flt_leg=0.8;	
 #endif
 u16 SET_PWM3_OFF=0;
 
@@ -50,9 +51,9 @@ in->sys.off_local[1]=off_local[1];
 switch(in->sys.id){
 case 1:	
 in->sys.leg_set_invert=1;
-in->sys.PWM_OFF[0]=1730;//570;	
-in->sys.PWM_OFF[1]=870;//1870;	
-in->sys.PWM_OFF[2]=1500+SET_PWM3_OFF;//1600		
+in->sys.PWM_OFF[0]=1730;	
+in->sys.PWM_OFF[1]=870;	
+in->sys.PWM_OFF[2]=1500+SET_PWM3_OFF;		
 in->sys.PWM_OFF[3]=1380;
 in->sys.sita_flag[0]=-1;
 in->sys.sita_flag[1]=1;	
@@ -81,7 +82,7 @@ break;
 case 3:	
 in->sys.leg_set_invert=1;	
 in->sys.PWM_OFF[0]=1060;	
-in->sys.PWM_OFF[1]=2000;//1540;	
+in->sys.PWM_OFF[1]=2000;	
 in->sys.PWM_OFF[2]=1510-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1416;
 in->sys.sita_flag[0]=1;
@@ -124,18 +125,18 @@ in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 case 3:
 in->sys.PWM_PER_DEGREE[0]=DJ_MG956;
-in->sys.PWM_PER_DEGREE[1]=DJ_MG954;
+in->sys.PWM_PER_DEGREE[1]=DJ_MG945;
 in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
 in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 case 4:
-in->sys.PWM_PER_DEGREE[0]=DJ_MG954;//7.8;//9.1;		
+in->sys.PWM_PER_DEGREE[0]=DJ_MG945;	
 in->sys.PWM_PER_DEGREE[1]=DJ_6221MG;
 in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
 in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 default:
-in->sys.PWM_PER_DEGREE[0]=9.34;//7.8;//9.1;		
+in->sys.PWM_PER_DEGREE[0]=9.34;
 in->sys.PWM_PER_DEGREE[1]=9.34;
 in->sys.PWM_PER_DEGREE[2]=9.34;	
 in->sys.PWM_PER_DEGREE[3]=9.34;

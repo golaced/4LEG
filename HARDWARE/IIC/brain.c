@@ -23,7 +23,7 @@ float size_k_trot;
 float limit_deng_tro=17.0;//12;
 float k_acc_control_trot[2]={-0.036,-0.036};
 float k_spd_control_trot[2]={0.25,0.15};
-float min_off_for_stable=0.5;
+float min_off_for_stable=0.0;
 
 #if TEST_MODE1
 float kp_att=0.0;
@@ -314,7 +314,6 @@ void estimate_center(BRAIN_STRUCT *in,float att[3],float spd_body[3],float acc_b
 		in->center.y=0+brain.now_acc[1]*k_acc;
 	  in->center.z=high_robot;
 		
-		
 		brain.att[0]=Pitch;
 		brain.att[1]=Roll;
 		
@@ -365,7 +364,6 @@ switch(in->ground_leg_num)
 }
 
 float att_control_out[5];
-
 void att_control(float dt)
 { static float int_ero[2];
   static float ero[2],ero_r[2];
@@ -482,7 +480,7 @@ void center_control_global_tro(float dt)
 	float dis_ero=sqrt(pow(ero1[Xr],2)+pow(ero1[Yr],2));
 	brain.global.center_stable_weight=LIMIT((brain.sys.leg_local[1].x/2-LIMIT(dis_ero,0,brain.sys.leg_local[1].x/2))/(brain.sys.leg_local[1].x/2),0,1);
 	
-	if(dis_ero<1)
+	if(dis_ero<1.6)
 	brain.center_stable=1; 
 	else
 	brain.center_stable=0;
@@ -572,7 +570,7 @@ void check_leg_need_move_global_tro(BRAIN_STRUCT *in,float spd_body[3],float spd
  
 //............................................................................................................
  //----------.......................跨腿触发条件:重心越过 两交点  .......................................
- if(brain.ground_leg_num>3&&brain.center_stable&&brain.leg_move_state==S_IDLE){
+ if(brain.ground_leg_num>3&&brain.center_stable){
 	 float k1,b1,k2,b2;
 	 float cro_x,cro_y;
 	 cro_x=(brain.global.end_pos_global[1].x+brain.global.end_pos_global[2].x+brain.global.end_pos_global[3].x+brain.global.end_pos_global[4].x)/4;
@@ -623,7 +621,7 @@ void check_leg_need_move_global_tro(BRAIN_STRUCT *in,float spd_body[3],float spd
 		 }
 		break;
     case S_LEG_TRIG:
-			//if(brain.global.center_stable_weight>0.9&&brain.ground_leg_num>3)
+			if(brain.ground_leg_num>3)
 			{ Ts[0]=(float)Get_Cycle_T(GET_T_TRIG);
 			brain.leg_move_state=S_LEG_TRIG_LEAVE_GROUND_CHECK;		 
 				if(brain.move_id==14){
@@ -647,7 +645,7 @@ void check_leg_need_move_global_tro(BRAIN_STRUCT *in,float spd_body[3],float spd
 		{brain.leg_move_state=S_LEG_TRIG_ING;}
 		break;
 		case S_LEG_TRIG_ING:
-		if(brain.ground_leg_num>3&&brain.center_stable)
+		if(brain.ground_leg_num>3)
 	  {brain.leg_move_state=S_IDLE;}
 		break;
 	}

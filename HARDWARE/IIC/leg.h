@@ -43,9 +43,9 @@ extern u8 trig_list_tl[5];
 
 typedef struct 
 {
-	u8 state;
-	u8 id[3];
-	char lisence[125];
+	u8 state;//1-> good  2->wrong lisence
+	u8 id[3];//board id
+	char lisence[125];//your lisence
 }LIS;
 extern LIS license;
 
@@ -194,6 +194,8 @@ void center_control_global_tro(float dt);
 void check_leg_need_move_global_tro(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
 void leg_tar_est_global_tro(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt,u8 fake);
 //----------------------------------------------LIB----------------------------------------------
+//设置使用授权码
+void set_lisence(char *in);
 //点与球体的交点
 u8 arrow_check_to_bow(float cx,float cy,float cz,float rx,float ry,float rz,float *x,float *y,float *z);
 //计算点矢量两侧对称点
