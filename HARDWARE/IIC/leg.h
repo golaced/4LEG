@@ -11,6 +11,7 @@
 #define TWO_LEG_TEST 0
 #define TIRG_CURVE_USE_BAI 1
 #define USE_GLOBAL_COOR 0
+#define TIRG_USE_LITTLE_DOG 1
 
 #define S_IDLE 0
 #define S_BODY_MOVE 1
@@ -188,12 +189,15 @@ void state_clear(void);
 void get_leg_tar_trig(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
 void fall_reset(float dt);
 void cal_pos_global(float dt);
+u8 planner_leg_little_dog(u8 last_move_id,u8 last_last_move_id);
 u8 planner_leg_all(u8 leg_flag,float dt);
 void leg_tar_est_global(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt,u8 fake);
 void center_control_global_tro(float dt);
 void check_leg_need_move_global_tro(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
 void leg_tar_est_global_tro(BRAIN_STRUCT *in,LEG_STRUCT *leg,float spd_body[3],float spd_tar[3],float w_tar,u8 need_move,float dt,u8 fake);
 //----------------------------------------------LIB----------------------------------------------
+//获得当前脚在步态表中的标号
+u8 get_next_leg_flag_in_list(u8 leg_id_now,u8 way);
 //设置使用授权码
 void set_lisence(char *in);
 //点与球体的交点
@@ -216,6 +220,8 @@ void line_function_from_arrow(float x,float y,float yaw,float *k,float *b);
 float get_min_dis_arrow_to_tangle(float x,float y,float x1,float y1,float x2,float y2,float x3,float y3,float x4,float y4);
 //点沿矢量对称缩放
 void resize_point_with_arrow(float x,float y,float cx,float cy,float yaw,float k,float *nx,float *ny);
+//三角形重心
+void cal_cog_tri(float x1,float y1,float x2,float y2,float x3,float y3,float *cx,float *cy);
 //判断脚到达初始化的位置
 u8 check_leg_near_init(float ero);
 //跨腿重复保护器

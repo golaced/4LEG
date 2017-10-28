@@ -20,7 +20,7 @@ BRAIN_STRUCT brain;
 #define DJ_6221MG 12.64
 #define DJ_DSERVO 11.34
 
-float off_local[2]={2,0.680};
+float off_local[2]={2.68,0.680};
 float k_z=0.968;
 #if TIRG_CURVE_USE_BAI
 float flt_leg=0;
@@ -82,7 +82,7 @@ break;
 case 3:	
 in->sys.leg_set_invert=1;	
 in->sys.PWM_OFF[0]=1060;	
-in->sys.PWM_OFF[1]=2000;	
+in->sys.PWM_OFF[1]=1980;	
 in->sys.PWM_OFF[2]=1510-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1416;
 in->sys.sita_flag[0]=1;
@@ -96,7 +96,7 @@ in->sys.pwm_id[3]=4;
 break;
 case 4:	
 in->sys.leg_set_invert=0;	
-in->sys.PWM_OFF[0]=1480;	
+in->sys.PWM_OFF[0]=1835;	
 in->sys.PWM_OFF[1]=720;	
 in->sys.PWM_OFF[2]=1390-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1360;
@@ -124,13 +124,13 @@ in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
 in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 case 3:
-in->sys.PWM_PER_DEGREE[0]=DJ_MG956;
-in->sys.PWM_PER_DEGREE[1]=DJ_MG945;
-in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
+in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;//da
+in->sys.PWM_PER_DEGREE[1]=DJ_DSERVO;//xiao
+in->sys.PWM_PER_DEGREE[2]=DJ_MG355;//zhuan
 in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 case 4:
-in->sys.PWM_PER_DEGREE[0]=DJ_MG945;	
+in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;	
 in->sys.PWM_PER_DEGREE[1]=DJ_6221MG;
 in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
 in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
@@ -190,6 +190,95 @@ u8 pos_range_check(LEG_STRUCT * in,float x,float y,float z)
  else
 	 return 1;
 }
+
+
+//
+u8 cal_sita_form_pos_tri_leg(float r1,float r2,float x,float y,float z,float *sita1,float *sita2,float *sita3)
+{
+	u8 i;
+	float sita_out[3];
+
+	sita_out[2]=atan2(x,sqrt(y*y+z*z))*57.3;	
+	
+	
+	float y_t=y,z_t=-z/cos(sita_out[2]*ANGLE_TO_RADIAN);
+	
+	float r=sqrt(z_t*z_t+y_t*y_t);//%??? 
+	if (r1+r2<=r || ABS(r1-r2)>=r) 	
+		return 0;
+	float seta;
+	seta=acos((r1*r1+r*r-r2*r2)/2/r/r1); // %??????????????? 
+	float r_seta;
+	r_seta=atan2(z_t,y_t);		//	%???????(?x???) 
+	float alpha[2];
+  alpha[0]=r_seta-seta;
+  alpha[1]=r_seta+seta;  	//%?????x???? 
+	float crossy[2],crossz[2];
+	for (i=0;i<2;i++){
+	crossy[i]=r1*cos(alpha[i]); 
+	crossz[i]=r1*sin(alpha[i]);
+  }
+	
+	float s1,s2;
+	if (crossy[0]<0)
+	s1=-atan(crossz[0]/crossy[0])*57.3+90+180;   
+	else    
+	s1=-atan(crossz[0]/crossy[0])*57.3+90;
+	
+	if (crossy[1]<0)
+	s2=-atan(crossz[1]/crossy[1])*57.3+90+180;  
+	else   
+	s2=-atan(crossz[1]/crossy[1])*57.3+90;
+	
+	if(s1>s2)
+	{sita_out[1]=s1;sita_out[0]=s2;}
+	else
+  {sita_out[1]=s2;sita_out[0]=s1;}
+	*sita1=sita_out[0];
+	*sita2=sita_out[1];
+	*sita3=sita_out[2];
+	return 1;
+}
+
+void cal_PWM_for_tri_leg(float sita1,float sita2,float sita3)
+{
+  static u8 init;
+	float s1,s2;
+	u8 i;
+	if(!init)
+	{
+	init=1;
+	aux.init[0]=1310;
+	aux.init[1]=1210;
+	aux.min[0]=1100;
+	aux.min[1]=750;
+  aux.max[0]=1750;
+	aux.max[1]=1900;
+
+	aux.flag[0]=1;	
+  aux.flag[1]=1;		
+	aux.pwm_per_dig[0]=9.4;
+	aux.pwm_per_dig[1]=9.4;
+	}	
+	if(aux.att[0]!=0||aux.att[1]!=0){
+	s1=aux.att[0];
+	s2=aux.att[1];	
+	}
+	else{
+	s1=(sita1-90);
+	s2=90-(sita2-180);
+	}
+	aux.pwm_tem[0]=aux.init[0]+aux.pwm_per_dig[0]*s1*aux.flag[0];
+	aux.pwm_tem[1]=aux.init[1]+aux.pwm_per_dig[1]*s2*aux.flag[1];
+	for(i=0;i<2;i++)
+	{
+			aux.pwm_tem[i] = LIMIT(aux.pwm_tem[i],aux.min[i],aux.max[i]);
+	}
+	
+	TIM8->CCR2 = (aux.pwm_tem[0] )/2 ;				//1	
+	TIM8->CCR1 = (aux.pwm_tem[1] )/2 ;				//2
+}
+
 
 //从位置结算关节角度 
 void cal_sita_from_pos(LEG_STRUCT * in,float x_i,float y_i,float z_i,u8 out)
@@ -513,6 +602,8 @@ static float reg[5][3];
 	float spd_wx,spd_wy;
 	float x_temp=fabs(sin((90-brain.sys.yaw_trig)/57.3))*brain.tar_w;
 	float y_temp=fabs(cos((90-brain.sys.yaw_trig)/57.3))*brain.tar_w;
+	if(brain.ground_leg_num<4)
+		x_temp=y_temp=0;
 	switch(id)
 	{
 	case 1:
@@ -687,7 +778,8 @@ static u16 cnt[5];
 	cal_sita_from_pos(in,x_temp,y_temp,z_temp,0);//从角度反推位置	
 	}	
 }
-
+float k_add_test22=0.01;
+float test22[9]={8,14,0,0,13,0,0,0};
 void leg_drive(LEG_STRUCT * in,float dt)
 {  
  u8 id=in->sys.id; 	
@@ -698,8 +790,35 @@ void leg_drive(LEG_STRUCT * in,float dt)
 	in->sys.pos_tar_reg[0]=in->pos_tar_trig[2].x;
 	in->sys.pos_tar_reg[1]=in->pos_tar_trig[2].y;
 	in->sys.pos_tar_reg[2]=in->pos_tar_trig[2].z;	
-	}
-   
+	} 
+	  if(line_test[0]){
+			static u8 flag;
+			if(flag)
+			test22[4]+=k_add_test22;
+			else
+			test22[4]-=k_add_test22;	
+			
+			if(test22[4]>(test22[1]+test22[0])*0.7)
+				flag=0;
+			else if(test22[4]<test22[0])
+				flag=1;
+		}
+		if(line_test[1]){
+			static u8 flag;
+			if(flag)
+			test22[3]+=k_add_test22;
+			else
+			test22[3]-=k_add_test22;	
+			
+			if(test22[3]>(test22[1])*0.7)
+				flag=0;
+			else if(test22[3]<-test22[0]*0.7)
+				flag=1;
+		}
+    test22[8]=cal_sita_form_pos_tri_leg(test22[0],test22[1],test22[2],test22[3],test22[4],&test22[5],&test22[6],&test22[7]);
+	
+	
+	  cal_PWM_for_tri_leg(test22[5],test22[6],test22[7]);
 	  if(in->rst_leg)
 		{
 		in->pos_tar_trig[2].x=in->sys.init_end_pos.x;

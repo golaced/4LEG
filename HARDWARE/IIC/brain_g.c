@@ -15,7 +15,9 @@ u8 side_leg[5]    =		 {0,2,4,3,1};
 u8 side_leg_f[5]    =		 {0,2,1,4,3};
 //--------------------------------------------parameter----------------------------------------------
 u8 area_protect=0;//区域小跨腿保护
-u8 out_protect=1;//超区区域跨腿
+u8 repeat_protect=1;//重复跨腿保护
+u8 out_protect=1;//超出范围优先跨腿
+u8 en_leg_trig_list=1;
 float k_size=0.0068;
 float k_force=3.333;//超限区域大小增益
 float force_rate=2;//超限权值减小步长
@@ -23,15 +25,16 @@ float size_k;
 float limit_deng=11.1111;//蹬腿速度控制限制
 float k_acc_control[2]={0,0};//-0.1,-0.07};
 float k_spd_control[2]={0.25,0.15};
+float force_stop_range[2]={4.8,6};
 
 int flag_acc[2]={-1,-1};
 float k_acc1=1;
 
 float set_max=5.7*2;//超限权值计算最大范围
-float min_spd=0.3;//超限权值最小值
+float min_spd=0.123;//超限权值最小值
 static u8 stop_leg;
 float set_trig_value=0.9;
-float center_stable_dead=1.234;//中心稳定判断死区
+float center_stable_dead=0.5;//中心稳定判断死区
 
 u8 en_off_trig=0;//跨腿添加 当前偏差
 u8 trig_use_now_pos=1;//跨腿起点为当前点
@@ -39,8 +42,11 @@ u8 trig_use_now_pos=1;//跨腿起点为当前点
 float h_k2=0.98;//跨脚高度增益
 float k_off=0.2;
 float k_trig1=2.68;//2;
-float k_rad=1.6;//跨脚旋转增益
+float k_rad=1.23;//跨脚旋转增益
 float k_trig=2;
+
+float min_steady_value_stable=2;
+float max_dis_cog=4;
 //---------------------------------------------------------------------------------------
 void state_clear(void)
 {
@@ -581,7 +587,7 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
 	 }
 	 
 	 //outrange for stop
-	 range_stop[i]=check_in_move_range(i,tar_x,tar_y,circle_center[0],circle_center[1],in->sys.min_range*k_force*1.618,in->sys.max_range*k_force*1.618);
+	 range_stop[i]=check_in_move_range(i,tar_x,tar_y,circle_center[0],circle_center[1],force_stop_range[0],force_stop_range[1]);
 	 if(dis[1]<dis[0]&&range_stop[i]==0)
 	 { 
 	   brain.force_stop=2;
@@ -620,7 +626,7 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
   static float center_now[2];
   static u8 leg_flag=1;
   static u16 cnt;
-  u8 temp; 		
+  u8 temp=0; 		
 		
 	switch(brain.leg_move_state)
 	{
@@ -635,7 +641,11 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
          for(i=1;i<5;i++)
 				   if(cal_dis_of_points(leg[i].pos_now[2].x,leg[i].pos_now[2].y,
 		        leg[i].sys.init_end_pos.x,leg[i].sys.init_end_pos.y)>brain.sys.in_rst_check)
-					 {temp=i;break;}
+					 {temp=i;
+					 leg_flag=get_next_leg_flag_in_list(temp,brain.way)+1;
+					 if(leg_flag>4)
+					 leg_flag=1;	
+					 break;}
 				 }
 				else{	// normal  crawl gait
          u8 out1=0,out2=0;
@@ -667,7 +677,11 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
 				 if(id_need_to_move>0&&out_protect)//out range to move
 				 { out_range_move[id_need_to_move]=0;
 					 temp=id_need_to_move;
-				 }else//                 normal
+					 leg_flag=get_next_leg_flag_in_list(temp,brain.way)+1;
+					 if(leg_flag>4)
+					 leg_flag=1;		
+			     
+				 }else if(en_leg_trig_list)//                 normal
 				 {
 				 if(brain.spd<0.3&&fabs(brain.tar_w)>0.3&&1)
 					if(brain.tar_w>0)
@@ -691,11 +705,16 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
 					leg_flag=1;		
 			   }					 
 				}//end
-
+				 #if TIRG_USE_LITTLE_DOG
+         in->move_id=planner_leg_little_dog(last_move_id, last_last_move_id);
+         #else				
 				 in->move_id=temp;
+				 #endif
 				 //repeat protect
-				 if(out_protect)
+				 if(repeat_protect)
 				 in->move_id=leg_repeat_protect1(temp, last_move_id, last_last_move_id,brain.spd_yaw,brain.sys.yaw_trig);
+				 
+				 
 				 //---area protect
 				 float x[5],y[5];
 				 leg_tar_est_global(&brain,&leg[brain.move_id],0,0,0,1,dt,1);	//fake
@@ -769,6 +788,75 @@ void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar
 	 brain.tar_att[1]=brain.tar_att_force[1];
 }
 
+
+u8 planner_leg_little_dog(u8 last_move_id,u8 last_last_move_id)
+{ 
+  u8 i,j,k,in_trig=0;
+	float cx,cy,gx,gy,steady_value,dis_cog_c,dis_can_move[5]={0};
+	static float spd_yaw_reg;
+	u8 leg_can_move[5]={0};
+	u8 flag=0;
+	float x[5]={0},y[5]={0};
+	
+	cx=brain.global.end_pos_global[0].x;
+	cy=brain.global.end_pos_global[0].y;
+	for(i=1;i<5;i++)
+	{
+ 
+			 //方向未移动 取出上次移动的腿
+		   if(spd_yaw_reg==brain.spd_yaw&&i==last_move_id)
+		     continue;
+			 
+			 //判断移动该腿是否造成机体不稳定
+			 k=x[0]=x[1]=x[2]=x[3]=x[4]=y[0]=y[1]=y[2]=y[3]=y[4]=0;
+			 for(j=1;j<5;j++)
+			  {
+				  if(j!=i)
+					{
+					  x[k]=brain.global.end_pos_global[j].x;
+					  y[k++]=brain.global.end_pos_global[j].y;
+					}
+				}
+				cal_cog_tri(x[0],y[0],x[1],y[1],x[2],y[2],&gx,&gy);
+				dis_cog_c=cal_dis_of_points(gx,gy,cx,cy);
+				in_trig=inTrig(cx,cy,x[0],y[0],x[1],y[1],x[2],y[2]);
+				steady_value=cal_steady_s(cx,cy,x[0],y[0],x[1],y[1],x[2],y[2]);
+				if(in_trig==0)
+				continue;	
+				if(steady_value<min_steady_value_stable)
+				continue;	
+				if(dis_cog_c>max_dis_cog)
+				continue;	
+				//can move
+		     leg_can_move[flag++]=i;
+	}
+	float jiao[2];
+	float k1[2],b1[2];
+	float max_dis;
+	u8 temp_id=0;
+	//找到移动方向上能移动最远的腿
+	if(flag>0)
+	{	
+	  for(i=0;i<flag;i++)
+	   {
+			 line_function_from_arrow(leg[i].pos_now[2].x,leg[i].pos_now[2].y,brain.spd_yaw,&k1[0],&b1[0]);
+			 line_function90_from_arrow(leg[i].sys.init_end_pos.x,leg[i].sys.init_end_pos.y,brain.spd_yaw,&k1[1],&b1[1]);
+			 if(cross_point_of_lines(k1[0],b1[0],k1[1],b1[1],&jiao[Xr],&jiao[Yr])){
+				if(check_point_front_arrow(leg[i].pos_now[2].x,leg[i].pos_now[2].y,jiao[Xr],jiao[Yr],brain.spd_yaw)) 
+		     dis_can_move[i]=cal_dis_of_points(leg[i].pos_now[2].x,leg[i].pos_now[2].y,jiao[Xr],jiao[Yr]);
+       }				 
+		 }
+		 max_dis=dis_can_move[0];
+		 for(i=0;i<flag;i++)
+		   if(dis_can_move[i]>max_dis)
+			 {temp_id=leg_can_move[i];max_dis=dis_can_move[i];}
+			 
+		return LIMIT(temp_id,1,4);	 
+	} 
+	else
+		return last_move_id;
+	spd_yaw_reg=brain.spd_yaw;
+}	
 //-----------------------area eater planner
 u8 planner_leg(u8 last_move_id,u8 last_last_move_id)
 { 

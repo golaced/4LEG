@@ -28,14 +28,17 @@ OS_EVENT * q_msg;			//消息队列
 OS_FLAG_GRP * flags_key;	//按键信号量集
 void * MsgGrp[256];			//消息队列存储地址,最大支持256个消息
 u8 en_read=1;
+
 char Lisence[]=//数学库授权码
 "2630991AF90D1980D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4";
+
 int main(void)
  { 
 	NVIC_PriorityGroupConfig(NVIC_GROUP);//设置系统中断优先级分组2
 	delay_init(168);  //初始化延时函数
 	Initial_Timer_SYS();
   RNG_Init();
+	PWM_AUX_Out_Init(50);
 	Delay_ms(100);
 	READ_PARM();
 	set_lisence(Lisence);
@@ -70,8 +73,8 @@ int main(void)
 
 	Delay_ms(100);
 	
-	Uart6_Init (115200L);     //IDLE
-	Delay_ms(100);
+	//Uart6_Init (115200L);     //IDLE
+	//Delay_ms(100);
 	//-----------------DMA Init--------------------------
 #if EN_DMA_UART4 
 	USART_DMACmd(UART4,USART_DMAReq_Tx,ENABLE);       
@@ -96,6 +99,7 @@ int main(void)
 	Delay_ms(100);
 	Mpu9250_Init();
 	Delay_ms(100);
+	
 //	while(1)
 //	{
 //	leg_init(&leg[1],1);

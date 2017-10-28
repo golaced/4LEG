@@ -2,13 +2,19 @@
 //--------------------------LEG_LIB---------------------------
 #define USE_LISENCE 1
 void cpuidGetId(void);
+
+//三角形重心
+void cal_cog_tri(float x1,float y1,float x2,float y2,float x3,float y3,float *cx,float *cy)
+{
+  *cx=(x1+x2+x3)/3;
+  *cy=(y1+y2+y3)/3;
+}
+
 //转换腿局部坐标系到全局机体坐标系
 void conver_legpos_to_barin(BRAIN_STRUCT *in,LEG_STRUCT * inl,u8 id)
 { u8 i;
 	static u8 init;
-	if(!init){init=1;
-	cpuidGetId();
-	}
+	
 	for(i=0;i<3;i++){
 	inl->pos_now_brain[i].x=inl->pos_now[i].x+in->sys.leg_local[id].x;
   inl->pos_now_brain[i].y=inl->pos_now[i].y+in->sys.leg_local[id].y;
@@ -34,6 +40,32 @@ u8 check_leg_near_init(float ero)
 	else 
 		return 0;
 }	
+
+//获得当前脚在步态表中的标号
+u8 get_next_leg_flag_in_list(u8 leg_id_now,u8 way)
+{
+ u8 *list,i;
+ switch(way)
+ {
+	case 1:
+	list=&trig_list_f[0];
+	break;
+	case 2:
+	list=&trig_list_r[0];
+	break;
+	case 3:
+	list=&trig_list_b[0];
+	break;
+	case 4:
+	list=&trig_list_l[0];
+	break;
+ }
+  for(i=1;i<5;i++)
+        if(*(list+i)==leg_id_now)
+					 return i;
+}
+
+
 //跨腿重复保护器
 u8 leg_repeat_protect(u8 id,u8 last_move_id,u8 last_last_move_id,float yaw,float yaw_trig){
 u8 i;	
@@ -1225,6 +1257,7 @@ void set_lisence(char *in)
 { u8 i=0;
   for(i=0;i<128;i++)
    license.lisence[i]=in[i];
+	cpuidGetId();
 }	
 
 void cpuidGetId(void)
