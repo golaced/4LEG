@@ -16,7 +16,11 @@ u8 side_leg_f[5]    =		 {0,2,1,4,3};
 //--------------------------------------------parameter----------------------------------------------
 u8 area_protect=0;//区域小跨腿保护
 u8 repeat_protect=1;//重复跨腿保护
+#if TIRG_USE_LITTLE_DOG
+u8 out_protect=0;//超出范围优先跨腿
+#else
 u8 out_protect=1;//超出范围优先跨腿
+#endif
 u8 en_leg_trig_list=1;
 float k_size=0.0068;
 float k_force=3.333;//超限区域大小增益
@@ -42,11 +46,11 @@ u8 trig_use_now_pos=1;//跨腿起点为当前点
 float h_k2=0.98;//跨脚高度增益
 float k_off=0.2;
 float k_trig1=2.68;//2;
-float k_rad=1.23;//跨脚旋转增益
+float k_rad=1.68;//跨脚旋转增益
 float k_trig=2;
 
-float min_steady_value_stable=2;
-float max_dis_cog=4;
+float min_steady_value_stable=0.68;
+float max_dis_cog=5.7;
 //---------------------------------------------------------------------------------------
 void state_clear(void)
 {
@@ -833,20 +837,21 @@ u8 planner_leg_little_dog(u8 last_move_id,u8 last_last_move_id)
 	float jiao[2];
 	float k1[2],b1[2];
 	float max_dis;
-	u8 temp_id=0;
+	u8 temp_id=0,id_use=0;
 	//找到移动方向上能移动最远的腿
 	if(flag>0)
 	{	
 	  for(i=0;i<flag;i++)
-	   {
-			 line_function_from_arrow(leg[i].pos_now[2].x,leg[i].pos_now[2].y,brain.spd_yaw,&k1[0],&b1[0]);
-			 line_function90_from_arrow(leg[i].sys.init_end_pos.x,leg[i].sys.init_end_pos.y,brain.spd_yaw,&k1[1],&b1[1]);
+	   { id_use=LIMIT(leg_can_move[i],1,4);
+			 line_function_from_arrow(leg[id_use].pos_now[2].x,leg[id_use].pos_now[2].y,brain.spd_yaw,&k1[0],&b1[0]);
+			 line_function90_from_arrow(leg[id_use].sys.init_end_pos.x,leg[id_use].sys.init_end_pos.y,brain.spd_yaw,&k1[1],&b1[1]);
 			 if(cross_point_of_lines(k1[0],b1[0],k1[1],b1[1],&jiao[Xr],&jiao[Yr])){
-				if(check_point_front_arrow(leg[i].pos_now[2].x,leg[i].pos_now[2].y,jiao[Xr],jiao[Yr],brain.spd_yaw)) 
-		     dis_can_move[i]=cal_dis_of_points(leg[i].pos_now[2].x,leg[i].pos_now[2].y,jiao[Xr],jiao[Yr]);
+				if(!check_point_front_arrow(leg[id_use].pos_now[2].x,leg[id_use].pos_now[2].y,jiao[Xr],jiao[Yr],brain.spd_yaw)) 
+		     dis_can_move[i]=cal_dis_of_points(leg[id_use].pos_now[2].x,leg[id_use].pos_now[2].y,jiao[Xr],jiao[Yr]);
        }				 
 		 }
 		 max_dis=dis_can_move[0];
+		 temp_id=leg_can_move[i];
 		 for(i=0;i<flag;i++)
 		   if(dis_can_move[i]>max_dis)
 			 {temp_id=leg_can_move[i];max_dis=dis_can_move[i];}

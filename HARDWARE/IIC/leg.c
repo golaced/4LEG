@@ -492,16 +492,12 @@ in->pos_tar[2].y=cal_curve[Ys];
 in->pos_tar[2].z=cal_curve[Zs];	
 }	
 
-void leg_curve_bai(LEG_STRUCT * in,float sx,float sy,float sz,float tx,float ty,float tz,float h,float time_now,float dt,float T)
+void leg_curve_bai(LEG_STRUCT * in,float sx,float sy,float sz,float tx,float ty,float tz,float h,float off_h,float time_now,float dt,float T)
 {
-float sita=(2*3.1415926/(T/dt))*(time_now/dt);
-in->pos_tar[2].x=(tx-sx)*(sita-sin(sita))/(2*3.1415926)+sx;
-in->pos_tar[2].y=(ty-sy)*(sita-sin(sita))/(2*3.1415926)+sy;
-float off_h=0;
-//if(tz>sz)
-off_h=(tz-sz)	;
-//off_h=0;
-in->pos_tar[2].z=-(h+off_h)*(1-cos(sita))/2+sz;
+float sita=(2*PI/(T/dt))*(time_now/dt);
+in->pos_tar[2].x=(tx-sx)*(sita-sin(sita))/(2*PI)+sx;
+in->pos_tar[2].y=(ty-sy)*(sita-sin(sita))/(2*PI)+sy;
+in->pos_tar[2].z=sz-(h+off_h)*(1-cos(sita))/2;
 }	
 
 
@@ -516,38 +512,38 @@ static u8 state[5];
 static float time[5],delay[5];	
 static float temp_h;
 static float pos_str[5][3],pos_tar[5][3];
+static float off_h[5];
 //判断是否重合等
 	
 switch(state[id])
 {
 case 0:
 if(*en){//由着地点规划当前轨迹
-//cal_curve_from_pos(in,desire_time);
 state[id]=1;	
 ground_mask[id]=time[id]=delay[id]=0;	
 in->leg_ground=0;
 }
 break;
 case 1://有时间和轨迹计算每一时间的曲线坐标
-if(*en){
+if(*en){//踩
 in->pos_tar[2].z=in->pos_now[2].z+down_h;
 temp_h=in->pos_now[2].z;
-{state[id]=2;}
+state[id]=2;
 }
 break;
 case 2:
-if(*en){
+if(*en){//抬
 time[id]+=dt;
-if(time[id]>down_t)	
-{
-state[id]=3;
-time[id]=0;		
-in->pos_tar[2].z=temp_h-1.61*down_h;
-}
+	if(time[id]>down_t)	
+	{
+	state[id]=3;
+	time[id]=0;		
+	in->pos_tar[2].z=temp_h-1.61*down_h;
+	}
 }
 break;///////////////
 case 3:
-if(*en){
+if(*en){//抬
 in->pos_tar[2].z=temp_h-1.61*down_h;	
 #if !TIRG_CURVE_USE_BAI
 cal_curve_from_pos(in,desire_time);	
@@ -557,19 +553,20 @@ pos_str[id][Ys]=in->pos_now[2].y;
 pos_str[id][Zs]=in->pos_now[2].z;
 pos_tar[id][Xs]=in->pos_tar_trig[2].x;
 pos_tar[id][Ys]=in->pos_tar_trig[2].y;
-pos_tar[id][Zs]=in->pos_tar_trig[2].z;	
+pos_tar[id][Zs]=in->pos_tar_trig[2].z;
+off_h[id]=(pos_tar[id][Zs]-pos_str[id][Zs])	;	
 #endif
 time[id]+=dt;
 state[id]=4;
 }
 break;
 case 4:
-if(*en){
+if(*en){//轨迹
 #if !TIRG_CURVE_USE_BAI
 cal_pos_tar_from_curve(in,time[id],dt);
 #else
 leg_curve_bai(in,pos_str[id][Xr],pos_str[id][Yr],pos_str[id][Zr],pos_tar[id][Xr],pos_tar[id][Yr],pos_tar[id][Zr]
-	,in->sys.leg_up_high,time[id],dt,desire_time-dt);
+	,in->sys.leg_up_high,off_h[id],time[id],dt,desire_time-dt);
 #endif
 #if TWO_LEG_TEST
 if(time[id]<desire_time/2)	

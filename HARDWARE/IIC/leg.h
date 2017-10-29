@@ -33,7 +33,7 @@
 #define RANDOM (float)RNG_Get_RandomRange(-1000,1000)/1000000.
 #define FLAG_IN(in) ((in) >= (0) ? 1 : -1)
 #define CHECK(in) (isinf(in)||isnan(in))
-
+#define PI 3.1415926
 extern float center_control_out[2],att_control_out[5];;
 extern u8 trig_list_f[5];
 extern u8 trig_list_r[5];
