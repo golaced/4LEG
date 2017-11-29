@@ -17,7 +17,7 @@ void CPU_LINK_TASK(void);
 typedef struct PID_STA{u16 OP,OI,OD,IP,II,ID,YP,YI,YD;}PID_STA;
 extern PID_STA HPID,SPID,FIX_PID,NAV_PID;
 void UsartSend_M100(uint8_t ch);
-
+void Send_DJ11_12(void);
 typedef struct int16_rcget{
 				int16_t ROLL;
 				int16_t PITCH;

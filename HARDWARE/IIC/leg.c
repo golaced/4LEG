@@ -12,6 +12,7 @@ BRAIN_STRUCT brain;
 //%   / 2  \\    l3                                ||
 //%          O                                     OO
 //PWM gain of Pan
+
 #define DJ_MG995 9.34
 #define DJ_MG956 9.34
 #define DJ_MG955 9.34
@@ -367,8 +368,8 @@ void cal_PWM_for_tri_leg(float sita1,float sita2,float sita3)
 			aux.pwm_tem[i] = LIMIT(aux.pwm_tem[i],aux.min[i],aux.max[i]);
 	}
 	
-	TIM8->CCR2 = (aux.pwm_tem[0] )/2 ;				//1	
-	TIM8->CCR1 = (aux.pwm_tem[1] )/2 ;				//2
+//	TIM8->CCR2 = (aux.pwm_tem[0] )/2 ;				//1	
+//	TIM8->CCR1 = (aux.pwm_tem[1] )/2 ;				//2
 }
 
 
@@ -909,7 +910,7 @@ void leg_drive(LEG_STRUCT * in,float dt)
    // test22[8]=cal_sita_form_pos_tri_leg(test22[0],test22[1],test22[2],test22[3],test22[4],&test22[5],&test22[6],&test22[7]);
 	  test22[8]=cal_sita_form_pos_tri_leg(test22[0],test22[1],0,leg[1].pos_now[2].y,leg[1].pos_now[2].z,&test22[5],&test22[6],&test22[7]);
 	
-	  cal_PWM_for_tri_leg(test22[5],test22[6],test22[7]);
+	  //cal_PWM_for_tri_leg(test22[5],test22[6],test22[7]);
 	  if(in->rst_leg)
 		{
 		in->pos_tar_trig[2].x=in->sys.init_end_pos.x;

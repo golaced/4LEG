@@ -432,6 +432,14 @@ while(USART_GetFlagStatus(UART5, USART_FLAG_TXE) == RESET);
 USART_SendData(UART5, ch); 
 }
 
+static void Send_Data_DJF1(u8 *dataToSend , u8 length)
+{
+u16 i;
+  for(i=0;i<length;i++)
+     UsartSend_LEG2(dataToSend[i]);
+}
+
+
 static void Send_Data_GOL_LINK(u8 *dataToSend , u8 length)
 {
 u16 i;
@@ -462,6 +470,31 @@ void Send_IMU_TO_FLOW(void)
 	Send_Data_GOL_LINK(data_to_send, _cnt);
 }
 
+void Send_DJ11_12(void)
+{u8 i;	u8 sum = 0;
+	u8 data_to_send[50];
+	u8 _cnt=0;
+	vs16 _temp;
+  data_to_send[_cnt++]=0xAA;
+	data_to_send[_cnt++]=0xAF;
+	data_to_send[_cnt++]=0x66;
+	data_to_send[_cnt++]=0;
+	
+	_temp = (vs16)(LIMIT(dj_out[10],600,2400));
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	_temp = (vs16)(LIMIT(dj_out[11],600,2400));
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	
+	data_to_send[3] = _cnt-4;
+
+	for( i=0;i<_cnt;i++)
+		sum += data_to_send[i];
+	data_to_send[_cnt++] = sum;
+	
+	Send_Data_DJF1(data_to_send, _cnt);
+}
 
 u8 feed_imu_dog=1;
 void Send_IMU_PARM(void)

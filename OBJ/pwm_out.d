@@ -65,4 +65,5 @@
 ..\obj\pwm_out.o: ..\HARDWARE\IIC\rng.h
 ..\obj\pwm_out.o: ..\HARDWARE\IIC\m100.h
 ..\obj\pwm_out.o: ..\HARDWARE\IIC\my_math.h
+..\obj\pwm_out.o: ..\HARDWARE\IIC\usart_fc.h
 ..\obj\pwm_out.o: ..\HARDWARE\IIC\filter.h

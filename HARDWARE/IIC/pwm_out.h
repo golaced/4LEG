@@ -11,8 +11,8 @@ void SEL_Init();
 u8 PWM_Out_Init_FOR_CAL(uint16_t hz,uint16_t min,uint16_t max);
 void SHOOT_Init(void);
 void EN_SHOOT(u8 on);
-
-
+void Set_DJ_PWM(void);
+extern int dj_out[12];
 void SetPwm_AUX(float pit,float rol);
 
 typedef struct 

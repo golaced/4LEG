@@ -120,15 +120,10 @@ void brain_task(void *pdata)
 {	static u8 cnt,cnt1,cnt2,init,rc_update;	
 	float T;float spd,spdy,spdx,yaw=0,w_rad;
 	u16 temps;
-	leg_init(&leg[1],1);
-	leg_init(&leg[2],2);
-	leg_init(&leg[3],3);
-	leg_init(&leg[4],4);	
  	while(1)
 	{	
 	leg_dt[4] = Get_Cycle_T(GET_T_BRAIN);								//获取外环准确的执行周期
   T=0.02;
-	SetPwm_AUX( 0, 0);
 	if(Rc_Get_SBUS.connect&&Rc_Get_SBUS.update){
 	temps=((channels[0])-SBUS_MID)*500/((SBUS_MAX-SBUS_MIN)/2)+1500;
 	if(temps>900&&temps<2100)
@@ -287,6 +282,7 @@ void brain_task(void *pdata)
 	leg_drive(&leg[2],T);
 	leg_drive(&leg[3],T);
 	leg_drive(&leg[4],T);
+	Set_DJ_PWM();
 	delay_ms(20);
 	}
 }		

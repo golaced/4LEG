@@ -1,6 +1,10 @@
 
 #include "include.h"
 
+#define D_LEG 0
+#define X_LEG 1
+#define T_LEG 2
+
 #define TEST_MODE1 0
 #define BODY_MOVE_WHEN_LEG_UP 0
 #define BODY_CONTROL_USE_GLOBAL 1

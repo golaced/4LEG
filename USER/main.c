@@ -38,7 +38,6 @@ int main(void)
 	delay_init(168);  //初始化延时函数
 	Initial_Timer_SYS();
   RNG_Init();
-	PWM_AUX_Out_Init(50);
 	Delay_ms(100);
 	READ_PARM();
 	set_lisence(Lisence);
@@ -61,7 +60,7 @@ int main(void)
 	MYDMA_Config(DMA1_Stream6,DMA_Channel_4,(u32)&USART2->DR,(u32)SendBuff2,SEND_BUF_SIZE2+2,1);//DMA2,STEAM7,CH4,外设为串口1,存储器为SendBuff,长度为:SEND_BUF_SIZE.
 	#endif
 	
-  Usart4_Init(115200);     //LEG3  SD UP
+  Usart4_Init(256000L);     //LEG3  SD UP
 	#if EN_DMA_UART4 
 	MYDMA_Config(DMA1_Stream4,DMA_Channel_4,(u32)&UART4->DR,(u32)SendBuff4,SEND_BUF_SIZE4+2,0);//DMA2,STEAM7,CH4,外设为串口1,存储器为SendBuff,长度为:SEND_BUF_SIZE.
 	#endif							
@@ -99,12 +98,12 @@ int main(void)
 	Delay_ms(100);
 	Mpu9250_Init();
 	Delay_ms(100);
-	
-//	while(1)
-//	{
-//	leg_init(&leg[1],1);
-//  leg_drive(&leg[1],0.01);//leg_dt[0]);
-//	Send_LEG(1);Delay_ms(20);}
+	leg_init(&leg[1],1);
+	leg_init(&leg[2],2);
+	leg_init(&leg[3],3);
+	leg_init(&leg[4],4);	
+	PWM_Out_Init(50);
+	PWM_AUX_Out_Init(50);
 	//---------------初始化UCOSII--------------------------
 	OSInit();  	 				
 	OSTaskCreate(start_task,(void *)0,(OS_STK *)&START_TASK_STK[START_STK_SIZE-1],START_TASK_PRIO );//创建起始任务
