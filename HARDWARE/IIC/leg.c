@@ -19,8 +19,12 @@ BRAIN_STRUCT brain;
 #define DJ_MG355 11.34
 #define DJ_6221MG 12.64
 #define DJ_DSERVO 11.34
-
+#define DJ_9G 9.34
+#if MINI_ROBOT
+float off_local[2]={0.88,0};
+#else
 float off_local[2]={2.68,0.680};
+#endif
 float k_z=0.968;
 #if TIRG_CURVE_USE_BAI
 float flt_leg=0;
@@ -43,28 +47,63 @@ if(!init)
 in->sys.id=id;
 in->leg_ground=1;
 in->sys.init_mode=0;	
+#if MINI_ROBOT
+in->sys.l1=1.7;
+in->sys.l2=4.2;
+in->sys.l3=5.8;	
+#else
 in->sys.l1=3.9;
 in->sys.l2=6.4;
 in->sys.l3=6.8;	
+#endif
 in->sys.off_local[0]=off_local[0];
 in->sys.off_local[1]=off_local[1];
 switch(in->sys.id){
 case 1:	
+#if MINI_ROBOT
+in->sys.leg_set_invert=0;
+#else
 in->sys.leg_set_invert=1;
+#endif
+#if MINI_ROBOT
+in->sys.PWM_OFF[0]=2380;	
+in->sys.PWM_OFF[1]=620;	
+in->sys.PWM_OFF[2]=1000+SET_PWM3_OFF;		
+in->sys.PWM_OFF[3]=1380;
+#else
 in->sys.PWM_OFF[0]=1730;	
 in->sys.PWM_OFF[1]=870;	
 in->sys.PWM_OFF[2]=1500+SET_PWM3_OFF;		
 in->sys.PWM_OFF[3]=1380;
+#endif
+#if MINI_ROBOT
+in->sys.sita_flag[0]=-1;
+in->sys.sita_flag[1]=1;	
+in->sys.sita_flag[2]=1;	
+in->sys.sita_flag[3]=-1;
+#else
 in->sys.sita_flag[0]=-1;
 in->sys.sita_flag[1]=1;	
 in->sys.sita_flag[2]=1;
 in->sys.sita_flag[3]=1;
+#endif
 in->sys.pwm_id[0]=9;
 in->sys.pwm_id[1]=8;
 in->sys.pwm_id[2]=10;
 in->sys.pwm_id[3]=11;
 break;
 case 2:	
+#if MINI_ROBOT
+in->sys.leg_set_invert=1;
+in->sys.PWM_OFF[0]=660;	
+in->sys.PWM_OFF[1]=2300;	
+in->sys.PWM_OFF[2]=1450+SET_PWM3_OFF;	
+in->sys.PWM_OFF[3]=1380;
+in->sys.sita_flag[0]=1;
+in->sys.sita_flag[1]=-1;	
+in->sys.sita_flag[2]=1;
+in->sys.sita_flag[3]=1;
+#else
 in->sys.leg_set_invert=0;
 in->sys.PWM_OFF[0]=586;	
 in->sys.PWM_OFF[1]=1980;	
@@ -74,12 +113,24 @@ in->sys.sita_flag[0]=1;
 in->sys.sita_flag[1]=-1;	
 in->sys.sita_flag[2]=1;	
 in->sys.sita_flag[3]=-1;
+#endif
 in->sys.pwm_id[0]=15;
 in->sys.pwm_id[1]=14;
 in->sys.pwm_id[2]=13;
 in->sys.pwm_id[3]=12;
 break;
 case 3:	
+#if MINI_ROBOT
+in->sys.leg_set_invert=0;
+in->sys.PWM_OFF[0]=560;	
+in->sys.PWM_OFF[1]=2150;	
+in->sys.PWM_OFF[2]=1800-SET_PWM3_OFF;	
+in->sys.PWM_OFF[3]=1416;
+in->sys.sita_flag[0]=1;
+in->sys.sita_flag[1]=-1;	
+in->sys.sita_flag[2]=1;
+in->sys.sita_flag[3]=-1;
+#else
 in->sys.leg_set_invert=1;	
 in->sys.PWM_OFF[0]=1060;	
 in->sys.PWM_OFF[1]=1980;	
@@ -88,13 +139,25 @@ in->sys.PWM_OFF[3]=1416;
 in->sys.sita_flag[0]=1;
 in->sys.sita_flag[1]=-1;	
 in->sys.sita_flag[2]=1;
-in->sys.sita_flag[3]=-1;
+in->sys.sita_flag[3]=1;
+#endif
 in->sys.pwm_id[0]=6;
 in->sys.pwm_id[1]=7;
 in->sys.pwm_id[2]=5;
 in->sys.pwm_id[3]=4;
 break;
 case 4:	
+#if MINI_ROBOT
+in->sys.leg_set_invert=1;
+in->sys.PWM_OFF[0]=2450;	
+in->sys.PWM_OFF[1]=720;	
+in->sys.PWM_OFF[2]=2070-SET_PWM3_OFF;	
+in->sys.PWM_OFF[3]=1360;
+in->sys.sita_flag[0]=-1;
+in->sys.sita_flag[1]=1;	
+in->sys.sita_flag[2]=1;
+in->sys.sita_flag[3]=1;
+#else	
 in->sys.leg_set_invert=0;	
 in->sys.PWM_OFF[0]=1835;	
 in->sys.PWM_OFF[1]=720;	
@@ -104,6 +167,7 @@ in->sys.sita_flag[0]=-1;
 in->sys.sita_flag[1]=1;	
 in->sys.sita_flag[2]=1;
 in->sys.sita_flag[3]=1;
+#endif
 in->sys.pwm_id[0]=1;
 in->sys.pwm_id[1]=0;
 in->sys.pwm_id[2]=2;
@@ -112,28 +176,56 @@ break;
 }
 switch(in->sys.id){
 case 1:
+#if MINI_ROBOT
+in->sys.PWM_PER_DEGREE[0]=DJ_9G;
+in->sys.PWM_PER_DEGREE[1]=DJ_9G;
+in->sys.PWM_PER_DEGREE[2]=DJ_9G;
+in->sys.PWM_PER_DEGREE[3]=DJ_9G;
+#else
 in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;
 in->sys.PWM_PER_DEGREE[1]=DJ_6221MG;
 in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
 in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
+#endif
 break;
 case 2:
+#if MINI_ROBOT
+in->sys.PWM_PER_DEGREE[0]=DJ_9G;
+in->sys.PWM_PER_DEGREE[1]=DJ_9G;
+in->sys.PWM_PER_DEGREE[2]=DJ_9G;
+in->sys.PWM_PER_DEGREE[3]=DJ_9G;
+#else	
 in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;	
 in->sys.PWM_PER_DEGREE[1]=DJ_DSERVO;
 in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
 in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
+#endif
 break;
 case 3:
+#if MINI_ROBOT
+in->sys.PWM_PER_DEGREE[0]=DJ_9G;
+in->sys.PWM_PER_DEGREE[1]=DJ_9G;
+in->sys.PWM_PER_DEGREE[2]=DJ_9G;
+in->sys.PWM_PER_DEGREE[3]=DJ_9G;
+#else		
 in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;//da
 in->sys.PWM_PER_DEGREE[1]=DJ_DSERVO;//xiao
 in->sys.PWM_PER_DEGREE[2]=DJ_MG355;//zhuan
 in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
+#endif
 break;
 case 4:
+#if MINI_ROBOT
+in->sys.PWM_PER_DEGREE[0]=DJ_9G;
+in->sys.PWM_PER_DEGREE[1]=DJ_9G;
+in->sys.PWM_PER_DEGREE[2]=DJ_9G;
+in->sys.PWM_PER_DEGREE[3]=DJ_9G;
+#else		
 in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;	
 in->sys.PWM_PER_DEGREE[1]=DJ_6221MG;
 in->sys.PWM_PER_DEGREE[2]=DJ_MG355;
 in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
+#endif
 break;
 default:
 in->sys.PWM_PER_DEGREE[0]=9.34;
@@ -599,8 +691,10 @@ static float reg[5][3];
 	float spd_wx,spd_wy;
 	float x_temp=fabs(sin((90-brain.sys.yaw_trig)/57.3))*brain.tar_w;
 	float y_temp=fabs(cos((90-brain.sys.yaw_trig)/57.3))*brain.tar_w;
-	if(brain.ground_leg_num<4)
-		x_temp=y_temp=0;
+	if(brain.ground_leg_num<4){
+		x_temp*=0.618;
+	  y_temp*=0.618;
+	}
 	switch(id)
 	{
 	case 1:
@@ -776,7 +870,7 @@ static u16 cnt[5];
 	}	
 }
 float k_add_test22=0.01;
-float test22[9]={8,14,0,0,13,0,0,0};
+float test22[9]={8,15,0,0,13,0,0,0};
 void leg_drive(LEG_STRUCT * in,float dt)
 {  
  u8 id=in->sys.id; 	
@@ -812,8 +906,8 @@ void leg_drive(LEG_STRUCT * in,float dt)
 			else if(test22[3]<-test22[0]*0.7)
 				flag=1;
 		}
-    test22[8]=cal_sita_form_pos_tri_leg(test22[0],test22[1],test22[2],test22[3],test22[4],&test22[5],&test22[6],&test22[7]);
-	
+   // test22[8]=cal_sita_form_pos_tri_leg(test22[0],test22[1],test22[2],test22[3],test22[4],&test22[5],&test22[6],&test22[7]);
+	  test22[8]=cal_sita_form_pos_tri_leg(test22[0],test22[1],0,leg[1].pos_now[2].y,leg[1].pos_now[2].z,&test22[5],&test22[6],&test22[7]);
 	
 	  cal_PWM_for_tri_leg(test22[5],test22[6],test22[7]);
 	  if(in->rst_leg)

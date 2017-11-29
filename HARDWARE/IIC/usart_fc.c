@@ -1469,3 +1469,166 @@ for(i=0;i<SEND_BUF_SIZE1;i++)
 SendBuff1[i]=0;
 
 }
+
+void UART_UP_Put_Char(u8 in)
+{
+while(USART_GetFlagStatus(UART4, USART_FLAG_TXE) == RESET);
+USART_SendData(UART4, in); 
+}	
+
+void ReportMotion(int16_t ax,int16_t ay,int16_t az,int16_t gx,int16_t gy,int16_t gz,
+					int16_t hx,int16_t hy,int16_t hz)
+{
+ 	unsigned int temp=0xaF+9;
+	char ctemp;
+	UART_UP_Put_Char(0xa5);
+	UART_UP_Put_Char(0x5a);
+	UART_UP_Put_Char(14+8);
+	UART_UP_Put_Char(0xA2);
+
+	if(ax<0)ax=32768-ax;
+	ctemp=ax>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=ax;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	if(ay<0)ay=32768-ay;
+	ctemp=ay>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=ay;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	if(az<0)az=32768-az;
+	ctemp=az>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=az;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	if(gx<0)gx=32768-gx;
+	ctemp=gx>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=gx;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	if(gy<0)gy=32768-gy;
+	ctemp=gy>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=gy;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+//-------------------------
+	if(gz<0)gz=32768-gz;
+	ctemp=gz>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=gz;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	if(hx<0)hx=32768-hx;
+	ctemp=hx>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=hx;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	if(hy<0)hy=32768-hy;
+	ctemp=hy>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=hy;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	if(hz<0)hz=32768-hz;
+	ctemp=hz>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=hz;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	UART_UP_Put_Char(temp%256);
+	UART_UP_Put_Char(0xaa);
+}
+
+
+void ReportIMU(int16_t yaw,int16_t pitch,int16_t roll
+,int16_t alt,int16_t tempr,int16_t press,int16_t IMUpersec)
+{
+ 	unsigned int temp=0xaF+2+2;
+	char ctemp;
+	UART_UP_Put_Char(0xa5);
+	UART_UP_Put_Char(0x5a);
+	UART_UP_Put_Char(14+4);
+	UART_UP_Put_Char(0xA1);
+
+	if(yaw<0)yaw=32768-yaw;
+	ctemp=yaw>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=yaw;							
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	if(pitch<0)pitch=32768-pitch;
+	ctemp=pitch>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=pitch;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+								 
+	if(roll<0)roll=32768-roll;
+	ctemp=roll>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=roll;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	if(alt<0)alt=32768-alt;
+	ctemp=alt>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;				
+	ctemp=alt;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	if(tempr<0)tempr=32768-tempr;
+	ctemp=tempr>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=tempr;
+	UART_UP_Put_Char(ctemp);	   
+	temp+=ctemp;
+
+	if(press<0)press=32768-press;
+	ctemp=press>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=press;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	ctemp=IMUpersec>>8;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+	ctemp=IMUpersec;
+	UART_UP_Put_Char(ctemp);
+	temp+=ctemp;
+
+	UART_UP_Put_Char(temp%256);
+	UART_UP_Put_Char(0xaa);
+}
+

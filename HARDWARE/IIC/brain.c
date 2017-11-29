@@ -39,8 +39,13 @@ float flt=0.223;
 
 void barin_init(BRAIN_STRUCT *in)
 {
+#if MINI_ROBOT
+float W=5  *2;//cm	
+float L=14.0;	
+#else
 float W=5.7  *2;//cm	
 float L=21.0;
+#endif
 in->sys.yaw_trig=fast_atan2(W/2,L/2)*57.3;	
 	
 in->sys.leg_local[1].x=W/2;
@@ -125,7 +130,7 @@ leg[2].sys.id=2;
 leg[3].sys.id=3;
 leg[4].sys.id=4;
 
-brain.tar_h=leg[1].sys.limit_min.z*1.618;
+brain.tar_h=leg[1].sys.init_end_pos.z;
 #if TEST_MODE1
 in->sys.k_center_c[0]=4;
 in->sys.k_center_c[1]=4;
@@ -316,11 +321,12 @@ void estimate_center(BRAIN_STRUCT *in,float att[3],float spd_body[3],float acc_b
 		
 		brain.att[0]=Pitch;
 		brain.att[1]=Roll;
-		
+		#if USE_FALL_TREADT
 		if(brain.att[1]>66)
 			brain.fall=1;
 		else if(brain.att[1]<-66)
-      brain.fall=-1;			
+      brain.fall=-1;	
+    #endif		
 }
 
 

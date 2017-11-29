@@ -328,4 +328,8 @@ void data_per_uart4(u8 sel);
 
 void Send_LEG(u8 sel);
 void GOL_LINK_TASK(void);
+
+
+void ReportMotion(int16_t ax,int16_t ay,int16_t az,int16_t gx,int16_t gy,int16_t gz,int16_t hx,int16_t hy,int16_t hz);
+void ReportIMU(int16_t yaw,int16_t pitch,int16_t roll,int16_t alt,int16_t tempr,int16_t press,int16_t IMUpersec);
 #endif

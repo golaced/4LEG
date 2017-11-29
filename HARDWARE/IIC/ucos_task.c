@@ -128,6 +128,7 @@ void brain_task(void *pdata)
 	{	
 	leg_dt[4] = Get_Cycle_T(GET_T_BRAIN);								//获取外环准确的执行周期
   T=0.02;
+	SetPwm_AUX( 0, 0);
 	if(Rc_Get_SBUS.connect&&Rc_Get_SBUS.update){
 	temps=((channels[0])-SBUS_MID)*500/((SBUS_MAX-SBUS_MIN)/2)+1500;
 	if(temps>900&&temps<2100)
@@ -201,7 +202,7 @@ void brain_task(void *pdata)
 	 spdy=my_deathzoom((Rc_Get_PWM.PITCH-1500)*k_rc_spd,0.1);//cm
 	 spdx=my_deathzoom((Rc_Get_PWM.ROLL-1500)*k_rc_spd,0.1);//cm
 	 w_rad=my_deathzoom((Rc_Get_PWM.YAW-1500)*0.001*20,1);//rad.cm
-	 spd=LIMIT(sqrt(pow(spdx,2)+pow(spdy,2)),0,2)*brain.sys.desire_time_init/brain.sys.desire_time*10/7;
+	 spd=LIMIT(sqrt(pow(spdx,2)+pow(spdy,2)),0,2)*brain.sys.desire_time_init/brain.sys.desire_time;
 	 
 	 if(spd>0){
 	 yaw=fast_atan2(spdx,spdy)*57.3;
@@ -253,11 +254,11 @@ void brain_task(void *pdata)
   else 
 	brain.tar_w_set=0;
 	
-	if((brain.tar_w_set!=0&&w_rad!=0)||brain.spd>0)
+	if(((brain.tar_w_set!=0&&w_rad!=0)||brain.spd>0)&&(brain.way==1||brain.way==3))
 	brain.tar_w=LIMIT(my_deathzoom(brain.tar_w_set-mpu6050_fc.Gyro_deg.z,0.1)*k_z_c,-10,10)*brain.global.value[2];
 	else
 	brain.tar_w=0;
-	
+	brain.tar_w=brain.tar_w_set*k_z_c*brain.global.value[2];
 	static u8 state_spd_rst;
 	switch(state_spd_rst){
 		case 0:
@@ -305,7 +306,10 @@ void uart_task(void *pdata)
 		Send_LEG(2);
 		Send_LEG(3);
 		Send_LEG(4);
-		GOL_LINK_TASK();									
+		GOL_LINK_TASK();	
+    ReportMotion(brain.global.steady_value*1000,brain.now_acc[Xr]*1000,brain.now_acc[Yr]*1000,
+		brain.global.center_stable_weight*1000,brain.global.end_pos_global[0].z*100,0,
+		center_control_out[Xr],center_control_out[Yr],0);		
 		delay_ms(20);  
 	}
 }	

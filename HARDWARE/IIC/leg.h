@@ -12,6 +12,7 @@
 #define TIRG_CURVE_USE_BAI 1
 #define USE_GLOBAL_COOR 0
 #define TIRG_USE_LITTLE_DOG 1
+#define USE_FALL_TREADT 1
 
 #define S_IDLE 0
 #define S_BODY_MOVE 1

@@ -1,6 +1,6 @@
 #include "include.h" 
 //--------------------------LEG_LIB---------------------------
-#define USE_LISENCE 1
+#define USE_LISENCE 0
 void cpuidGetId(void);
 
 //三角形重心
@@ -1096,14 +1096,11 @@ return 0xf;
 	D[i]=dis_point_to_line(cx,cy,k[i],b[i]);
 	
 	ST=D[0];
-	for(i=1;i<3;i++)
+	for(i=0;i<3;i++)
 	  if(D[i]<ST)
 			 ST=D[i];
 		
-  if(ST>0)
    return ST;
-  else 
-   return 0;	
   }else
   return 0;	
 }	
@@ -1129,14 +1126,11 @@ return 0xf;
 	D[i]=dis_point_to_line(cx,cy,k[i],b[i]);
 	
 	ST=D[0];
-	for(i=1;i<4;i++)
+	for(i=0;i<4;i++)
 	  if(D[i]<ST)
 			 ST=D[i];
 		
-  if(ST>0)
-   return ST;
-  else 
-   return 0;	
+   return ST;	
 }	
 //判断一个点在四边形内部
 //			  y

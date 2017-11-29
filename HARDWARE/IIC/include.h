@@ -306,5 +306,7 @@ extern u8 state_set_point;
 //#define DEBUG_GPS_NAV
 //#define DEBUG_HOLD_HEIGHT
 //#define DEBUG_HOLD_WALL
+
+#define MINI_ROBOT 1
 #endif
 

@@ -27,7 +27,7 @@ float k_force=3.333;//超限区域大小增益
 float force_rate=2;//超限权值减小步长
 float size_k;
 float limit_deng=11.1111;//蹬腿速度控制限制
-float k_acc_control[2]={0,0};//-0.1,-0.07};
+float k_acc_control[2]={0,0};//{-0.1,-0.07};
 float k_spd_control[2]={0.25,0.15};
 float force_stop_range[2]={4.8,6};
 
@@ -35,7 +35,7 @@ int flag_acc[2]={-1,-1};
 float k_acc1=1;
 
 float set_max=5.7*2;//超限权值计算最大范围
-float min_spd=0.123;//超限权值最小值
+float min_spd=0.023;//超限权值最小值
 static u8 stop_leg;
 float set_trig_value=0.9;
 float center_stable_dead=0.5;//中心稳定判断死区
@@ -49,7 +49,7 @@ float k_trig1=2.68;//2;
 float k_rad=1.68;//跨脚旋转增益
 float k_trig=2;
 
-float min_steady_value_stable=0.68;
+float min_steady_value_stable=0.18;
 float max_dis_cog=5.7;
 //---------------------------------------------------------------------------------------
 void state_clear(void)
@@ -97,12 +97,14 @@ void cal_pos_global(float dt)
 
 	float k_acc1=10.0/brain.sys.k_center_c[0];
 	float temp1=leg[1].pos_now_brain[2].z*leg[1].leg_ground+leg[2].pos_now_brain[2].z*leg[2].leg_ground+
-		leg[3].pos_now_brain[2].z*leg[3].leg_ground+leg[4].pos_now_brain[2].z*leg[4].leg_ground;
+	leg[3].pos_now_brain[2].z*leg[3].leg_ground+leg[4].pos_now_brain[2].z*leg[4].leg_ground;
 	brain.global.end_pos_global[0].z=temp1/brain.ground_leg_num+0.5*brain.now_acc[2]*dt*dt;
+	
   brain.global.end_pos_global[0].x=brain.sys.leg_local[1].x-leg[4].pos_now[2].x
 	+flag_acc[0]*my_deathzoom(brain.global.end_pos_global[0].z/9.87*brain.now_acc[Xr],0.06)*k_acc1*0+off_cor[Xr];
 	brain.global.end_pos_global[0].y=brain.sys.leg_local[1].y-leg[4].pos_now[2].y
 	+flag_acc[1]*my_deathzoom(brain.global.end_pos_global[0].z/9.87*brain.now_acc[Yr],0.06)*k_acc1*0+off_cor[Yr];
+	
 	if(isnan(brain.global.end_pos_global[0].x))
 	brain.global.end_pos_global[0].x=leg[1].sys.init_end_pos.x;
 	if(isnan(brain.global.end_pos_global[0].y))
@@ -161,13 +163,13 @@ switch(ground_leg_num)
 	 brain.global.leg_ground_center[Xr]=(float)(x[0]+x[1]+x[2]+x[3])/4.;
    brain.global.leg_ground_center[Yr]=(float)(y[0]+y[1]+y[2]+y[4])/4.;
    brain.global.area_of_leg[0]=cal_area_trig( x[0],y[0], x[1],y[1], x[2],y[2])/2+cal_area_trig( x[3],y[3], x[1],y[1], x[2],y[2])/2;
-   brain.global.steady_value=cal_steady_s4( brain.global.end_pos_global[0].x, brain.global.end_pos_global[0].y,x[0],y[0], x[1],y[1], x[2],y[2],x[3],y[3]);	
+   brain.global.steady_value=cal_steady_s4( brain.global.ZMP.x,brain.global.ZMP.y,x[0],y[0], x[1],y[1], x[2],y[2],x[3],y[3]);	
  break;	 
  case 3:
    brain.global.leg_ground_center[Xr]=(float)(x[0]+x[1]+x[2])/3.;
    brain.global.leg_ground_center[Yr]=(float)(y[0]+y[1]+y[2])/3.;
    brain.global.area_of_leg[0]=cal_area_trig( x[0],y[0], x[1],y[1], x[2],y[2]);
-   brain.global.steady_value=cal_steady_s( brain.global.end_pos_global[0].x, brain.global.end_pos_global[0].y,x[0],y[0], x[1],y[1], x[2],y[2]);
+   brain.global.steady_value=cal_steady_s( brain.global.ZMP.x,brain.global.ZMP.y,x[0],y[0], x[1],y[1], x[2],y[2]);
  break;
  case 4:
     temp[0][Xr]=(float)(x[0]+x[1]+x[2])/3.;
@@ -177,7 +179,7 @@ switch(ground_leg_num)
     brain.global.leg_ground_center[Xr]=(float)(temp[0][Xr]+temp[1][Xr])/2.;
     brain.global.leg_ground_center[Yr]=(float)(temp[0][Yr]+temp[1][Yr])/2.;
     brain.global.area_of_leg[0]=cal_area_trig( x[0],y[0], x[1],y[1], x[2],y[2])/2+cal_area_trig( x[3],y[3], x[1],y[1], x[2],y[2])/2;
-    brain.global.steady_value=cal_steady_s4( brain.global.end_pos_global[0].x, brain.global.end_pos_global[0].y,x[0],y[0], x[1],y[1], x[2],y[2],x[3],y[3]);	
+    brain.global.steady_value=cal_steady_s4( brain.global.ZMP.x,brain.global.ZMP.y,x[0],y[0], x[1],y[1], x[3],y[3],x[2],y[2]);	
  break;
  default:
 	  brain.global.area_of_leg[0]=0;
@@ -219,6 +221,7 @@ for(i=1;i<5;i++){
 }	
 
 //----------Body center movement control
+float ero_center[2];
 float center_control_out[2];
 void center_control_global(float dt)
 { static u8 reg_flag;
@@ -464,10 +467,10 @@ void center_control_global(float dt)
 	brain.global.tar_center[Xr]=brain.tar_center[Xr]=center_tar_x;
 	brain.global.tar_center[Yr]=brain.tar_center[Yr]=center_tar_y;
 
-	ero[Xr]=my_deathzoom((brain.tar_center[Xr]-brain.global.end_pos_global[0].x
+	ero_center[Xr]=my_deathzoom((brain.tar_center[Xr]-brain.global.end_pos_global[0].x
 	+k_spd_control[Xr]*my_deathzoom(LIMIT(brain.now_spd[Xr],-0.66,0.66),0.01)
 	+k_acc_control[Xr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(LIMIT(brain.now_acc[Xr],-2,2),0.3)),0.001);
-  ero[Yr]=my_deathzoom((brain.tar_center[Yr]-brain.global.end_pos_global[0].y
+  ero_center[Yr]=my_deathzoom((brain.tar_center[Yr]-brain.global.end_pos_global[0].y
 	+k_spd_control[Yr]*my_deathzoom(LIMIT(brain.now_spd[Yr],-0.66,0.66),0.01)
 	+k_acc_control[Yr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(LIMIT(brain.now_acc[Yr],-2,2),0.3)),0.001);
 	
@@ -478,8 +481,8 @@ void center_control_global(float dt)
 	brain.global.center_stable_weight=LIMIT((brain.sys.leg_local[1].x/2-LIMIT(dis_ero,0,brain.sys.leg_local[1].x/2))/(brain.sys.leg_local[1].x/2),0,1);
 	
 	
-	center_control_out[Xr]=ero[Xr]*brain.sys.k_center_c[Xr];
-	center_control_out[Yr]=ero[Yr]*brain.sys.k_center_c[Yr];
+	center_control_out[Xr]=ero_center[Xr]*brain.sys.k_center_c[Xr];
+	center_control_out[Yr]=ero_center[Yr]*brain.sys.k_center_c[Yr];
   
 	float k_ero_in=1;
 	if(dis_ero<center_stable_dead)
@@ -489,9 +492,10 @@ void center_control_global(float dt)
 	else
 	brain.center_stable=0;
 	
-	float fall_con[4];
+	float fall_con[4]={0};
+	#if USE_FALL_TREADT
 	fall_treat1(dt,&fall_con[0]);
-
+  #endif
   //output
 	for(i=1;i<5;i++){
 	if((leg[i].control_mode||brain.control_mode)&&leg[i].leg_ground&&!leg[i].sys.leg_ground_force){	
@@ -1056,6 +1060,7 @@ limit_move_range_tangle( id,leg->sys.init_end_pos.x,leg->sys.init_end_pos.y, tem
 tempz1=tempz;
 
 tempx2=tempx1;tempy2=tempy1;tempz2=tempz1;
+//tempx2=tempx;tempy2=tempy;tempz2=tempz;
 //limit_trig_pos_of_leg(tempx1,tempy1,tempz1,leg[id].sys.limit.x,leg[id].sys.limit.y,leg[id].sys.limit.z,&tempx2,&tempy2,&tempz2);
 
 if(fake){
