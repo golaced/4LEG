@@ -74,3 +74,5 @@
 ..\obj\main.o: ..\HARDWARE\IIC\pwm_in.h
 ..\obj\main.o: ..\HARDWARE\IIC\mpu9250.h
 ..\obj\main.o: ..\HARDWARE\IIC\spi.h
+..\obj\main.o: ..\HARDWARE\IIC\bat.h
+..\obj\main.o: ..\HARDWARE\IIC\beep.h

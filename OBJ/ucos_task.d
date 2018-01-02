@@ -68,8 +68,7 @@
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\ms5611.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\ms5611_2.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\iic.h
-..\obj\ucos_task.o: ..\HARDWARE\IIC\hml5833l.h
-..\obj\ucos_task.o: d:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+..\obj\ucos_task.o: ..\HARDWARE\IIC\bat.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\alt_kf.h
 ..\obj\ucos_task.o: ..\HARDWARE\IIC\arm_math_m.h
 ..\obj\ucos_task.o: ..\CORE\core_cm4.h

@@ -9,6 +9,8 @@
 #include "pwm_in.h"
 #include "mpu9250.h"
 #include "spi.h"
+#include "bat.h"
+#include "beep.h"
 #include "stm32f4xx_dma.h"
  /////////////////////////UCOSII启动任务设置///////////////////////////////////
 //START 任务
@@ -38,12 +40,28 @@ int main(void)
 	delay_init(168);  //初始化延时函数
 	Initial_Timer_SYS();
   RNG_Init();
-	Delay_ms(100);
-	READ_PARM();
 	set_lisence(Lisence);
+	leg_init(&leg[1],1);
+	leg_init(&leg[2],2);
+	leg_init(&leg[3],3);
+	leg_init(&leg[4],4);	
+	leg_task1(0.02);
+	leg_drive(&leg[1],0.02);
+	leg_drive(&leg[2],0.02);
+	leg_drive(&leg[3],0.02);
+	leg_drive(&leg[4],0.02); 
+  Usart4_Init(576000L);     //LEG3  MINI dj board
+	#if EN_DMA_UART4 
+	MYDMA_Config(DMA1_Stream4,DMA_Channel_4,(u32)&UART4->DR,(u32)SendBuff4,SEND_BUF_SIZE4+2,0);//DMA2,STEAM7,CH4,外设为串口1,存储器为SendBuff,长度为:SEND_BUF_SIZE.
+	#endif
+  PWM_AUX_Out_Init(50); 	 
+	PWM_Out_Init(50);
+	LED_Init();								//LED功能初始化
+	Adc_Init();
+	Beep_Init(0,84-1);
 //------------------------Uart Init-------------------------------------
 	#if USE_DJ_CONTROL_BOARD
-	Usart1_Init(115200);      //  DJ board
+	 Usart1_Init(115200);      //  DJ board
 	#else
 	Usart1_Init(256000L);			//  FC RC1
 	#endif
@@ -60,20 +78,12 @@ int main(void)
 	MYDMA_Config(DMA1_Stream6,DMA_Channel_4,(u32)&USART2->DR,(u32)SendBuff2,SEND_BUF_SIZE2+2,1);//DMA2,STEAM7,CH4,外设为串口1,存储器为SendBuff,长度为:SEND_BUF_SIZE.
 	#endif
 	
-  Usart4_Init(256000L);     //LEG3  SD UP
-	#if EN_DMA_UART4 
-	MYDMA_Config(DMA1_Stream4,DMA_Channel_4,(u32)&UART4->DR,(u32)SendBuff4,SEND_BUF_SIZE4+2,0);//DMA2,STEAM7,CH4,外设为串口1,存储器为SendBuff,长度为:SEND_BUF_SIZE.
-	#endif							
-	Usart3_Init(38400);     //LEG2
+					
+	Usart3_Init(115200);     //LEG2 //TINKERBOARD
 	#if EN_DMA_UART3
 	MYDMA_Config(DMA1_Stream3,DMA_Channel_4,(u32)&USART3->DR,(u32)SendBuff3,SEND_BUF_SIZE3+2,2);//DMA2,STEAM7,CH4,外设为串口1,存储器为SendBuff,长度为:SEND_BUF_SIZE.
   #endif	
   Uart5_Init (100000);     //LEG4  SBUS
-
-	Delay_ms(100);
-	
-	//Uart6_Init (115200L);     //IDLE
-	//Delay_ms(100);
 	//-----------------DMA Init--------------------------
 #if EN_DMA_UART4 
 	USART_DMACmd(UART4,USART_DMAReq_Tx,ENABLE);       
@@ -91,19 +101,10 @@ int main(void)
 	USART_DMACmd(USART1,USART_DMAReq_Tx,ENABLE);     
 	MYDMA_Enable(DMA2_Stream7,SEND_BUF_SIZE1+2);     
 #endif		
-	Delay_ms(100);
   LED_Init();								//LED功能初始化
-	Delay_ms(100);
-  SPI2_Init1();
-	Delay_ms(100);
-	Mpu9250_Init();
-	Delay_ms(100);
-	leg_init(&leg[1],1);
-	leg_init(&leg[2],2);
-	leg_init(&leg[3],3);
-	leg_init(&leg[4],4);	
-	PWM_Out_Init(50);
-	PWM_AUX_Out_Init(50);
+//  SPI2_Init1();
+//	Mpu9250_Init();
+	READ_PARM();
 	//---------------初始化UCOSII--------------------------
 	OSInit();  	 				
 	OSTaskCreate(start_task,(void *)0,(OS_STK *)&START_TASK_STK[START_STK_SIZE-1],START_TASK_PRIO );//创建起始任务

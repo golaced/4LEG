@@ -115,7 +115,7 @@ void uart_init(u32 bound){
 
   //Usart1 NVIC 配置
   NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=3 ;//抢占优先级3
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=1 ;//抢占优先级3
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;		//子优先级3
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			//IRQ通道使能
 	NVIC_Init(&NVIC_InitStructure);	//根据指定的参数初始化VIC寄存器
@@ -245,11 +245,11 @@ int main(void)
 {	
 	  delay_init();	    	 //延时函数初始化	  
 	  time_init();
-	  uart_init(256000);
+	  uart_init(576000L);
 	  LED_Init();
    	while(1)
 	{  
- 		delay_ms(100);	   					 
+ 		delay_ms(10);	   					 
 		PWM_Set(LIMIT(dj[0],500+100,2500-100),LIMIT(dj[1],500+100,2500-100));
 	} 
 }

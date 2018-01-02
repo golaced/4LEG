@@ -1016,6 +1016,16 @@ void USART1_IRQHandler(void)
 //		m100.STATUS=m100.m100_connect=*(data_buf+38);
 //	  #endif
 	}		
+	else if(*(data_buf+2)==0x98)//Wifi
+  { 
+
+	Rc_Wifi.connect=*(data_buf+4);
+	Rc_Wifi.PITCH=(int16_t)(*(data_buf+5)<<8)|*(data_buf+6);
+	Rc_Wifi.ROLL=(int16_t)(*(data_buf+7)<<8)|*(data_buf+8);
+	Rc_Wifi.THROTTLE=(int16_t)(*(data_buf+9)<<8)|*(data_buf+10);
+	Rc_Wifi.YAW=(int16_t)(*(data_buf+11)<<8)|*(data_buf+12);
+
+	}		
 }
 
 u8 set1=0;
@@ -1148,6 +1158,38 @@ void USART2_IRQHandler(void)
 }
 
 
+
+//leg1
+ Tinker tinker;
+ void Data_Receive_Anl_Tinker(u8 *data_buf,u8 num)
+{ double zen,xiao;
+	vs16 rc_value_temp;
+	float temp_pos[2];
+	u8 sum = 0;
+	u8 i;
+	for( i=0;i<(num-1);i++)
+		sum += *(data_buf+i);
+	if(!(sum==*(data_buf+num-1)))		return;		//??sum
+	if(!(*(data_buf)==0xAA && *(data_buf+1)==0xAF))		return;		//????
+	if(*(data_buf+2)==0x98)//ALL
+  {
+		tinker.connect=1;
+		tinker.lose_cnt=0;		
+		tinker.pos_end[1][0]=(float)((int16_t)(*(data_buf+4)<<8)|*(data_buf+5))/100.;
+		tinker.pos_end[1][1]=(float)((int16_t)(*(data_buf+6)<<8)|*(data_buf+7))/100.;
+		tinker.pos_end[1][2]=(float)((int16_t)(*(data_buf+8)<<8)|*(data_buf+9))/100.;
+		tinker.pos_end[2][0]=(float)((int16_t)(*(data_buf+10)<<8)|*(data_buf+11))/100.;
+		tinker.pos_end[2][1]=(float)((int16_t)(*(data_buf+12)<<8)|*(data_buf+13))/100.;
+		tinker.pos_end[2][2]=(float)((int16_t)(*(data_buf+14)<<8)|*(data_buf+15))/100.;
+		tinker.pos_end[3][0]=(float)((int16_t)(*(data_buf+16)<<8)|*(data_buf+17))/100.;
+		tinker.pos_end[3][1]=(float)((int16_t)(*(data_buf+18)<<8)|*(data_buf+19))/100.;
+		tinker.pos_end[3][2]=(float)((int16_t)(*(data_buf+20)<<8)|*(data_buf+21))/100.;
+		tinker.pos_end[4][0]=(float)((int16_t)(*(data_buf+22)<<8)|*(data_buf+23))/100.;
+		tinker.pos_end[4][1]=(float)((int16_t)(*(data_buf+24)<<8)|*(data_buf+25))/100.;
+		tinker.pos_end[4][2]=(float)((int16_t)(*(data_buf+26)<<8)|*(data_buf+27))/100.;		
+  }
+}
+
 //leg2
 u8 TxBuffer3[256];
 u8 TxCounter3=0;
@@ -1208,6 +1250,7 @@ void USART3_IRQHandler(void)
 		{
 			RxState3 = 0;
 			RxBuffer3[4+_data_cnt3]=com_data;
+			Data_Receive_Anl_Tinker(RxBuffer3,_data_cnt3+5);
 			Data_LEG(RxBuffer3,_data_cnt3+5,2);
 		}
 		else
@@ -1311,7 +1354,7 @@ void UART4_IRQHandler(void)
 }
 
 
-RC_GETDATA Rc_Get_PWM,Rc_Get_SBUS;
+RC_GETDATA Rc_Get_PWM,Rc_Get_SBUS,Rc_Wifi;
 //leg4
 
 u8 TxBuffer5[256];

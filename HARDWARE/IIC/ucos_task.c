@@ -3,7 +3,7 @@
 #include "hml_sample.h"
 #include "ms5611.h"
 #include "ms5611_2.h"
-#include "hml5833l.h"
+#include "bat.h"
 #include "alt_kf.h"
 #include "flash.h"
 #include "led_fc.h"
@@ -33,32 +33,32 @@ void leg1_task(void *pdata)
 //  leg_drive(&leg[1],0.01);//leg_dt[0]);
 //  //Send_LEG(1);
 //  //UsartSend_LEG_BUF_BUF(1);
-	MPU6050_Read(); 															//??mpu6????
-  ANO_AK8975_Read_Mag_Data();
-	MPU6050_Data_Prepare( leg_dt[0] );			//mpu6????????
+//	MPU6050_Read(); 															//??mpu6????
+//  ANO_AK8975_Read_Mag_Data();
+//	MPU6050_Data_Prepare( leg_dt[0] );			//mpu6????????
 
-	if(cnt_init++>1/0.005){cnt_init=65530;
- 
- 	IMUupdate(0.5f *leg_dt[0],mpu6050_fc.Gyro_deg.x, mpu6050_fc.Gyro_deg.y, mpu6050_fc.Gyro_deg.z, mpu6050_fc.Acc.x, mpu6050_fc.Acc.y, mpu6050_fc.Acc.z
-	,&Roll,&Pitch,&Yaw);
-	
-	
-  float a_br[3],acc_temp[3];
-	static float acc_flt[3];
-	a_br[0] =(float) mpu6050_fc.Acc.x/4096.;//16438.;
-	a_br[1] =(float) mpu6050_fc.Acc.y/4096.;//16438.;
-	a_br[2] =(float) mpu6050_fc.Acc.z/4096.;//16438.;
-	acc_temp[0] = a_br[1]*reference_vr[2]  - a_br[2]*reference_vr[1] ;
-	acc_temp[1] = a_br[2]*reference_vr[0]  - a_br[0]*reference_vr[2] ;
-	acc_temp[2] = reference_vr[2] *a_br[2] + reference_vr[0] *a_br[0]+ reference_vr[1] *a_br[1] - 1 ;
-	
-	
-	brain.now_acc[0]=acc_flt[0] = -firstOrderFilter(acc_temp[0] ,&firstOrderFilters[ACC_LOWPASS_X],leg_dt[0])*9.8;
-	brain.now_acc[1]=acc_flt[1] = firstOrderFilter(acc_temp[1] ,&firstOrderFilters[ACC_LOWPASS_Y],leg_dt[0])*9.8;
-  brain.now_acc[2]=acc_flt[2] = firstOrderFilter(acc_temp[2] ,&firstOrderFilters[ACC_LOWPASS_Z],leg_dt[0])*9.8;
-  }
-
-	delay_ms(5);
+//	if(cnt_init++>1/0.005){cnt_init=65530;
+// 
+// 	IMUupdate(0.5f *leg_dt[0],mpu6050_fc.Gyro_deg.x, mpu6050_fc.Gyro_deg.y, mpu6050_fc.Gyro_deg.z, mpu6050_fc.Acc.x, mpu6050_fc.Acc.y, mpu6050_fc.Acc.z
+//	,&Roll,&Pitch,&Yaw);
+//	
+//	
+//  float a_br[3],acc_temp[3];
+//	static float acc_flt[3];
+//	a_br[0] =(float) mpu6050_fc.Acc.x/4096.;//16438.;
+//	a_br[1] =(float) mpu6050_fc.Acc.y/4096.;//16438.;
+//	a_br[2] =(float) mpu6050_fc.Acc.z/4096.;//16438.;
+//	acc_temp[0] = a_br[1]*reference_vr[2]  - a_br[2]*reference_vr[1] ;
+//	acc_temp[1] = a_br[2]*reference_vr[0]  - a_br[0]*reference_vr[2] ;
+//	acc_temp[2] = reference_vr[2] *a_br[2] + reference_vr[0] *a_br[0]+ reference_vr[1] *a_br[1] - 1 ;
+//	
+//	
+//	brain.now_acc[0]=acc_flt[0] = -firstOrderFilter(acc_temp[0] ,&firstOrderFilters[ACC_LOWPASS_X],leg_dt[0])*9.8;
+//	brain.now_acc[1]=acc_flt[1] = firstOrderFilter(acc_temp[1] ,&firstOrderFilters[ACC_LOWPASS_Y],leg_dt[0])*9.8;
+//  brain.now_acc[2]=acc_flt[2] = firstOrderFilter(acc_temp[2] ,&firstOrderFilters[ACC_LOWPASS_Z],leg_dt[0])*9.8;
+//  }
+  Set_DJ_PWM();
+	delay_ms(15);
 	}
 }		
 
@@ -109,7 +109,7 @@ void leg4_task(void *pdata)
 }		
 
 //========================外环  任务函数============================路径规划
-float k_rc_spd=0.005;
+float k_rc_spd=0.01;
 float k_z_c= 0.16;
 OS_STK BRAIN_TASK_STK[BRAIN_STK_SIZE];
 float test[5]={1,1,4};
@@ -124,7 +124,7 @@ void brain_task(void *pdata)
 	{	
 	leg_dt[4] = Get_Cycle_T(GET_T_BRAIN);								//获取外环准确的执行周期
   T=0.02;
-	if(Rc_Get_SBUS.connect&&Rc_Get_SBUS.update){
+	if((Rc_Get_SBUS.connect&&Rc_Get_SBUS.update)||Rc_Wifi.connect){
 	temps=((channels[0])-SBUS_MID)*500/((SBUS_MAX-SBUS_MIN)/2)+1500;
 	if(temps>900&&temps<2100)
 	Rc_Get_SBUS.ROLL=		 temps;
@@ -149,12 +149,24 @@ void brain_task(void *pdata)
 	temps=((channels[7])-SBUS_MID_A)*500/((SBUS_MAX_A-SBUS_MIN_A)/2)+1500;
 	if(temps>900&&temps<2100)
 	Rc_Get_SBUS.AUX4=		 temps;
+	if(Rc_Wifi.connect)
+	{	
+	Rc_Get_SBUS.connect=Rc_Get_SBUS.update=1;	
+	Rc_Get_PWM.AUX1=1600;	
+	Rc_Get_PWM.THROTTLE=Rc_Wifi.THROTTLE;
+	Rc_Get_PWM.ROLL=my_deathzoom_rc(Rc_Wifi.ROLL,2)	;
+	Rc_Get_PWM.PITCH=my_deathzoom_rc(Rc_Wifi.PITCH,2)	;
+	Rc_Get_PWM.YAW=my_deathzoom_rc(Rc_Wifi.YAW,2)	;
+	}
+	else{
 	Rc_Get_PWM.THROTTLE=Rc_Get_PWM.ROLL=Rc_Get_PWM.PITCH=Rc_Get_PWM.YAW=1500;
 	Rc_Get_PWM.THROTTLE=LIMIT(Rc_Get_SBUS.THROTTLE,1000,2000)	;
 	Rc_Get_PWM.ROLL=my_deathzoom_rc(Rc_Get_SBUS.ROLL,2)	;
 	Rc_Get_PWM.PITCH=my_deathzoom_rc(Rc_Get_SBUS.PITCH,2)	;
 	Rc_Get_PWM.YAW=my_deathzoom_rc(Rc_Get_SBUS.YAW,2)	;
 	Rc_Get_PWM.AUX1=Rc_Get_SBUS.AUX1;
+	}
+
 	Rc_Get_PWM.AUX2=Rc_Get_SBUS.AUX2;
 	Rc_Get_PWM.AUX3=Rc_Get_SBUS.AUX3;
 	Rc_Get_PWM.AUX4=Rc_Get_SBUS.AUX4;
@@ -173,7 +185,9 @@ void brain_task(void *pdata)
 	brain.sys.desire_time=LIMIT(0.5+(Rc_Get_PWM.AUX4-1500)/1000.,0.2,2);
 	if(brain.trot_gait)
 	brain.sys.desire_time=LIMIT(brain.sys.desire_time,0.3,0.6);
-	
+	#if MINI_ROBOT
+	brain.sys.desire_time=0.45;
+	#endif
 	if(flag&&Rc_Get_PWM.AUX1<1500)
 	{flag=0;brain.rst_all_soft=1;cnt_soft_rst=0;}
 	
@@ -231,7 +245,9 @@ void brain_task(void *pdata)
 	 brain.spd=spd;
    }
 	 
-	 	brain.tar_h=LIMIT(leg[1].sys.init_end_pos.z-(Rc_Get_PWM.THROTTLE-1000)/1000.*(leg[1].sys.init_end_pos.z-leg[1].sys.limit_min.z)    
+	 int thr_temp;
+	 thr_temp=LIMIT(Rc_Get_PWM.THROTTLE-450,0,2000);
+	 	brain.tar_h=LIMIT(leg[1].sys.init_end_pos.z-(thr_temp-1000)/1000.*(leg[1].sys.init_end_pos.z-leg[1].sys.limit_min.z)    
 	,leg[1].sys.limit_min.z,leg[1].sys.init_end_pos.z);
 	 
   }else
@@ -241,7 +257,7 @@ void brain_task(void *pdata)
 	Rc_Get_PWM.PITCH=1500;
 	Rc_Get_PWM.YAW=1500;
 	}
-	
+	brain.power_all=brain.control_mode=1;
 	if(w_rad!=0||(fabs(Yaw_set-Yaw)>25))
 	Yaw_set=Yaw;
 	else if(brain.spd!=0)
@@ -253,6 +269,10 @@ void brain_task(void *pdata)
 	brain.tar_w=LIMIT(my_deathzoom(brain.tar_w_set-mpu6050_fc.Gyro_deg.z,0.1)*k_z_c,-10,10)*brain.global.value[2];
 	else
 	brain.tar_w=0;
+	
+	if(Rc_Wifi.connect)
+	brain.tar_w=w_rad*k_z_c*3*brain.global.value[2];	
+	else
 	brain.tar_w=brain.tar_w_set*k_z_c*brain.global.value[2];
 	static u8 state_spd_rst;
 	switch(state_spd_rst){
@@ -263,7 +283,7 @@ void brain_task(void *pdata)
 	  case 1:
 			if(brain.spd==0)
 			  brain.sys.no_control_cnt++;
-			if(brain.sys.no_control_cnt>3/0.02)
+			if(brain.sys.no_control_cnt>3/T)
 			{state_spd_rst=2;brain.rst_all_soft=1;}
 			break;
 		case 2:
@@ -276,14 +296,18 @@ void brain_task(void *pdata)
 	rc_update=Rc_Get_SBUS.update;
 		
 	//test
-	
+	static u8 uart;
+	if(!tinker.connect&&uart)
+		brain.rst_all_soft=1;
+	uart=tinker.connect;
 	leg_task1(T);
 	leg_drive(&leg[1],T);
 	leg_drive(&leg[2],T);
 	leg_drive(&leg[3],T);
 	leg_drive(&leg[4],T);
-	Set_DJ_PWM();
-	delay_ms(20);
+	
+	Bat_protect(T);
+	delay_ms(10);
 	}
 }		
 
@@ -339,11 +363,13 @@ void tmr2_callback(OS_TMR *ptmr,void *p_arg)
 u8 i;	
 static u16 cnt_1,cnt_2;	
 static u8 cnt;
+	LEDRGB_STATE(0.05);
   for(i=0;i<5;i++)
 	 if(leg[i].sys.leg_loss_cnt++>2/0.05)leg[i].leg_connect=0;
 	 if(brain.sys.leg_loss_cnt++>2/0.05)brain.sys.leg_connect=0;
 	 if(Rc_Get_SBUS.lose_cnt++>2/0.05)Rc_Get_SBUS.connect=0;
-	
+	 if(tinker.lose_cnt++>2/0.05)tinker.connect=0;
+
 }
 //软件定时器3的回调函数				  	   
 void tmr3_callback(OS_TMR *ptmr,void *p_arg) 

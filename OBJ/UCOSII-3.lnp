@@ -19,6 +19,8 @@
 "..\obj\stm32f4xx_spi.o"
 "..\obj\stm32f4xx_dma.o"
 "..\obj\stm32f4xx_rng.o"
+"..\obj\stm32f4xx_dac.o"
+"..\obj\stm32f4xx_adc.o"
 "..\obj\os_core.o"
 "..\obj\os_flag.o"
 "..\obj\os_mbox.o"
@@ -38,6 +40,8 @@
 "..\obj\dma.o"
 "..\obj\rng.o"
 "..\obj\spi_nrf.o"
+"..\obj\bat.o"
+"..\obj\beep.o"
 "..\obj\usart_fc.o"
 "..\HARDWARE\IIC\sbus_oldx.lib"
 "..\obj\mpu6050.o"
@@ -55,7 +59,7 @@
 "..\obj\brain_g.o"
 "..\obj\fliter.o"
 "..\obj\my_math.o"
---strict --scatter "..\OBJ\UCOSII-3.sct"
+--library_type=microlib --strict --scatter "..\OBJ\UCOSII-3.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list "..\OBJ\UCOSII-3.map" -o ..\OBJ\UCOSII-3.axf

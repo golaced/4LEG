@@ -5,18 +5,23 @@
 #define X_LEG 1
 #define T_LEG 2
 
+#define MINI_ROBOT 0
 #define TEST_MODE1 0
-#define BODY_MOVE_WHEN_LEG_UP 0
+#define BODY_MOVE_WHEN_LEG_UP 1
 #define BODY_CONTROL_USE_GLOBAL 1
 #define DENG_LIMIT_TEST 0
 #define USE_LEG_TRIG_DELAY 1
 #define USE_SIMPLE_CENTER 0
 #define HORIZON_USE_FORWARD_CENTER 1
 #define TWO_LEG_TEST 0
-#define TIRG_CURVE_USE_BAI 1
+#define TIRG_CURVE_USE_BAI 0
 #define USE_GLOBAL_COOR 0
 #define TIRG_USE_LITTLE_DOG 1
 #define USE_FALL_TREADT 1
+
+
+//#define CENTER_CONTROL_TEST //重心控制测试模式
+//#define TRIG_TEST
 
 #define S_IDLE 0
 #define S_BODY_MOVE 1
@@ -102,7 +107,7 @@ typedef struct
 	u8 leg_power,rst_leg;
 	u8 need_move;	
 	u8 curve_trig,control_mode;
-	POS pos_now[3],pos_now_brain[3];
+	POS pos_now[3],pos_now_trig_f[3],pos_now_brain[3];
 	POS pos_tar[3],pos_tar_trig[3];
 	float sita[4],sita_force[4];
 	 //0->openloop 1->closeloop	
@@ -145,7 +150,7 @@ typedef struct
 typedef struct 
 { u8 control_mode,power_all,rst_all,rst_all_soft,tabu;
 	int fall,trot_gait;
-	float steady_value,min_st[2];
+	float steady_value,min_st[3];
 	u8 force_stop,loss_center,ground_leg_num,can_move_leg;	
 	u8 leg_move[5],leg_out_range[5],way;	
 	BRAIN_GLOBAL global;

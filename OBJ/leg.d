@@ -63,3 +63,4 @@
 ..\obj\leg.o: ..\HARDWARE\IIC\leg.h
 ..\obj\leg.o: ..\HARDWARE\IIC\rng.h
 ..\obj\leg.o: ..\HARDWARE\IIC\m100.h
+..\obj\leg.o: ..\HARDWARE\IIC\usart_fc.h

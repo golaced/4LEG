@@ -35,7 +35,7 @@ typedef struct int16_rcget{
 	      u8 connect;
 				int16_t RST;}RC_GETDATA;
 
-extern RC_GETDATA Rc_Get,Rc_Get_PWM,Rc_Get_SBUS;//接收到的RC数据,1000~2000
+extern RC_GETDATA Rc_Get,Rc_Get_PWM,Rc_Get_SBUS,Rc_Wifi;//接收到的RC数据,1000~2000
 				
 				
 struct _float{
@@ -332,4 +332,11 @@ void GOL_LINK_TASK(void);
 
 void ReportMotion(int16_t ax,int16_t ay,int16_t az,int16_t gx,int16_t gy,int16_t gz,int16_t hx,int16_t hy,int16_t hz);
 void ReportIMU(int16_t yaw,int16_t pitch,int16_t roll,int16_t alt,int16_t tempr,int16_t press,int16_t IMUpersec);
+
+typedef struct {
+        float pos_end[5][3];
+	      u16 lose_cnt,lose_cnt_rx;
+	      u8 connect;}Tinker;
+
+extern Tinker tinker;//接收到的RC数据,1000~2000
 #endif

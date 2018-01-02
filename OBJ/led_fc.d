@@ -64,5 +64,8 @@
 ..\obj\led_fc.o: ..\HARDWARE\IIC\leg.h
 ..\obj\led_fc.o: ..\HARDWARE\IIC\rng.h
 ..\obj\led_fc.o: ..\HARDWARE\IIC\m100.h
+..\obj\led_fc.o: ..\HARDWARE\IIC\hml5833l.h
+..\obj\led_fc.o: d:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+..\obj\led_fc.o: ..\HARDWARE\IIC\beep.h
 ..\obj\led_fc.o: ..\HARDWARE\IIC\circle.h
 ..\obj\led_fc.o: ..\HARDWARE\IIC\gps.h

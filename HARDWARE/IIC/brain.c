@@ -71,19 +71,26 @@ in->sys.max_range=0.707*leg[1].sys.l2*0.78;//6.3 3.830526
 in->sys.leg_move_range[Yr]=MAX(in->sys.max_range, in->sys.min_range);//cm		
 in->sys.leg_move_range[Xr]=W/4*0.88;//cm	
 //for leg 1
+#if MINI_ROBOT
+in->sys.leg_move_range1[1]=0.707*leg[1].sys.l2;
+in->sys.leg_move_range1[2]=sin(22/57.3)*(leg[1].sys.l2+leg[1].sys.l3);
+in->sys.leg_move_range1[3]=0.707*leg[1].sys.l3*0.3;
+in->sys.leg_move_range1[4]=MIN(sin(35/57.3)*(leg[1].sys.l2+leg[1].sys.l3)*0.618,W/2*0.268);
+#else
 in->sys.leg_move_range1[1]=0.707*leg[1].sys.l2;
 in->sys.leg_move_range1[2]=sin(22/57.3)*(leg[1].sys.l2+leg[1].sys.l3);
 in->sys.leg_move_range1[3]=0.707*leg[1].sys.l3*0.3/1.618;
 in->sys.leg_move_range1[4]=MIN(sin(35/57.3)*(leg[1].sys.l2+leg[1].sys.l3)*0.618,W/2*0.268)/1.618;
-
+#endif
 in->sys.kp_center[0]=0.8;
 in->sys.kp_center[1]=0.6;
 in->sys.k_center_fp=0.0;
 
 in->sys.move_range_k=0.66;
 
-in->min_st[0]=0.69;//cm
+in->min_st[0]=1.68;//cm
 in->min_st[1]=in->min_st[0];
+in->min_st[2]=in->min_st[0];
 in->sys.k_center_c[0]=100;
 in->sys.k_center_c[1]=100;
 
@@ -104,15 +111,18 @@ in->sys.leg_h[2]=2.68;
 in->sys.leg_h[3]=2.68;
 in->sys.leg_h[4]=2.68;
 #else
-in->sys.leg_h[1]=4.68;
-in->sys.leg_h[2]=4.68;
-in->sys.leg_h[3]=4.68;
-in->sys.leg_h[4]=4.68;
+in->sys.leg_h[1]=3.68;
+in->sys.leg_h[2]=3.68;
+in->sys.leg_h[3]=3.68;
+in->sys.leg_h[4]=3.68;
 #endif
 #if USE_LEG_TRIG_DELAY // BEST TIM 0.4
 in->sys.desire_time=0.6;//0.7;//0.76;
 #else
 in->sys.desire_time=0.8;//0.7;//0.76;
+#endif
+#if MINI_ROBOT
+in->sys.desire_time=0.2;
 #endif
 in->sys.desire_time_init=in->sys.desire_time;
 in->sys.leg_move_min_dt=in->sys.desire_time*0.68;//35 ;
@@ -279,9 +289,11 @@ barin_init(&brain);}
 			
 			  cal_center_of_leg_ground(&brain);//估计着地多边形
 			  //brain.trot_gait=1;
+			#if defined(TRIG_TEST)
+			#else
 			if(brain.trot_gait){
 				check_leg_need_move_global_tro(&brain,brain.now_spd,brain.sys.tar_spd,brain.tar_w,dt);//判断需要跨脚  规划跨腿		
-        
+        #
 			  center_control_global_tro(dt);//在着地区域内移动重心
 
         att_control(dt);					
@@ -292,6 +304,7 @@ barin_init(&brain);}
 			
 				att_control(dt);	
 			}
+			#endif
 		 }
 		brain.power_all=1;
 	}//end_init

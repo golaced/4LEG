@@ -1,4 +1,5 @@
 #include "include.h" 
+#include "usart_fc.h"
 LEG_STRUCT leg[5];
 BRAIN_STRUCT brain;
 //% leg ending positon calculate'
@@ -21,17 +22,22 @@ BRAIN_STRUCT brain;
 #define DJ_6221MG 12.64
 #define DJ_DSERVO 11.34
 #define DJ_9G 9.34
+#define DJ_9G1 10.34
 #if MINI_ROBOT
-float off_local[2]={0.88,0};
+float off_local[2]={2,0};
+float k_z=0.88;
 #else
-float off_local[2]={2.68,0.680};
-#endif
+float off_local[2]={2.38,0.680};
 float k_z=0.968;
+#endif
+
 #if TIRG_CURVE_USE_BAI
 float flt_leg=0;
 #else
-float flt_leg=0.8;	
+float flt_leg=0.33;//腿限制幅度滤波	
 #endif
+float flt1=0.5;//跨腿最终点滤波
+u8 en_pos_recal=0;//使用POSnow计算值作为输出
 u16 SET_PWM3_OFF=0;
 
 void READ_LEG_ID(LEG_STRUCT *in)
@@ -50,8 +56,8 @@ in->leg_ground=1;
 in->sys.init_mode=0;	
 #if MINI_ROBOT
 in->sys.l1=1.7;
-in->sys.l2=4.2;
-in->sys.l3=5.8;	
+in->sys.l2=6.0;
+in->sys.l3=6.2;	
 #else
 in->sys.l1=3.9;
 in->sys.l2=6.4;
@@ -67,14 +73,14 @@ in->sys.leg_set_invert=0;
 in->sys.leg_set_invert=1;
 #endif
 #if MINI_ROBOT
-in->sys.PWM_OFF[0]=2380;	
-in->sys.PWM_OFF[1]=620;	
-in->sys.PWM_OFF[2]=1000+SET_PWM3_OFF;		
+in->sys.PWM_OFF[0]=2140;	
+in->sys.PWM_OFF[1]=690;	
+in->sys.PWM_OFF[2]=980+SET_PWM3_OFF;		
 in->sys.PWM_OFF[3]=1380;
 #else
-in->sys.PWM_OFF[0]=1730;	
-in->sys.PWM_OFF[1]=870;	
-in->sys.PWM_OFF[2]=1500+SET_PWM3_OFF;		
+in->sys.PWM_OFF[0]=1820;	
+in->sys.PWM_OFF[1]=700;	
+in->sys.PWM_OFF[2]=1400+SET_PWM3_OFF;		
 in->sys.PWM_OFF[3]=1380;
 #endif
 #if MINI_ROBOT
@@ -96,9 +102,9 @@ break;
 case 2:	
 #if MINI_ROBOT
 in->sys.leg_set_invert=1;
-in->sys.PWM_OFF[0]=660;	
-in->sys.PWM_OFF[1]=2300;	
-in->sys.PWM_OFF[2]=1450+SET_PWM3_OFF;	
+in->sys.PWM_OFF[0]=1070;	
+in->sys.PWM_OFF[1]=2360;	
+in->sys.PWM_OFF[2]=1350+SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1380;
 in->sys.sita_flag[0]=1;
 in->sys.sita_flag[1]=-1;	
@@ -106,9 +112,9 @@ in->sys.sita_flag[2]=1;
 in->sys.sita_flag[3]=1;
 #else
 in->sys.leg_set_invert=0;
-in->sys.PWM_OFF[0]=586;	
-in->sys.PWM_OFF[1]=1980;	
-in->sys.PWM_OFF[2]=1510+SET_PWM3_OFF;	
+in->sys.PWM_OFF[0]=1050;	
+in->sys.PWM_OFF[1]=2000;	
+in->sys.PWM_OFF[2]=1490+SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1380;
 in->sys.sita_flag[0]=1;
 in->sys.sita_flag[1]=-1;	
@@ -123,9 +129,9 @@ break;
 case 3:	
 #if MINI_ROBOT
 in->sys.leg_set_invert=0;
-in->sys.PWM_OFF[0]=560;	
-in->sys.PWM_OFF[1]=2150;	
-in->sys.PWM_OFF[2]=1800-SET_PWM3_OFF;	
+in->sys.PWM_OFF[0]=888;	
+in->sys.PWM_OFF[1]=2260;	
+in->sys.PWM_OFF[2]=1470-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1416;
 in->sys.sita_flag[0]=1;
 in->sys.sita_flag[1]=-1;	
@@ -133,7 +139,7 @@ in->sys.sita_flag[2]=1;
 in->sys.sita_flag[3]=-1;
 #else
 in->sys.leg_set_invert=1;	
-in->sys.PWM_OFF[0]=1060;	
+in->sys.PWM_OFF[0]=1121;	
 in->sys.PWM_OFF[1]=1980;	
 in->sys.PWM_OFF[2]=1510-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1416;
@@ -150,9 +156,9 @@ break;
 case 4:	
 #if MINI_ROBOT
 in->sys.leg_set_invert=1;
-in->sys.PWM_OFF[0]=2450;	
-in->sys.PWM_OFF[1]=720;	
-in->sys.PWM_OFF[2]=2070-SET_PWM3_OFF;	
+in->sys.PWM_OFF[0]=2100;	
+in->sys.PWM_OFF[1]=880;	
+in->sys.PWM_OFF[2]=1880-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1360;
 in->sys.sita_flag[0]=-1;
 in->sys.sita_flag[1]=1;	
@@ -160,9 +166,9 @@ in->sys.sita_flag[2]=1;
 in->sys.sita_flag[3]=1;
 #else	
 in->sys.leg_set_invert=0;	
-in->sys.PWM_OFF[0]=1835;	
-in->sys.PWM_OFF[1]=720;	
-in->sys.PWM_OFF[2]=1390-SET_PWM3_OFF;	
+in->sys.PWM_OFF[0]=1750;	
+in->sys.PWM_OFF[1]=875;	
+in->sys.PWM_OFF[2]=1300-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1360;
 in->sys.sita_flag[0]=-1;
 in->sys.sita_flag[1]=1;	
@@ -178,10 +184,10 @@ break;
 switch(in->sys.id){
 case 1:
 #if MINI_ROBOT
-in->sys.PWM_PER_DEGREE[0]=DJ_9G;
-in->sys.PWM_PER_DEGREE[1]=DJ_9G;
-in->sys.PWM_PER_DEGREE[2]=DJ_9G;
-in->sys.PWM_PER_DEGREE[3]=DJ_9G;
+in->sys.PWM_PER_DEGREE[0]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[1]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[2]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[3]=DJ_9G1;
 #else
 in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;
 in->sys.PWM_PER_DEGREE[1]=DJ_6221MG;
@@ -191,10 +197,10 @@ in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 case 2:
 #if MINI_ROBOT
-in->sys.PWM_PER_DEGREE[0]=DJ_9G;
-in->sys.PWM_PER_DEGREE[1]=DJ_9G;
-in->sys.PWM_PER_DEGREE[2]=DJ_9G;
-in->sys.PWM_PER_DEGREE[3]=DJ_9G;
+in->sys.PWM_PER_DEGREE[0]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[1]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[2]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[3]=DJ_9G1;
 #else	
 in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;	
 in->sys.PWM_PER_DEGREE[1]=DJ_DSERVO;
@@ -204,10 +210,10 @@ in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 case 3:
 #if MINI_ROBOT
-in->sys.PWM_PER_DEGREE[0]=DJ_9G;
-in->sys.PWM_PER_DEGREE[1]=DJ_9G;
-in->sys.PWM_PER_DEGREE[2]=DJ_9G;
-in->sys.PWM_PER_DEGREE[3]=DJ_9G;
+in->sys.PWM_PER_DEGREE[0]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[1]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[2]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[3]=DJ_9G1;
 #else		
 in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;//da
 in->sys.PWM_PER_DEGREE[1]=DJ_DSERVO;//xiao
@@ -217,10 +223,10 @@ in->sys.PWM_PER_DEGREE[3]=DJ_MG955;
 break;
 case 4:
 #if MINI_ROBOT
-in->sys.PWM_PER_DEGREE[0]=DJ_9G;
-in->sys.PWM_PER_DEGREE[1]=DJ_9G;
-in->sys.PWM_PER_DEGREE[2]=DJ_9G;
-in->sys.PWM_PER_DEGREE[3]=DJ_9G;
+in->sys.PWM_PER_DEGREE[0]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[1]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[2]=DJ_9G1;
+in->sys.PWM_PER_DEGREE[3]=DJ_9G1;
 #else		
 in->sys.PWM_PER_DEGREE[0]=DJ_DSERVO;	
 in->sys.PWM_PER_DEGREE[1]=DJ_6221MG;
@@ -248,9 +254,9 @@ in->sys.init_end_pos.z=in->pos_tar[2].z=in->sys.pos_tar_trig_test[2].z=(in->sys.
 in->pos_tar_trig[2].x=in->sys.init_end_pos.x;
 in->pos_tar_trig[2].y=in->sys.init_end_pos.y;
 in->pos_tar_trig[2].z=in->sys.init_end_pos.z;
-
-in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25*ANGLE_TO_RADIAN);	
-in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(25*ANGLE_TO_RADIAN);//0.25;	
+in->pos_now_trig_f[2].z=in->sys.init_end_pos.z;
+in->sys.limit.x=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(35*ANGLE_TO_RADIAN);	
+in->sys.limit.y=(in->sys.l1+in->sys.l2+in->sys.l3)*sin(35*ANGLE_TO_RADIAN);//0.25;	
 in->sys.limit.z=(in->sys.l1+in->sys.l2*cos(30*ANGLE_TO_RADIAN)+in->sys.l3*cos(30*ANGLE_TO_RADIAN));	
 	
 in->sys.limit_min.z=(in->sys.l3-(in->sys.l2-in->sys.l1))*1.15;
@@ -333,45 +339,6 @@ u8 cal_sita_form_pos_tri_leg(float r1,float r2,float x,float y,float z,float *si
 	return 1;
 }
 
-void cal_PWM_for_tri_leg(float sita1,float sita2,float sita3)
-{
-  static u8 init;
-	float s1,s2;
-	u8 i;
-	if(!init)
-	{
-	init=1;
-	aux.init[0]=1310;
-	aux.init[1]=1210;
-	aux.min[0]=1100;
-	aux.min[1]=750;
-  aux.max[0]=1750;
-	aux.max[1]=1900;
-
-	aux.flag[0]=1;	
-  aux.flag[1]=1;		
-	aux.pwm_per_dig[0]=9.4;
-	aux.pwm_per_dig[1]=9.4;
-	}	
-	if(aux.att[0]!=0||aux.att[1]!=0){
-	s1=aux.att[0];
-	s2=aux.att[1];	
-	}
-	else{
-	s1=(sita1-90);
-	s2=90-(sita2-180);
-	}
-	aux.pwm_tem[0]=aux.init[0]+aux.pwm_per_dig[0]*s1*aux.flag[0];
-	aux.pwm_tem[1]=aux.init[1]+aux.pwm_per_dig[1]*s2*aux.flag[1];
-	for(i=0;i<2;i++)
-	{
-			aux.pwm_tem[i] = LIMIT(aux.pwm_tem[i],aux.min[i],aux.max[i]);
-	}
-	
-//	TIM8->CCR2 = (aux.pwm_tem[0] )/2 ;				//1	
-//	TIM8->CCR1 = (aux.pwm_tem[1] )/2 ;				//2
-}
-
 
 //从位置结算关节角度 
 void cal_sita_from_pos(LEG_STRUCT * in,float x_i,float y_i,float z_i,u8 out)
@@ -393,7 +360,9 @@ x=(x_i*(1-flt_leg)+x1*flt_leg);
 y=(y_i*(1-flt_leg)+y1*flt_leg);
 z=(z_i*(1-flt_leg)+z1*flt_leg);	
 }	
-
+//x=x_i;
+//y=y_i;
+//z=z_i;	
 
 if(id==1&&in->curve_trig)
 	id=1;
@@ -447,7 +416,8 @@ if(id==1&&in->curve_trig)
 	float d2=cos(in->sita[2]*AtR)*l3;
 	in->pos_now[1].x=(l1+h1)*sin(in->sita[2]*AtR);in->pos_now[1].y=-cos(in->sita[0]*AtR)*d1;in->pos_now[1].z=cos(in->sita[2]*AtR)*(l1+h1);
 	in->pos_now[2].x=(l1+h1+h2)*sin(in->sita[2]*AtR);in->pos_now[2].y=-cos(in->sita[0]*AtR)*d1+cos((180-in->sita[0]-in->sita[1])*AtR)*d2;in->pos_now[2].z=cos(in->sita[2]*AtR)*(l1+h1+h2);	
-  //in->pos_now[2].x=x;in->pos_now[2].y=y;in->pos_now[2].z=z;
+  if(!en_pos_recal)
+	in->pos_now[2].x=x;in->pos_now[2].y=y;in->pos_now[2].z=z;
 	if(in->sys.leg_set_invert)
 		for(u8 i=0;i<3;i++)
 	   {
@@ -500,6 +470,7 @@ float c3[5][3];
 float c4[5][3];
 float c5[5][3];
 float c6[5][3];
+u8 en_xie=1;
 void cal_curve_from_pos(LEG_STRUCT * in,float desire_time)
 {
 u8 id=in->sys.id;	
@@ -512,8 +483,10 @@ pos_tar[Xs]=in->pos_tar_trig[2].x;
 pos_tar[Ys]=in->pos_tar_trig[2].y;
 pos_tar[Zs]=in->pos_tar_trig[2].z;
 	
-		float t1=0;t1=desire_time/2; //middle 0.5s
-    float t2=0;t2=desire_time; //end 1s
+		float t1=0;
+	  t1=desire_time/2; //middle 0.5s
+    float t2=0;
+	  t2=desire_time; //end 1s
     float p0[3];
     float p1[3];
     float p2[3];
@@ -526,8 +499,34 @@ pos_tar[Zs]=in->pos_tar_trig[2].z;
    	p2[1]=pos_tar[Ys];//y
    	p2[2]=pos_tar[Zs];//z
 //-------------middle
-   	p1[0]=(p0[0]+p2[0])/2;
+    float k,b;
+		p1[0]=(p0[0]+p2[0])/2;
    	p1[1]=(p0[1]+p2[1])/2;
+		float r=in->sys.leg_up_high*tan(LIMIT(in->sita[2],-45,45)*0.0173);
+		line_function_from_two_point(p1[0],p1[1],0,0,&k,&b);
+		float jiaodiao[2][2]={0};
+		//计算速度直线与椭圆交点
+		float temp=sqrt(pow(r,2)/(1+pow(r*k/r,2)));
+		//判断速度方向交点符号
+		{jiaodiao[0][Xr]=temp; jiaodiao[1][Xr]=-temp;}
+		jiaodiao[0][Yr]=k*jiaodiao[0][Xr];
+		jiaodiao[1][Yr]=k*jiaodiao[1][Xr];
+		jiaodiao[0][Xr]+=p1[0];jiaodiao[1][Xr]+=p1[0];
+		jiaodiao[0][Yr]+=p1[1];jiaodiao[1][Yr]+=p1[1];
+    float dis[2];
+		dis[0]=cal_dis_of_points(0,0,jiaodiao[0][Xr],jiaodiao[0][Yr]);
+   	dis[1]=cal_dis_of_points(0,0,jiaodiao[1][Xr],jiaodiao[1][Yr]);
+		if(en_xie){
+		if(dis[0]<dis[1])
+		{
+		p1[0]=jiaodiao[0][Xr];
+		p1[1]=jiaodiao[0][Yr];	
+		}else
+		{
+		p1[0]=jiaodiao[1][Xr];
+		p1[1]=jiaodiao[1][Yr];	
+		}}
+		
    	p1[2]=LIMIT((p0[2]+p2[2])/2-in->sys.leg_up_high,in->sys.limit_min.z,30);//wait
 		
   float p1_p0[3];
@@ -596,6 +595,7 @@ in->pos_tar[2].z=sz-(h+off_h)*(1-cos(sita))/2;
 
 float rate_delay_kuai=0.066;
 float delay_time_kuai=0.66;
+float off_time_k=0.0;
 //跨腿
 void leg_follow_curve(LEG_STRUCT * in,float desire_time,u8 *en,float dt,float down_h,float down_t)
 {
@@ -606,15 +606,19 @@ static float time[5],delay[5];
 static float temp_h;
 static float pos_str[5][3],pos_tar[5][3];
 static float off_h[5];
+float dis_tar;
+
+dis_tar=sqrt(pow(in->pos_tar_trig[2].x-in->pos_now[2].x,2)*0+
+						 pow(in->pos_tar_trig[2].y-in->pos_now[2].y,2)*0+
+						 pow(in->pos_tar_trig[2].z-in->pos_now[2].z,2));	
 //判断是否重合等
 	
 switch(state[id])
 {
 case 0:
 if(*en){//由着地点规划当前轨迹
-state[id]=1;	
+state[id]=3;	
 ground_mask[id]=time[id]=delay[id]=0;	
-in->leg_ground=0;
 }
 break;
 case 1://有时间和轨迹计算每一时间的曲线坐标
@@ -637,19 +641,19 @@ time[id]+=dt;
 break;///////////////
 case 3:
 if(*en){//抬
-in->pos_tar[2].z=temp_h-1.61*down_h;	
+in->leg_ground=0;	
 #if !TIRG_CURVE_USE_BAI
 cal_curve_from_pos(in,desire_time);	
 #else	
+in->pos_tar[2].z=temp_h-1.61*down_h;		
 pos_str[id][Xs]=in->pos_now[2].x;
 pos_str[id][Ys]=in->pos_now[2].y;
 pos_str[id][Zs]=in->pos_now[2].z;
 pos_tar[id][Xs]=in->pos_tar_trig[2].x;
 pos_tar[id][Ys]=in->pos_tar_trig[2].y;
 pos_tar[id][Zs]=in->pos_tar_trig[2].z;
-off_h[id]=(pos_tar[id][Zs]-pos_str[id][Zs])	;	
+off_h[id]=(pos_tar[id][Zs]-pos_str[id][Zs])*0	;	
 #endif
-time[id]+=dt;
 state[id]=4;
 }
 break;
@@ -659,20 +663,22 @@ if(*en){//轨迹
 cal_pos_tar_from_curve(in,time[id],dt);
 #else
 leg_curve_bai(in,pos_str[id][Xr],pos_str[id][Yr],pos_str[id][Zr],pos_tar[id][Xr],pos_tar[id][Yr],pos_tar[id][Zr]
-	,in->sys.leg_up_high,off_h[id],time[id],dt,desire_time-dt);
+	,in->sys.leg_up_high,off_h[id],time[id],dt,desire_time);
 #endif
 #if TWO_LEG_TEST
 if(time[id]<desire_time/2)	
 time[id]+=dt;
 #else	
 time[id]+=dt;
-if(time[id]>desire_time)	
+if((time[id]>desire_time+off_time_k))	
 {state[id]=5;}
 #endif
 }
 break;
 case 5:
 	in->leg_ground=1;
+
+  in->pos_now_trig_f[2].z=in->pos_now[2].z*(1-flt1)+in->pos_tar[2].z*flt1;
   state[id]=0;
   if(in->rst_leg)
 		in->rst_leg=0;
@@ -740,15 +746,20 @@ static float reg[5][3];
 	reg[id][1]=in->pos_tar[2].y;
 	if(!isnan(in->pos_tar[2].z))
 	reg[id][2]=in->pos_tar[2].z; 
-
-	 
-	in->pos_tar[2].x=LIMIT(in->pos_tar[2].x,-in->sys.limit.x,in->sys.limit.x);
-	in->pos_tar[2].y=LIMIT(in->pos_tar[2].y,-in->sys.limit.y,in->sys.limit.y);	 
-	limit_range_leg(in->pos_tar[2].x,in->pos_tar[2].y,in->sys.limit.x,in->sys.limit.y,&in->pos_tar[2].x,&in->pos_tar[2].y);
+  if(in->pos_now[2].z==0)
+	{
+	in->pos_now[2].x=in->sys.init_end_pos.x;
+	in->pos_now[2].y=in->sys.init_end_pos.y;
+	in->pos_now[2].z=in->sys.init_end_pos.z;
+	} 
+	float limit_mask=1;
+	in->pos_tar[2].x=LIMIT(in->pos_tar[2].x,-in->sys.limit.x*limit_mask,in->sys.limit.x*limit_mask);
+	in->pos_tar[2].y=LIMIT(in->pos_tar[2].y,-in->sys.limit.y*limit_mask,in->sys.limit.y*limit_mask);	 
+	limit_range_leg(in->pos_tar[2].x,in->pos_tar[2].y,in->sys.limit.x*limit_mask,in->sys.limit.y*limit_mask,&in->pos_tar[2].x,&in->pos_tar[2].y);
 	  
 	//in->pos_tar[2].z=LIMIT(in->pos_now[2].z+att_control_out[id]-(brain.tar_h-brain.global.end_pos_global[0].z)*dt*1.618,in->sys.limit_min.z,in->sys.limit.z);	 
-	in->pos_tar[2].z=LIMIT(att_control_out[id]+brain.tar_h,in->sys.limit_min.z,in->sys.limit.z);	 
-	in->pos_tar[2].z=LIMIT(in->pos_tar[2].z,in->sys.limit_min.z,in->sys.limit.z);
+	//in->pos_tar[2].z=LIMIT(brain.tar_h,in->sys.limit_min.z,in->sys.limit.z);	 
+	in->pos_tar[2].z=LIMIT(in->pos_now_trig_f[2].z,in->sys.limit_min.z,in->sys.limit.z);
 	}
 }	
 
@@ -829,6 +840,22 @@ static u16 cnt[5];
 	y_temp=in->pos_tar[2].y;
 	z_temp=in->pos_tar[2].z;
 	}		
+	if(tinker.connect)
+	{
+	in->pos_tar[2].x=	tinker.pos_end[id][0];
+	in->pos_tar[2].y=	tinker.pos_end[id][1];
+	in->pos_tar[2].z=	tinker.pos_end[id][2];		
+	if(in->sys.leg_set_invert)//<---------------------use normal mode 
+	{	
+	x_temp=-(in->pos_tar[2].x);
+	y_temp=-(in->pos_tar[2].y);
+	z_temp=in->pos_tar[2].z;
+	}else{
+	x_temp=in->pos_tar[2].x;
+	y_temp=in->pos_tar[2].y;
+	z_temp=in->pos_tar[2].z;
+	}
+	}
 	//由坐标计算角度
 	cal_sita_from_pos(in,x_temp+in->sys.off_all.x,y_temp+in->sys.off_all.y,
 	z_temp+in->sys.off_all.z,1);

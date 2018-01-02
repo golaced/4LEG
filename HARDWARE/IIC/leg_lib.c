@@ -1034,15 +1034,30 @@ float cal_area_trig(float ax,float ay,float bx,float by,float cx,float cy)
 if(license.state==0) 
 return 0xf;
 #endif		
-	
+
 float mx=cx-ax,my=cy-ay,nx=bx-ax,ny=by-ay;
 float Lm= sqrt(mx*mx+my*my),Ln= sqrt(nx*nx+ny*ny),cosA=(mx*nx+my*ny)/Lm/Ln;
 float sinA=sqrt(1-cosA*cosA);
 float S_tri=0.5*Lm*Ln*sinA;
-if(S_tri>=0) 
-	return S_tri;
-else  
-	return (-1*S_tri);
+
+S_tri=(ax*by+bx*cy+cx*ay-ay*bx-by*cx-cy*ax)/2;
+
+float dx=ax-bx;
+float dy=ay-by;
+float p1Len=sqrt(dx*dx+dy*dy);
+dx=bx-cx;
+dy=by-cy;
+float p2Len=sqrt(dx*dx+dy*dy);
+dx=cx-ax;
+dy=cy-ay;
+float p3Len=sqrt(dx*dx+dy*dy);
+
+float p=(p1Len+p2Len+p3Len)/2;
+S_tri=sqrt(p*(p-p1Len)*(p-p2Len)*(p-p3Len));
+if(S_tri>0)
+    return S_tri;
+else
+    return 0;
 }	
 
 //一个点在三角形内部

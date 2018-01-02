@@ -13,12 +13,12 @@
 #define LED4_ON          ANO_GPIO_LED->BSRRH = ANO_Pin_LED4
 
 /***************LED GPIO定义******************/
-#define ANO_RCC_LED			RCC_AHB1Periph_GPIOA
-#define ANO_GPIO_LED		GPIOA
-#define ANO_Pin_LED1		GPIO_Pin_4
-#define ANO_Pin_LED2		GPIO_Pin_5
-#define ANO_Pin_LED3		GPIO_Pin_6
-#define ANO_Pin_LED4		GPIO_Pin_7
+#define ANO_RCC_LED			RCC_AHB1Periph_GPIOC
+#define ANO_GPIO_LED		GPIOC
+#define ANO_Pin_LED1		GPIO_Pin_1
+#define ANO_Pin_LED2		GPIO_Pin_3
+#define ANO_Pin_LED3		GPIO_Pin_2
+#define ANO_Pin_LED4		GPIO_Pin_15
 /*********************************************/
 
 void LED_Init(void);
@@ -29,7 +29,7 @@ void LED_MPU_Err(void);
 void LED_Mag_Err(void);
 void LED_MS5611_Err(void);
 
-extern u8 LED_Brightness[4];
+extern u8 LED_Brightness[4],LED[3];
 
 
 		//带参宏，可以像内联函数一样使用
@@ -56,8 +56,8 @@ extern u8 LED_Brightness[4];
 #define YELLOW 3
 #define BLACK 4
 #define WHITE 5
-void LEDRGB_STATE(u8 sel);
-void LEDRGB_COLOR(u8 color);
-void LEDRGB(u8 sel,u8 on);				
+extern void LEDRGB_STATE(float dt);
+extern void LEDRGB_COLOR(u8 color);
+extern void LEDRGB(u8 sel,u8 on);				
 #endif
 

@@ -21,6 +21,7 @@ u8 out_protect=0;//超出范围优先跨腿
 #else
 u8 out_protect=1;//超出范围优先跨腿
 #endif
+u8 leg_off_ground_test=1;
 u8 en_leg_trig_list=1;
 float k_size=0.0068;
 float k_force=3.333;//超限区域大小增益
@@ -30,7 +31,7 @@ float limit_deng=11.1111;//蹬腿速度控制限制
 float k_acc_control[2]={0,0};//{-0.1,-0.07};
 float k_spd_control[2]={0.25,0.15};
 float force_stop_range[2]={4.8,6};
-
+float std_switch=1.68;
 int flag_acc[2]={-1,-1};
 float k_acc1=1;
 
@@ -38,7 +39,7 @@ float set_max=5.7*2;//超限权值计算最大范围
 float min_spd=0.023;//超限权值最小值
 static u8 stop_leg;
 float set_trig_value=0.9;
-float center_stable_dead=0.5;//中心稳定判断死区
+float center_stable_dead=0.68;//中心稳定判断死区
 
 u8 en_off_trig=0;//跨腿添加 当前偏差
 u8 trig_use_now_pos=1;//跨腿起点为当前点
@@ -162,7 +163,7 @@ switch(ground_leg_num)
 	}
 	 brain.global.leg_ground_center[Xr]=(float)(x[0]+x[1]+x[2]+x[3])/4.;
    brain.global.leg_ground_center[Yr]=(float)(y[0]+y[1]+y[2]+y[4])/4.;
-   brain.global.area_of_leg[0]=cal_area_trig( x[0],y[0], x[1],y[1], x[2],y[2])/2+cal_area_trig( x[3],y[3], x[1],y[1], x[2],y[2])/2;
+   brain.global.area_of_leg[0]=cal_area_trig( x[0],y[0], x[1],y[1], x[2],y[2])+cal_area_trig( x[3],y[3], x[1],y[1], x[2],y[2]);
    brain.global.steady_value=cal_steady_s4( brain.global.ZMP.x,brain.global.ZMP.y,x[0],y[0], x[1],y[1], x[2],y[2],x[3],y[3]);	
  break;	 
  case 3:
@@ -178,7 +179,7 @@ switch(ground_leg_num)
     temp[1][Yr]=(float)(y[1]+y[2]+y[3])/3.;
     brain.global.leg_ground_center[Xr]=(float)(temp[0][Xr]+temp[1][Xr])/2.;
     brain.global.leg_ground_center[Yr]=(float)(temp[0][Yr]+temp[1][Yr])/2.;
-    brain.global.area_of_leg[0]=cal_area_trig( x[0],y[0], x[1],y[1], x[2],y[2])/2+cal_area_trig( x[3],y[3], x[1],y[1], x[2],y[2])/2;
+    brain.global.area_of_leg[0]=cal_area_trig( x[0],y[0], x[1],y[1], x[2],y[2])+cal_area_trig( x[3],y[3], x[1],y[1], x[2],y[2]);
     brain.global.steady_value=cal_steady_s4( brain.global.ZMP.x,brain.global.ZMP.y,x[0],y[0], x[1],y[1], x[3],y[3],x[2],y[2]);	
  break;
  default:
@@ -203,6 +204,10 @@ switch(ground_leg_num)
 	 brain.global.min_width_value=LIMIT(MIN(dis[0],dis[1])/(brain.sys.leg_local[1].x*2*1.618),0,1);
 	 break;
  }
+	#if defined(CENTER_CONTROL_TEST)
+	brain.leg_move_state=S_BODY_MOVE;
+  brain.move_id=leg_off_ground_test;
+	#endif 
 //--------------------------Fake pos when trig leg
 if(brain.leg_move_state==S_BODY_MOVE||brain.leg_move_state==S_LEG_TRIG){ 
 j=0;
@@ -215,296 +220,316 @@ for(i=1;i<5;i++){
   }
    brain.global.leg_ground_center_trig[Xr]=(float)(x[0]+x[1]+x[2])/3.;
    brain.global.leg_ground_center_trig[Yr]=(float)(y[0]+y[1]+y[2])/3.;
+	// brain.global.steady_value=cal_steady_s( brain.global.ZMP.x,brain.global.ZMP.y,x[0],y[0], x[1],y[1], x[2],y[2]);
 } 
 
   brain.global.area_value=LIMIT((brain.area_of_leg[0]/brain.area_of_leg[1]),0,1);
 }	
 
+
 //----------Body center movement control
+float control_draw[50];
 float ero_center[2];
 float center_control_out[2];
 void center_control_global(float dt)
-{ static u8 reg_flag;
-  u8 i;
-	u8 id_f[3]={0};
-	float ero[2];
-	float center_tar_x,center_tar_y;
-	float spd_use,yaw_use;
-	float k_c=0,b_c=0;
-	float k_c1=0,b_c1=0;
-	float gx=brain.global.leg_ground_center[Xr];
-	float gy=brain.global.leg_ground_center[Yr];
-	float k_spd=1;
-	float tar_x,tar_y;
-	u8 brain_ground_leg_num=brain.ground_leg_num;
-	u8 leg_ground[5];
-	float leg_end_use[5][2];
-	//--------------value flt
-	brain.global.value[0]=0.9*brain.global.value[0]+0.1*brain.global.area_value*brain.global.out_value*LIMIT(brain.global.center_stable_weight,0.3,1);
-	brain.global.value[1]=0.9*brain.global.value[1]+0.1*LIMIT(brain.global.area_value,0.68,1);
-	brain.global.value[2]=0.9*brain.global.value[2]+0.1*brain.global.area_value* brain.global.min_width_value;
-	if(brain.force_stop==2)
-	brain.global.value[3]=0.1;
-	else if(brain.force_stop==1)
-	brain.global.value[3]-=(force_rate*dt);	
-	else	
-	brain.global.value[3]+=(force_rate*dt);
-	brain.global.value[3]=LIMIT(brain.global.value[3],0.1,1);
-	
-	for(i=0;i<5;i++)
-	leg_ground[i]=leg[i].leg_ground;
-	
-	if(brain.leg_move_state==S_BODY_MOVE||brain.leg_move_state==S_LEG_TRIG){
-	gx=brain.global.leg_ground_center_trig[Xr];
-  gy=brain.global.leg_ground_center_trig[Yr];
-	brain_ground_leg_num=3;	
-	leg_ground[brain.move_id]=0;	
-	}
-	#if TEST_MODE1
-	k_spd=10;
-	if(brain.force_stop)
-	spd_use=k_spd*brain.global.center_stable_weight/4;
-	else
-	spd_use=brain.spd*k_spd*brain.global.center_stable_weight;
-	#else
-	spd_use=brain.spd*k_spd*brain.global.value[0]*brain.global.value[3];
-	#endif
-	//resize
-	float gx_use,gy_use;
-	float low_k=brain.sys.leg_local[1].x/brain.sys.leg_local[1].y*k_size;
-	float temp1=(1-low_k)/2;
-	float temp2=cos(yaw_use*2*ANGLE_TO_RADIAN);
-	size_k= LIMIT(temp1*temp2+low_k+temp1,0,1);	
-	//size_k=1;
-	yaw_use=brain.spd_yaw;
-	#if HORIZON_USE_FORWARD_CENTER
-	  if((brain.spd_yaw!=0&&brain.spd_yaw!=180)&&brain_ground_leg_num==3)
-	  {
-			size_k=1;
-			yaw_use=0;
-			spd_use=0;
-		}
-	#endif
-	float re_x=0,re_y=0;
-	for(i=1;i<5;i++)
-	resize_point_with_arrow(brain.global.end_pos_global[i].x,brain.global.end_pos_global[i].y,re_x,re_y,yaw_use,size_k,&leg_end_use[i][Xr],&leg_end_use[i][Yr]);
-	
-	resize_point_with_arrow(gx,gy,re_x,re_y,yaw_use,size_k,&gx_use,&gy_use);
-	
+{
+    static char reg_flag;
+    char i;
+    char id_f[3]={0};
+    float ero[2];
+    float center_tar_x,center_tar_y;
+    float spd_use,yaw_use;
+    float k_c=0,b_c=0;
+    float k_c1=0,b_c1=0;
+    float gx=brain.global.leg_ground_center[Xr];
+    float gy=brain.global.leg_ground_center[Yr];
+    float k_spd=1;
+    float tar_x,tar_y;
+    char brain_ground_leg_num=brain.ground_leg_num;
+    char leg_ground[5];
+    float leg_end_use[5][2];
+    control_draw[0]=0;
+    //--------------value flt
+    brain.global.value[0]=0.9*brain.global.value[0]+0.1*brain.global.area_value*brain.global.out_value*LIMIT(brain.global.center_stable_weight,0.3,1);
+    brain.global.value[1]=0.9*brain.global.value[1]+0.1*LIMIT(brain.global.area_value,0.68,1);
+    brain.global.value[2]=0.9*brain.global.value[2]+0.1*brain.global.area_value* brain.global.min_width_value;
+    if(brain.force_stop==2)
+    brain.global.value[3]=0.1;
+    else if(brain.force_stop==1)
+    brain.global.value[3]-=(force_rate*dt);
+    else
+    brain.global.value[3]+=(force_rate*dt);
+    brain.global.value[3]=LIMIT(brain.global.value[3],0.1,1);
 
-	//normal
-	line_function_from_arrow(gx_use,gy_use,yaw_use,&k_c,&b_c);
-	
-	
-	switch(brain_ground_leg_num)
-	{
-		case 3://three leg ground
-			//Debug
-		  if(leg[3].leg_ground==0) 
-		   i=0;
-			//	
-		  u8 front_leg_num=0;
-		  float f_leg_x,f_leg_y;
-		  for(i=1;i<5;i++)
-		  if(leg_ground[i])
-		      if(check_point_front_arrow(leg_end_use[i][Xr],leg_end_use[i][Yr],gx_use,gy_use,yaw_use)){
-						 id_f[front_leg_num++]=i;
-					}		
-      brain.sys.front_leg_num=front_leg_num;					
-		  f_leg_x=leg_end_use[id_f[0]][Xr];
-			f_leg_y=leg_end_use[id_f[0]][Yr];
-	 if(front_leg_num==1){	//one leg before center
-			float cross_point_x,cross_point_y;						
-			float k_f,b_f;
-			for(i=1;i<5;i++)
-		  if(leg_ground[i]&&i!=id_f[0])		 
+    for(i=0;i<5;i++)
+    leg_ground[i]=leg[i].leg_ground;
+    #if defined(CENTER_CONTROL_TEST)
+    brain.leg_move_state=S_BODY_MOVE;
+    for(i=0;i<5;i++)
+     if(i!=leg_off_ground_test)
+     {leg_ground[i]=1;leg[i].sys.limit.z=brain.tar_h;}
+     else
+     {leg_ground[i]=0;leg[i].sys.limit.z=brain.tar_h-3;}
+    #endif
+    if(brain.leg_move_state==S_BODY_MOVE||brain.leg_move_state==S_LEG_TRIG){
+    gx=brain.global.leg_ground_center_trig[Xr];
+    gy=brain.global.leg_ground_center_trig[Yr];
+    brain_ground_leg_num=3;
+    leg_ground[brain.move_id]=0;
+    }
+    #if TEST_MODE1
+    k_spd=10;
+    if(brain.force_stop)
+    spd_use=k_spd*brain.global.center_stable_weight/4;
+    else
+    spd_use=brain.spd*k_spd*brain.global.center_stable_weight;
+    #else
+    spd_use=brain.spd*k_spd*brain.global.value[0]*brain.global.value[3];
+    #endif
+    //resize
+    float gx_use,gy_use;
+    float low_k=brain.sys.leg_local[1].x/brain.sys.leg_local[1].y*k_size;
+    float temp1=(1-low_k)/2;
+    float temp2=cos(yaw_use*2*ANGLE_TO_RADIAN);
+    size_k= LIMIT(temp1*temp2+low_k+temp1,0,1);
+    //size_k=1;
+    yaw_use=brain.spd_yaw;
+    #if HORIZON_USE_FORWARD_CENTER
+      if((brain.spd_yaw!=0&&brain.spd_yaw!=180)&&brain_ground_leg_num==3)
       {
-       float k_temp,b_temp;
-			 line_function_from_two_point(f_leg_x,f_leg_y,leg_end_use[i][Xr],leg_end_use[i][Yr],&k_temp,&b_temp);					
-				if(check_cross_arrow_line(gx_use,gy_use,yaw_use,k_temp,b_temp,&cross_point_x,&cross_point_y)){	
-         id_f[1]=i; 
-				 k_f=k_temp;
-				 b_f=b_temp;
-				 break;}   					
-			}
-		 
-			cross_point_x-=brain.min_st[0]*sin((yaw_use)*ANGLE_TO_RADIAN)*size_k;
-			cross_point_y-=brain.min_st[0]*cos((yaw_use)*ANGLE_TO_RADIAN)*size_k;
-			
-			int traj_flag;
-			
-			traj_flag=check_point_front_arrow(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,cross_point_x,cross_point_y,yaw_use);
-			if(traj_flag){
-			check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			yaw_use,k_f,b_f,&tar_x,&tar_y);
-			}	
-			else
-			check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			yaw_use,k_c,b_c,&tar_x,&tar_y);
-			
-		
-			#if USE_SIMPLE_CENTER
-      float k_cc,b_cc;	
-			line_function_from_two_point(gx,gy,f_leg_x,f_leg_y,&k_cc,&b_cc);
-			check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			yaw_use,k_cc,b_cc,&tar_x,&tar_y);
-			#endif
-  		if(cal_dis_of_points(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,
-		  f_leg_x,f_leg_y)<brain.min_st[0]*size_k)
-	    {tar_x=f_leg_x-brain.min_st[0]*size_k*sin((yaw_use)*ANGLE_TO_RADIAN);tar_y=f_leg_y-brain.min_st[0]*size_k*cos((yaw_use)*ANGLE_TO_RADIAN);brain.force_stop=1;}
-		}
-	  else//  two leg before
-		{
-		  float f_leg_x1,f_leg_y1;
-		  f_leg_x1=leg_end_use[id_f[1]][Xr];
-			f_leg_y1=leg_end_use[id_f[1]][Yr];
-		
-			u8 id3;				 
-			for(i=1;i<5;i++)
-		  if(leg_ground[i]&&i!=id_f[0]&&i!=id_f[1])		 
-      {
-			id3=i;
-      break;				
-			}
-			float jiao[2][2];
-			float coner[3][2];
-			if(leg[4].leg_ground==0)
-				i=0;
-			coner[0][Xr]=f_leg_x;coner[0][Yr]=f_leg_y;
-			coner[1][Xr]=f_leg_x1;coner[1][Yr]=f_leg_y1;
-			coner[2][Xr]=leg_end_use[id3][Xr];coner[2][Yr]=leg_end_use[id3][Yr];
-			check_point_to_trig(gx_use,gy_use,yaw_use,f_leg_x,f_leg_y,f_leg_x1,f_leg_y1,leg_end_use[id3][Xr],leg_end_use[id3][Yr],
-	    &jiao[0][Xr],&jiao[0][Yr],&jiao[1][Xr],&jiao[1][Yr]);
-			float dis[2][3];
-			dis[0][0]=cal_dis_of_points(jiao[0][Xr],jiao[0][Yr],f_leg_x,f_leg_y);
-	    dis[0][1]=cal_dis_of_points(jiao[0][Xr],jiao[0][Yr],f_leg_x1,f_leg_y1);
-	    dis[0][2]=cal_dis_of_points(jiao[0][Xr],jiao[0][Yr],leg_end_use[id3][Xr],leg_end_use[id3][Yr]);
-			dis[1][0]=cal_dis_of_points(jiao[1][Xr],jiao[1][Yr],f_leg_x,f_leg_y);
-	    dis[1][1]=cal_dis_of_points(jiao[1][Xr],jiao[1][Yr],f_leg_x1,f_leg_y1);
-	    dis[1][2]=cal_dis_of_points(jiao[1][Xr],jiao[1][Yr],leg_end_use[id3][Xr],leg_end_use[id3][Yr]);
-			float dis_big[2]={dis[0][0],dis[1][0]};
-			u8 id_closet[2]={1,1};
-			for(i=1;i<3;i++)
-			  if(dis[0][i]<dis_big[0])
-					 id_closet[0]=i;
-			for(i=1;i<3;i++)
-			  if(dis[1][i]<dis_big[1])
-					 id_closet[1]=i;	
-		
-			float cross_point[2][2];
-		  float coner_point[2][2];		
-			coner_point[0][Xr]=coner[id_closet[0]][Xr];	
-			coner_point[0][Yr]=coner[id_closet[0]][Yr];	
-			coner_point[1][Xr]=coner[id_closet[1]][Xr]+brain.min_st[1]*size_k*sin((yaw_use)*ANGLE_TO_RADIAN);	
-			coner_point[1][Yr]=coner[id_closet[1]][Yr]+brain.min_st[1]*size_k*cos((yaw_use)*ANGLE_TO_RADIAN);	
+            size_k=1;
+            yaw_use=0;
+            spd_use=0;
+        }
+    #endif
+    float re_x=0,re_y=0;
+    for(i=1;i<5;i++)
+    resize_point_with_arrow(brain.global.end_pos_global[i].x,brain.global.end_pos_global[i].y,re_x,re_y,yaw_use,size_k,&leg_end_use[i][Xr],&leg_end_use[i][Yr]);
 
-			cross_point[0][Xr]=jiao[0][Xr]-brain.min_st[0]*size_k*sin((yaw_use)*ANGLE_TO_RADIAN);
-			cross_point[0][Yr]=jiao[0][Yr]-brain.min_st[0]*size_k*cos((yaw_use)*ANGLE_TO_RADIAN);
-			cross_point[1][Xr]=jiao[1][Xr]+brain.min_st[1]*size_k*sin((yaw_use)*ANGLE_TO_RADIAN);
-			cross_point[1][Yr]=jiao[1][Yr]+brain.min_st[1]*size_k*cos((yaw_use)*ANGLE_TO_RADIAN);
-			//
-			float k_tr[3],b_tr[3];
-			line_function_from_two_point(coner_point[0][Xr],coner_point[0][Yr],cross_point[0][Xr],cross_point[0][Yr],&k_tr[0],&b_tr[0]);				
- 	    line_function_from_two_point(cross_point[0][Xr],cross_point[0][Yr],cross_point[1][Xr],cross_point[1][Yr],&k_tr[1],&b_tr[1]);
-		  line_function_from_two_point(cross_point[1][Xr],cross_point[1][Yr],coner_point[1][Xr],coner_point[1][Yr],&k_tr[2],&b_tr[2]);
-			
-			int traj_flag[3];
-			//
-			traj_flag[0]=check_point_front_arrow(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,cross_point[0][Xr],cross_point[0][Yr],yaw_use);
-			traj_flag[1]=check_point_front_arrow(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,cross_point[1][Xr],cross_point[1][Yr],yaw_use);
-			
-			if(traj_flag[0]==1&&traj_flag[1]==1&&1)//qian
-			check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			yaw_use,k_tr[0],b_tr[0],&tar_x,&tar_y);
-			else if(traj_flag[0]==0&&traj_flag[1]==0)//hou
-			check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			yaw_use,k_tr[2],b_tr[2],&tar_x,&tar_y);	
-			//{tar_x=cross_point[1][Xr];tar_y=cross_point[1][Yr];}
-			else//zhongj
-			check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			yaw_use,k_tr[1],b_tr[1],&tar_x,&tar_y);	
-			#if USE_SIMPLE_CENTER
-						//----new
-			float k_cc1,b_cc1;
-			line_function_from_two_point(gx,gy,coner_point[1][Xr],coner_point[1][Yr],&k_cc1,&b_cc1);
-			traj_flag[2]=check_point_front_arrow(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,gx,gy,yaw_use);
-			if(traj_flag[2])//line
-			check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			yaw_use,k_tr[1],b_tr[1],&tar_x,&tar_y);	
-			else //coner
-			check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			yaw_use,k_cc1,b_cc1,&tar_x,&tar_y);	
-			#endif
-			
-			if(cal_dis_of_points(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,
-		  coner_point[0][Xr],coner_point[0][Yr])<brain.min_st[0]*size_k||
-			cal_dis_of_points(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,
-		  coner_point[1][Xr],coner_point[1][Yr])<brain.min_st[1]*size_k)
-	    brain.force_stop=1;
-		}//end----
-					
-		  center_tar_x=tar_x;
-			center_tar_y=tar_y;
-		break;
-		case 4:	//4 leg ground
-		  check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
-			yaw_use,k_c,b_c,&tar_x,&tar_y);
-			center_tar_x=tar_x;
-			center_tar_y=tar_y;
-		break;	
-	}
+    resize_point_with_arrow(gx,gy,re_x,re_y,yaw_use,size_k,&gx_use,&gy_use);
 
-			
-	brain.global.tar_center[Xr]=brain.tar_center[Xr]=center_tar_x;
-	brain.global.tar_center[Yr]=brain.tar_center[Yr]=center_tar_y;
 
-	ero_center[Xr]=my_deathzoom((brain.tar_center[Xr]-brain.global.end_pos_global[0].x
-	+k_spd_control[Xr]*my_deathzoom(LIMIT(brain.now_spd[Xr],-0.66,0.66),0.01)
-	+k_acc_control[Xr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(LIMIT(brain.now_acc[Xr],-2,2),0.3)),0.001);
+    //normal
+    line_function_from_arrow(gx_use,gy_use,yaw_use,&k_c,&b_c);
+
+
+    switch(brain_ground_leg_num)
+    {
+        case 3:{//three leg ground
+            //Debug
+
+          if(leg[3].leg_ground==0)
+           i=0;
+            //
+          char front_leg_num=0;
+          float f_leg_x,f_leg_y;
+          for(i=1;i<5;i++)
+          if(leg_ground[i])
+              if(check_point_front_arrow(leg_end_use[i][Xr],leg_end_use[i][Yr],gx_use,gy_use,yaw_use)){
+                         id_f[front_leg_num++]=i;
+                    }
+      brain.sys.front_leg_num=front_leg_num;
+          f_leg_x=leg_end_use[id_f[0]][Xr];
+          f_leg_y=leg_end_use[id_f[0]][Yr];
+     if(front_leg_num==1){	//one leg before center
+         control_draw[0]=1;
+         //cout<<control_draw[0]<<endl;
+            float cross_point_x,cross_point_y;
+            float k_f,b_f;
+            for(i=1;i<5;i++)
+                if(leg_ground[i]&&i!=id_f[0]&&i!=brain.move_id)
+                {
+                    float k_temp,b_temp;
+                    line_function_from_two_point(f_leg_x,f_leg_y,leg_end_use[i][Xr],leg_end_use[i][Yr],&k_temp,&b_temp);
+                    if(check_cross_arrow_line(gx_use,gy_use,yaw_use,k_temp,b_temp,&cross_point_x,&cross_point_y)){
+                        id_f[1]=i;
+                        k_f=k_temp;
+                        b_f=b_temp;
+                        break;}
+                }
+
+            cross_point_x-=brain.min_st[0]*sin((yaw_use)*ANGLE_TO_RADIAN)*size_k;
+            cross_point_y-=brain.min_st[0]*cos((yaw_use)*ANGLE_TO_RADIAN)*size_k;
+            control_draw[1]=cross_point_x;
+            control_draw[2]=cross_point_y;
+            control_draw[3]=f_leg_x;
+            control_draw[4]=f_leg_y;
+            float k_f_st,b_f_st;
+            line_function_from_two_point(cross_point_x,cross_point_y,f_leg_x,f_leg_y,&k_f_st,&b_f_st);
+
+
+            int traj_flag;
+
+            traj_flag=check_point_front_arrow(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,cross_point_x,cross_point_y,yaw_use);
+            //cout<<traj_flag<<endl;
+            if(traj_flag){
+            check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            yaw_use,k_f_st,b_f_st,&tar_x,&tar_y);
+            }
+            else
+            check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            yaw_use,k_c,b_c,&tar_x,&tar_y);
+
+
+        if(cal_dis_of_points(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,
+          f_leg_x,f_leg_y)<brain.min_st[0]*size_k)
+        {tar_x=f_leg_x-brain.min_st[0]*size_k*sin((yaw_use)*ANGLE_TO_RADIAN);tar_y=f_leg_y-brain.min_st[0]*size_k*cos((yaw_use)*ANGLE_TO_RADIAN);brain.force_stop=1;}
+        }
+      else//  two leg before
+        { control_draw[0]=2;
+          float f_leg_x1,f_leg_y1;
+          f_leg_x1=leg_end_use[id_f[1]][Xr];
+          f_leg_y1=leg_end_use[id_f[1]][Yr];
+
+          char id3;
+          for(i=1;i<5;i++)
+              if(leg_ground[i]&&i!=id_f[0]&&i!=id_f[1]&&i!=brain.move_id)
+              {
+                  id3=i;
+                  break;
+              }
+            float jiao[2][2];
+            float coner[3][2];
+            if(leg[4].leg_ground==0)
+                i=0;
+           // cout<<(int)id_f[0]<<" "<<(int)id_f[1]<<" "<<(int)id3<<endl;
+            coner[0][Xr]=f_leg_x;coner[0][Yr]=f_leg_y;
+            coner[1][Xr]=f_leg_x1;coner[1][Yr]=f_leg_y1;
+            coner[2][Xr]=leg_end_use[id3][Xr];coner[2][Yr]=leg_end_use[id3][Yr];
+            check_point_to_trig(gx_use,gy_use,yaw_use,f_leg_x,f_leg_y,f_leg_x1,f_leg_y1,leg_end_use[id3][Xr],leg_end_use[id3][Yr],
+                                &jiao[0][Xr],&jiao[0][Yr],&jiao[1][Xr],&jiao[1][Yr]);
+            float dis[2][3];
+            dis[0][0]=cal_dis_of_points(jiao[0][Xr],jiao[0][Yr],f_leg_x,f_leg_y);
+            dis[0][1]=cal_dis_of_points(jiao[0][Xr],jiao[0][Yr],f_leg_x1,f_leg_y1);
+            dis[0][2]=cal_dis_of_points(jiao[0][Xr],jiao[0][Yr],leg_end_use[id3][Xr],leg_end_use[id3][Yr]);
+            dis[1][0]=cal_dis_of_points(jiao[1][Xr],jiao[1][Yr],f_leg_x,f_leg_y);
+            dis[1][1]=cal_dis_of_points(jiao[1][Xr],jiao[1][Yr],f_leg_x1,f_leg_y1);
+            dis[1][2]=cal_dis_of_points(jiao[1][Xr],jiao[1][Yr],leg_end_use[id3][Xr],leg_end_use[id3][Yr]);
+            float dis_big[2]={dis[0][0],dis[1][0]};
+            char id_closet[2]={1,1};
+            for(i=1;i<3;i++)
+              if(dis[0][i]<dis_big[0])
+                     id_closet[0]=i;
+            for(i=1;i<3;i++)
+              if(dis[1][i]<dis_big[1])
+                     id_closet[1]=i;
+
+            float cross_point[2][2];
+            float coner_point[2][2];
+            coner_point[0][Xr]=coner[id_closet[0]][Xr];
+            coner_point[0][Yr]=coner[id_closet[0]][Yr];
+            coner_point[1][Xr]=coner[id_closet[1]][Xr]+brain.min_st[1]*size_k*sin((yaw_use)*ANGLE_TO_RADIAN);
+            coner_point[1][Yr]=coner[id_closet[1]][Yr]+brain.min_st[1]*size_k*cos((yaw_use)*ANGLE_TO_RADIAN);
+
+            cross_point[0][Xr]=jiao[0][Xr]-brain.min_st[0]*size_k*sin((yaw_use)*ANGLE_TO_RADIAN);
+            cross_point[0][Yr]=jiao[0][Yr]-brain.min_st[0]*size_k*cos((yaw_use)*ANGLE_TO_RADIAN);
+            cross_point[1][Xr]=jiao[1][Xr]+brain.min_st[1]*size_k*sin((yaw_use)*ANGLE_TO_RADIAN);
+            cross_point[1][Yr]=jiao[1][Yr]+brain.min_st[1]*size_k*cos((yaw_use)*ANGLE_TO_RADIAN);
+
+            control_draw[1]=cross_point[0][Xr];
+            control_draw[2]=cross_point[0][Yr];
+            control_draw[3]=cross_point[1][Xr];
+            control_draw[4]=cross_point[1][Yr];
+            control_draw[5]=coner_point[0][Xr];
+            control_draw[6]=coner_point[0][Yr];
+            control_draw[7]=coner_point[1][Xr];
+            control_draw[8]=coner_point[1][Yr];
+            control_draw[9]=coner_point[2][Xr];
+            control_draw[10]=coner_point[2][Yr];
+
+            //
+            float k_tr[3],b_tr[3];
+            line_function_from_two_point(coner_point[0][Xr],coner_point[0][Yr],cross_point[0][Xr],cross_point[0][Yr],&k_tr[0],&b_tr[0]);
+            line_function_from_two_point(cross_point[0][Xr],cross_point[0][Yr],cross_point[1][Xr],cross_point[1][Yr],&k_tr[1],&b_tr[1]);
+            line_function_from_two_point(cross_point[1][Xr],cross_point[1][Yr],coner_point[1][Xr],coner_point[1][Yr],&k_tr[2],&b_tr[2]);
+
+            int traj_flag[3];
+            //
+            traj_flag[0]=check_point_front_arrow(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,cross_point[0][Xr],cross_point[0][Yr],yaw_use);
+            traj_flag[1]=check_point_front_arrow(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,cross_point[1][Xr],cross_point[1][Yr],yaw_use);
+
+            if(traj_flag[0]==1&&traj_flag[1]==1&&1)//qian
+            check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            yaw_use,k_tr[0],b_tr[0],&tar_x,&tar_y);
+            else if(traj_flag[0]==0&&traj_flag[1]==0)//hou
+            check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            yaw_use,k_tr[2],b_tr[2],&tar_x,&tar_y);
+            //{tar_x=cross_point[1][Xr];tar_y=cross_point[1][Yr];}
+            else//zhongj
+            check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            yaw_use,k_tr[1],b_tr[1],&tar_x,&tar_y);
+
+            if(cal_dis_of_points(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,
+          coner_point[0][Xr],coner_point[0][Yr])<brain.min_st[0]*size_k||
+            cal_dis_of_points(brain.global.end_pos_global[0].x,brain.global.end_pos_global[0].y,
+          coner_point[1][Xr],coner_point[1][Yr])<brain.min_st[1]*size_k)
+        brain.force_stop=1;
+        }//end----
+
+          center_tar_x=tar_x;
+            center_tar_y=tar_y;
+        break;}
+        case 4:
+    {//4 leg ground
+          check_cross_arrow90_line(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt,
+            yaw_use,k_c,b_c,&tar_x,&tar_y);
+            center_tar_x=tar_x;
+            center_tar_y=tar_y;
+    }
+        break;
+    }
+    if(brain.global.steady_value<brain.min_st[2]){
+    center_tar_x=brain.global.leg_ground_center[Xr];center_tar_y=brain.global.leg_ground_center[Yr];
+    }
+    brain.global.tar_center[Xr]=brain.tar_center[Xr]=center_tar_x;
+    brain.global.tar_center[Yr]=brain.tar_center[Yr]=center_tar_y;
+
+    ero_center[Xr]=my_deathzoom((brain.tar_center[Xr]-brain.global.end_pos_global[0].x
+    +k_spd_control[Xr]*my_deathzoom(LIMIT(brain.now_spd[Xr],-0.66,0.66),0.01)
+    +k_acc_control[Xr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(LIMIT(brain.now_acc[Xr],-2,2),0.3)),0.001);
   ero_center[Yr]=my_deathzoom((brain.tar_center[Yr]-brain.global.end_pos_global[0].y
-	+k_spd_control[Yr]*my_deathzoom(LIMIT(brain.now_spd[Yr],-0.66,0.66),0.01)
-	+k_acc_control[Yr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(LIMIT(brain.now_acc[Yr],-2,2),0.3)),0.001);
-	
-	float ero1[2];
-	ero1[Xr]=my_deathzoom((brain.tar_center[Xr]-(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt)),0.001);
+    +k_spd_control[Yr]*my_deathzoom(LIMIT(brain.now_spd[Yr],-0.66,0.66),0.01)
+    +k_acc_control[Yr]*brain.global.end_pos_global[0].z/9.87*my_deathzoom(LIMIT(brain.now_acc[Yr],-2,2),0.3)),0.001);
+
+    float ero1[2];
+    ero1[Xr]=my_deathzoom((brain.tar_center[Xr]-(brain.global.end_pos_global[0].x+sin(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt)),0.001);
   ero1[Yr]=my_deathzoom((brain.tar_center[Yr]-(brain.global.end_pos_global[0].y+cos(yaw_use*ANGLE_TO_RADIAN)*spd_use*dt)),0.001);
-	float dis_ero=sqrt(pow(ero1[Xr],2)+pow(ero1[Yr],2));
-	brain.global.center_stable_weight=LIMIT((brain.sys.leg_local[1].x/2-LIMIT(dis_ero,0,brain.sys.leg_local[1].x/2))/(brain.sys.leg_local[1].x/2),0,1);
-	
-	
-	center_control_out[Xr]=ero_center[Xr]*brain.sys.k_center_c[Xr];
-	center_control_out[Yr]=ero_center[Yr]*brain.sys.k_center_c[Yr];
-  
-	float k_ero_in=1;
-	if(dis_ero<center_stable_dead)
-		k_ero_in=1.618;
-	if(dis_ero<center_stable_dead)
-	brain.center_stable=1; 
-	else
-	brain.center_stable=0;
-	
-	float fall_con[4]={0};
-	#if USE_FALL_TREADT
-	fall_treat1(dt,&fall_con[0]);
+    float dis_ero=sqrt(pow(ero1[Xr],2)+pow(ero1[Yr],2));
+    brain.global.center_stable_weight=LIMIT((brain.sys.leg_local[1].x/2-LIMIT(dis_ero,0,brain.sys.leg_local[1].x/2))/(brain.sys.leg_local[1].x/2),0,1);
+
+
+    center_control_out[Xr]=ero_center[Xr]*brain.sys.k_center_c[Xr];
+    center_control_out[Yr]=ero_center[Yr]*brain.sys.k_center_c[Yr];
+    //cout<<"cx:"<< center_control_out[Xr]<<" cy:"<< center_control_out[Yr]<<endl;
+    float k_ero_in=1;
+    if(dis_ero<center_stable_dead)
+        k_ero_in=1.618;
+    if(dis_ero<center_stable_dead)
+    brain.center_stable=1;
+    else
+    brain.center_stable=0;
+
+    float fall_con[4]={0};
+    #if USE_FALL_TREADT
+    fall_treat1(dt,&fall_con[0]);
   #endif
   //output
-	for(i=1;i<5;i++){
-	if((leg[i].control_mode||brain.control_mode)&&leg[i].leg_ground&&!leg[i].sys.leg_ground_force){	
-	leg[i].deng[Xr]=LIMIT(center_control_out[Xr],-limit_deng*brain.global.value[1]*k_ero_in,limit_deng*brain.global.value[1]*k_ero_in)+fall_con[i-1];
-	leg[i].deng[Yr]=LIMIT(center_control_out[Yr],-limit_deng*brain.global.value[1]*k_ero_in,limit_deng*brain.global.value[1]*k_ero_in);	}
-	}	
-	
-	 reg_flag=brain.leg_move_state;
+    for(i=1;i<5;i++){
+    if((leg[i].control_mode||brain.control_mode)&&leg[i].leg_ground&&!leg[i].sys.leg_ground_force){
+    leg[i].deng[Xr]=LIMIT(center_control_out[Xr],-limit_deng*brain.global.value[1]*k_ero_in,limit_deng*brain.global.value[1]*k_ero_in)+fall_con[i-1];
+    leg[i].deng[Yr]=LIMIT(center_control_out[Yr],-limit_deng*brain.global.value[1]*k_ero_in,limit_deng*brain.global.value[1]*k_ero_in);	}
+    }
+
+     reg_flag=brain.leg_move_state;
 }
+
+
 //-*******************************************************************************************************************/
 //-*******************************************************************************************************************/
 //-*******************************************************************************************************************/
@@ -1060,8 +1085,9 @@ limit_move_range_tangle( id,leg->sys.init_end_pos.x,leg->sys.init_end_pos.y, tem
 tempz1=tempz;
 
 tempx2=tempx1;tempy2=tempy1;tempz2=tempz1;
-//tempx2=tempx;tempy2=tempy;tempz2=tempz;
+//tempx2=tempx;tempy2=tempy;
 //limit_trig_pos_of_leg(tempx1,tempy1,tempz1,leg[id].sys.limit.x,leg[id].sys.limit.y,leg[id].sys.limit.z,&tempx2,&tempy2,&tempz2);
+//limit_range_leg(tempx1,tempy1,leg[1].sys.limit.x,leg[1].sys.limit.y,&tempx2,&tempy2);
 
 if(fake){
 	brain.global.fake_tar_pos.x=tempx2;
