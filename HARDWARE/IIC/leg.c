@@ -27,14 +27,15 @@ BRAIN_STRUCT brain;
 float off_local[2]={2,0};
 float k_z=0.88;
 #else
-float off_local[2]={2.38,0.680};
-float k_z=0.968;
+//float off_local[2]={1,0.40};
+float off_local[2]={0,0};
+float k_z=0.88;
 #endif
 
 #if TIRG_CURVE_USE_BAI
 float flt_leg=0;
 #else
-float flt_leg=0.33;//腿限制幅度滤波	
+float flt_leg=1;//腿限制幅度滤波	
 #endif
 float flt1=0.5;//跨腿最终点滤波
 u8 en_pos_recal=0;//使用POSnow计算值作为输出
@@ -61,7 +62,7 @@ in->sys.l3=6.2;
 #else
 in->sys.l1=3.9;
 in->sys.l2=6.4;
-in->sys.l3=6.8;	
+in->sys.l3=11.3;//6.8;	
 #endif
 in->sys.off_local[0]=off_local[0];
 in->sys.off_local[1]=off_local[1];
@@ -168,7 +169,7 @@ in->sys.sita_flag[3]=1;
 in->sys.leg_set_invert=0;	
 in->sys.PWM_OFF[0]=1750;	
 in->sys.PWM_OFF[1]=875;	
-in->sys.PWM_OFF[2]=1300-SET_PWM3_OFF;	
+in->sys.PWM_OFF[2]=1940-SET_PWM3_OFF;	
 in->sys.PWM_OFF[3]=1360;
 in->sys.sita_flag[0]=-1;
 in->sys.sita_flag[1]=1;	
@@ -416,7 +417,11 @@ if(id==1&&in->curve_trig)
 	float d2=cos(in->sita[2]*AtR)*l3;
 	in->pos_now[1].x=(l1+h1)*sin(in->sita[2]*AtR);in->pos_now[1].y=-cos(in->sita[0]*AtR)*d1;in->pos_now[1].z=cos(in->sita[2]*AtR)*(l1+h1);
 	in->pos_now[2].x=(l1+h1+h2)*sin(in->sita[2]*AtR);in->pos_now[2].y=-cos(in->sita[0]*AtR)*d1+cos((180-in->sita[0]-in->sita[1])*AtR)*d2;in->pos_now[2].z=cos(in->sita[2]*AtR)*(l1+h1+h2);	
-  if(!en_pos_recal)
+  if(isnan(in->pos_now[2].x))
+		in->pos_now[2].x=0;
+  if(isnan(in->pos_now[2].y))
+		in->pos_now[2].y=0;
+	if(!en_pos_recal)
 	in->pos_now[2].x=x;in->pos_now[2].y=y;in->pos_now[2].z=z;
 	if(in->sys.leg_set_invert)
 		for(u8 i=0;i<3;i++)
@@ -688,6 +693,7 @@ break;
 }
 
 //蹬腿
+float k_trot_r=1;
 void  cal_pos_tar_for_deng(LEG_STRUCT * in,float spdx,float spdy,float dt)
 {
 u8 id=in->sys.id;
@@ -696,8 +702,13 @@ static float h[5];
 static float time;
 static float reg[5][3];	
 	float spd_wx,spd_wy;
-	float x_temp=fabs(sin((90-brain.sys.yaw_trig)/57.3))*brain.tar_w;
-	float y_temp=fabs(cos((90-brain.sys.yaw_trig)/57.3))*brain.tar_w;
+	if(brain.trot_gait)
+	k_trot_r=10;
+	else
+	k_trot_r=1;
+	
+	float x_temp=fabs(sin((90-brain.sys.yaw_trig)/57.3))*brain.tar_w*k_trot_r;
+	float y_temp=fabs(cos((90-brain.sys.yaw_trig)/57.3))*brain.tar_w*k_trot_r;
 	if(brain.ground_leg_num<4){
 		x_temp*=0.618;
 	  y_temp*=0.618;
@@ -758,8 +769,8 @@ static float reg[5][3];
 	limit_range_leg(in->pos_tar[2].x,in->pos_tar[2].y,in->sys.limit.x*limit_mask,in->sys.limit.y*limit_mask,&in->pos_tar[2].x,&in->pos_tar[2].y);
 	  
 	//in->pos_tar[2].z=LIMIT(in->pos_now[2].z+att_control_out[id]-(brain.tar_h-brain.global.end_pos_global[0].z)*dt*1.618,in->sys.limit_min.z,in->sys.limit.z);	 
-	//in->pos_tar[2].z=LIMIT(brain.tar_h,in->sys.limit_min.z,in->sys.limit.z);	 
-	in->pos_tar[2].z=LIMIT(in->pos_now_trig_f[2].z,in->sys.limit_min.z,in->sys.limit.z);
+	in->pos_tar[2].z=LIMIT(brain.tar_h,in->sys.limit_min.z,in->sys.limit.z);	 
+	//in->pos_tar[2].z=LIMIT(in->pos_now_trig_f[2].z,in->sys.limit_min.z,in->sys.limit.z);
 	}
 }	
 
@@ -840,7 +851,7 @@ static u16 cnt[5];
 	y_temp=in->pos_tar[2].y;
 	z_temp=in->pos_tar[2].z;
 	}		
-	if(tinker.connect)
+	if(tinker.connect&&0)
 	{
 	in->pos_tar[2].x=	tinker.pos_end[id][0];
 	in->pos_tar[2].y=	tinker.pos_end[id][1];

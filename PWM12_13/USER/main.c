@@ -48,10 +48,12 @@ enum
 #include "delay.h"
 //PWM接口开启 并执行初始化
 
-void PWM_Set(const uint16_t pwm1, const uint16_t pwm2)
+void PWM_Set(const uint16_t pwm1, const uint16_t pwm2, const uint16_t pwm3, const uint16_t pwm4)
 {
 	TIM_SetCompare1(TIM1, pwm1);
 	TIM_SetCompare2(TIM1, pwm2);
+	TIM_SetCompare3(TIM2, pwm3);
+	TIM_SetCompare4(TIM2, pwm4);
 }
 #define LED PBout(5)	
 #define LIMIT( x,min,max ) ( (x) < (min)  ? (min) : ( (x) > (max) ? (max) : (x) ) )
@@ -92,7 +94,41 @@ void time_init(){
  TIM_SetCompare2(TIM1,1500);
 }
 
-
+void time_init2(){
+ GPIO_InitTypeDef GPIO_InitStructure2;         
+ TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;        
+ TIM_OCInitTypeDef TIM_OCInitStructure;        
+ TIM_BDTRInitTypeDef TIM_BDTRInitStructure;               
+ RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE); 
+ RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,ENABLE); 
+ GPIO_InitStructure2.GPIO_Pin=GPIO_Pin_2|GPIO_Pin_3;         
+ GPIO_InitStructure2.GPIO_Speed=GPIO_Speed_50MHz;         
+ GPIO_InitStructure2.GPIO_Mode=GPIO_Mode_AF_PP;                        
+ GPIO_Init(GPIOA,&GPIO_InitStructure2);        
+ TIM_TimeBaseStructure.TIM_Period=20000;                       
+ TIM_TimeBaseStructure.TIM_Prescaler=72-1;                         
+ TIM_TimeBaseStructure.TIM_ClockDivision=TIM_CKD_DIV1;         
+ TIM_TimeBaseStructure.TIM_CounterMode=TIM_CounterMode_Up;         
+ TIM_TimeBaseStructure.TIM_RepetitionCounter=0;                         
+ TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);      
+ TIM_OCInitStructure.TIM_OCMode=TIM_OCMode_PWM1;                           
+ TIM_OCInitStructure.TIM_Pulse=500;                                         
+ TIM_OCInitStructure.TIM_OCPolarity=TIM_OCPolarity_High;                    
+ TIM_OCInitStructure.TIM_OutputState=TIM_OutputState_Enable;                 
+ TIM_OCInitStructure.TIM_OCNPolarity=TIM_OCNPolarity_High;                
+ TIM_OCInitStructure.TIM_OutputNState=TIM_OutputNState_Enable;      
+ TIM_OCInitStructure.TIM_OCIdleState=TIM_OCIdleState_Reset;             
+ TIM_OCInitStructure.TIM_OCNIdleState=TIM_OCNIdleState_Reset;                          
+ TIM_OC3Init(TIM2, &TIM_OCInitStructure);  					
+ TIM_OC4Init(TIM2, &TIM_OCInitStructure);  					
+ TIM_OC3PreloadConfig(TIM2, TIM_OCPreload_Enable);      
+ TIM_OC4PreloadConfig(TIM2, TIM_OCPreload_Enable);     
+ TIM_ARRPreloadConfig(TIM2, ENABLE);                        
+ TIM_Cmd(TIM2,ENABLE);                                     
+ TIM_CtrlPWMOutputs(TIM2, ENABLE);                                   
+ TIM_SetCompare3(TIM2,1500);
+ TIM_SetCompare4(TIM2,1500);
+}
 
 void uart_init(u32 bound){
   //GPIO端口设置
@@ -137,7 +173,7 @@ void uart_init(u32 bound){
 
 
 
-int dj[2]={1500,1500};
+int dj[4]={1500,1500,1500,1500};
 void Data_Receive_Anl3(u8 *data_buf,u8 num)
 {
 	vs16 rc_value_temp;
@@ -152,6 +188,8 @@ void Data_Receive_Anl3(u8 *data_buf,u8 num)
 	 LED=!LED;	
    dj[0]=((int16_t)(*(data_buf+4)<<8)|*(data_buf+5));
    dj[1]=((int16_t)(*(data_buf+6)<<8)|*(data_buf+7));
+	 dj[2]=((int16_t)(*(data_buf+8)<<8)|*(data_buf+9));
+   dj[3]=((int16_t)(*(data_buf+10)<<8)|*(data_buf+11));	
 	}				
 }
 
@@ -245,12 +283,14 @@ int main(void)
 {	
 	  delay_init();	    	 //延时函数初始化	  
 	  time_init();
+	  time_init2();
 	  uart_init(576000L);
 	  LED_Init();
    	while(1)
 	{  
  		delay_ms(10);	   					 
-		PWM_Set(LIMIT(dj[0],500+100,2500-100),LIMIT(dj[1],500+100,2500-100));
+		PWM_Set(LIMIT(dj[0],500+100,2500-100),LIMIT(dj[1],500+100,2500-100),
+		LIMIT(dj[2],500+100,2500-100),LIMIT(dj[3],500+100,2500-100));
 	} 
 }
 

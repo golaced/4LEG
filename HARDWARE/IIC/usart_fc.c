@@ -432,6 +432,13 @@ while(USART_GetFlagStatus(UART5, USART_FLAG_TXE) == RESET);
 USART_SendData(UART5, ch); 
 }
 
+static void Send_Data_SPD(u8 *dataToSend , u8 length)
+{
+u16 i;
+  for(i=0;i<length;i++)
+     UsartSend_LEG_DJ(dataToSend[i]);
+}
+
 static void Send_Data_DJF1(u8 *dataToSend , u8 length)
 {
 u16 i;
@@ -484,6 +491,12 @@ void Send_DJ11_12(void)
 	data_to_send[_cnt++]=BYTE1(_temp);
 	data_to_send[_cnt++]=BYTE0(_temp);
 	_temp = (vs16)(LIMIT(dj_out[11],600,2400));
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	_temp = (vs16)(LIMIT(dj_pan[0],600,2400));
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	_temp = (vs16)(LIMIT(dj_pan[1],600,2400));
 	data_to_send[_cnt++]=BYTE1(_temp);
 	data_to_send[_cnt++]=BYTE0(_temp);
 	
@@ -951,7 +964,7 @@ void USART1_IRQHandler(void)
 		sum += *(data_buf+i);
 	if(!(sum==*(data_buf+num-1)))		return;		//??sum
 	if(!(*(data_buf)==0xAA && *(data_buf+1)==0xAF))		return;		//????
-	if(*(data_buf+2)==0x88)//ALL
+	if(*(data_buf+2)==0x88&&0)//ALL
   {
 		//imu_loss_cnt=0;
     //NAV_BOARD_CONNECT=1;
@@ -1187,6 +1200,16 @@ void USART2_IRQHandler(void)
 		tinker.pos_end[4][0]=(float)((int16_t)(*(data_buf+22)<<8)|*(data_buf+23))/100.;
 		tinker.pos_end[4][1]=(float)((int16_t)(*(data_buf+24)<<8)|*(data_buf+25))/100.;
 		tinker.pos_end[4][2]=(float)((int16_t)(*(data_buf+26)<<8)|*(data_buf+27))/100.;		
+  }else	if(*(data_buf+2)==0x21)//FACE
+  {
+		tinker.connect=1;
+		tinker.lose_cnt=0;		
+		tinker.face_check=(*(data_buf+4));
+		tinker.fx=(float)((int16_t)(*(data_buf+5)<<8)|*(data_buf+6));
+		tinker.fy=(float)((int16_t)(*(data_buf+7)<<8)|*(data_buf+8));
+		tinker.fw=(float)((int16_t)(*(data_buf+9)<<8)|*(data_buf+10));
+		tinker.fh=(float)((int16_t)(*(data_buf+11)<<8)|*(data_buf+12));
+	
   }
 }
 
@@ -1707,4 +1730,67 @@ void ReportIMU(int16_t yaw,int16_t pitch,int16_t roll
 	UART_UP_Put_Char(temp%256);
 	UART_UP_Put_Char(0xaa);
 }
+
+float kp=20,ki=0.00,kd=0;
+void Send_Speed(float spd[4])
+{u8 i;	u8 sum = 0;
+	u8 data_to_send[50];
+	u8 _cnt=0;
+	vs16 _temp;
+	data_to_send[_cnt++]=0xAA;
+	data_to_send[_cnt++]=0xAF;
+	data_to_send[_cnt++]=0x01;//功能字
+	data_to_send[_cnt++]=0;//数据量
+  if(spd[0]>0)
+	data_to_send[_cnt++]=0;
+	else
+	data_to_send[_cnt++]=1;	
+	_temp = (vs16)(fabs(spd[0])*10);//ultra_distance;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+
+	
+	if(spd[1]>0)
+	data_to_send[_cnt++]=0;
+	else
+	data_to_send[_cnt++]=1;	
+	_temp = (vs16)(fabs(spd[1])*10);//ultra_distance;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	
+	  if(spd[2]>0)
+	data_to_send[_cnt++]=0;
+	else
+	data_to_send[_cnt++]=1;	
+		_temp = (vs16)(fabs(spd[2])*10);//ultra_distance;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	
+	  if(spd[3]>0)
+	data_to_send[_cnt++]=0;
+	else
+	data_to_send[_cnt++]=1;	
+		_temp = (vs16)(fabs(spd[3])*10);//ultra_distance;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	
+	_temp = (vs16)(kp*10);//ultra_distance;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	_temp = (vs16)(ki*10);//ultra_distance;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	_temp = (vs16)(kd*10);//ultra_distance;
+	data_to_send[_cnt++]=BYTE1(_temp);
+	data_to_send[_cnt++]=BYTE0(_temp);
+	
+	
+  data_to_send[3] = _cnt-4;
+	for( i=0;i<_cnt;i++)
+		sum += data_to_send[i];
+	data_to_send[_cnt++] = sum;
+	
+	Send_Data_SPD(data_to_send, _cnt);
+}  
+
 

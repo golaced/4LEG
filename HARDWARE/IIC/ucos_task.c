@@ -109,22 +109,43 @@ void leg4_task(void *pdata)
 }		
 
 //========================外环  任务函数============================路径规划
-float k_rc_spd=0.01;
-float k_z_c= 0.16;
+float k_rc_spd=0.02;
+float k_z_c= 1.68;//0.3;
 OS_STK BRAIN_TASK_STK[BRAIN_STK_SIZE];
 float test[5]={1,1,4};
 float k_rc[2]={0.015,0.015};
 float Yaw_set;
 float kp_yaw=0.68;
+float kp_face[3]={50,0.045,0.15};
+int face_control_rad;
+float test_w[2];
 void brain_task(void *pdata)
 {	static u8 cnt,cnt1,cnt2,init,rc_update;	
 	float T;float spd,spdy,spdx,yaw=0,w_rad;
+
 	u16 temps;
+	float ero[2];
+	float ero_r[2];
  	while(1)
 	{	
 	leg_dt[4] = Get_Cycle_T(GET_T_BRAIN);								//获取外环准确的执行周期
   T=0.02;
-	if((Rc_Get_SBUS.connect&&Rc_Get_SBUS.update)||Rc_Wifi.connect){
+		
+	//face control
+	if(tinker.face_check<2&&tinker.connect)
+	{
+	ero[0]=	LIMIT(my_deathzoom(tinker.fx-90,10),-65,65);
+	face_control_rad=LIMIT(kp_face[0]*ero[0],-500,500)+1500;
+		
+	ero[1]=	LIMIT(my_deathzoom(tinker.fy-90,5),-65,65);
+	dj_pan[0]+=-kp_face[1]*ero[1]+(ero_r[1]-ero[1])*kp_face[2];
+	ero_r[1]=ero[1];	
+	dj_pan[0]=LIMIT(dj_pan[0],1000,2300);
+	} 
+	if(tinker.face_check>4&&tinker.connect){
+		dj_pan[0]=1550;face_control_rad=1500;}
+	//dj_pan[0]=1500; 
+	if((Rc_Get_SBUS.connect&&Rc_Get_SBUS.update)||Rc_Wifi.connect||(tinker.face_check<2&&tinker.connect)){
 	temps=((channels[0])-SBUS_MID)*500/((SBUS_MAX-SBUS_MIN)/2)+1500;
 	if(temps>900&&temps<2100)
 	Rc_Get_SBUS.ROLL=		 temps;
@@ -170,10 +191,12 @@ void brain_task(void *pdata)
 	Rc_Get_PWM.AUX2=Rc_Get_SBUS.AUX2;
 	Rc_Get_PWM.AUX3=Rc_Get_SBUS.AUX3;
 	Rc_Get_PWM.AUX4=Rc_Get_SBUS.AUX4;
-	Rc_Get_PWM.connect=Rc_Get_SBUS.connect;
+	Rc_Get_PWM.connect=Rc_Get_SBUS.connect; 
 	Rc_Get_PWM.update=Rc_Get_SBUS.update;
 	Rc_Get_PWM.POS_MODE=Rc_Get_SBUS.AUX3;
 	Rc_Get_PWM.HEIGHT_MODE=Rc_Get_SBUS.AUX4;
+	
+
 	
 	static u8 flag;
 	if(Rc_Get_PWM.AUX1>1500)
@@ -182,21 +205,24 @@ void brain_task(void *pdata)
 	 brain.power_all=brain.control_mode=0;
 	
 	static u16 cnt_soft_rst;
-	brain.sys.desire_time=LIMIT(0.5+(Rc_Get_PWM.AUX4-1500)/1000.,0.2,2);
-	if(brain.trot_gait)
-	brain.sys.desire_time=LIMIT(brain.sys.desire_time,0.3,0.6);
-	#if MINI_ROBOT
-	brain.sys.desire_time=0.45;
-	#endif
-	if(flag&&Rc_Get_PWM.AUX1<1500)
-	{flag=0;brain.rst_all_soft=1;cnt_soft_rst=0;}
+//	if(!Rc_Wifi.connect)
+//	brain.sys.desire_time=LIMIT(0.5+(Rc_Get_PWM.AUX4-1500)/1000.,0.2,2);
+//	if(brain.trot_gait)
+//	brain.sys.desire_time=LIMIT(brain.sys.desire_time,0.3,0.6);
+//	#if MINI_ROBOT
+//	brain.sys.desire_time=0.45;
+//	#endif
+
+//	if(flag&&Rc_Get_PWM.AUX1<1500)
+//	{flag=0;brain.rst_all_soft=1;cnt_soft_rst=0;}
 	
-	if(flag&&Rc_Get_PWM.AUX3>1500)
-	  brain.trot_gait=1;
-	else
-		brain.trot_gait=0;
+//	if(flag&&Rc_Get_PWM.AUX3>1500)
+//	  brain.trot_gait=1;
+//	else
+//		brain.trot_gait=0;
+
 	
-	
+
 //	if(brain.rst_all_soft>0)
 //		brain.sys.desire_time=0.33;
 	
@@ -210,7 +236,10 @@ void brain_task(void *pdata)
 	
 	 spdy=my_deathzoom((Rc_Get_PWM.PITCH-1500)*k_rc_spd,0.1);//cm
 	 spdx=my_deathzoom((Rc_Get_PWM.ROLL-1500)*k_rc_spd,0.1);//cm
-	 w_rad=my_deathzoom((Rc_Get_PWM.YAW-1500)*0.001*20,1);//rad.cm
+	 if(tinker.face_check<3&&tinker.connect)
+	 w_rad=my_deathzoom((face_control_rad-1500)*0.001*8,2);//rad.cm
+	 else
+	 w_rad=my_deathzoom((Rc_Get_PWM.YAW-1500)*0.001*5,2);//rad.cm
 	 spd=LIMIT(sqrt(pow(spdx,2)+pow(spdy,2)),0,2)*brain.sys.desire_time_init/brain.sys.desire_time;
 	 
 	 if(spd>0){
@@ -226,14 +255,18 @@ void brain_task(void *pdata)
 //	else
 //	 brain.spd_yaw=yaw;	
 //  #else	 
-	 if(yaw>60&&yaw<90+60)//r
-	{brain.spd_yaw=90;}
-	else if(yaw<-60&&yaw>-90-60)//l
-	{brain.spd_yaw=-90;}
-	else if((yaw<60&&yaw>=0)||(yaw>-60&&yaw<0))//f
-	{brain.spd_yaw=0;}
-	else//b
-	{brain.spd_yaw=180;}
+	 if(!brain.trot_gait){
+			if(yaw>60&&yaw<90+60)//r
+			{brain.trot_gait=90;}
+			else if(yaw<-60&&yaw>-90-60)//l
+			{brain.spd_yaw=-90;}
+			else if((yaw<60&&yaw>=0)||(yaw>-60&&yaw<0))//f
+			{brain.spd_yaw=0;}
+			else//b
+			{brain.spd_yaw=180;}
+  }else
+	brain.spd_yaw=yaw; 
+	
 	//#endif
 	 brain.tar_w_set=w_rad;
 	 if(w_rad!=0&&spd==0)
@@ -244,9 +277,17 @@ void brain_task(void *pdata)
 	 else
 	 brain.spd=spd;
    }
-	 
+	 if(brain.leg_lun_mode){
+	 brain.spd=0;
+	 //brain.spd_yaw=0;
+	 }
 	 int thr_temp;
 	 thr_temp=LIMIT(Rc_Get_PWM.THROTTLE-450,0,2000);
+	 if(thr_temp>1450)
+		 brain.leg_lun_mode=1;
+	 else
+		 brain.leg_lun_mode=0;
+	 
 	 	brain.tar_h=LIMIT(leg[1].sys.init_end_pos.z-(thr_temp-1000)/1000.*(leg[1].sys.init_end_pos.z-leg[1].sys.limit_min.z)    
 	,leg[1].sys.limit_min.z,leg[1].sys.init_end_pos.z);
 	 
@@ -256,17 +297,18 @@ void brain_task(void *pdata)
 	Rc_Get_PWM.ROLL=1500;
 	Rc_Get_PWM.PITCH=1500;
 	Rc_Get_PWM.YAW=1500;
+	brain.tar_w_set=0;
 	}
 	brain.power_all=brain.control_mode=1;
-	if(w_rad!=0||(fabs(Yaw_set-Yaw)>25))
-	Yaw_set=Yaw;
-	else if(brain.spd!=0)
-	brain.tar_w_set=my_deathzoom(Yaw_set-Yaw,1)*kp_yaw;
-  else 
-	brain.tar_w_set=0;
+//	if(w_rad!=0||(fabs(Yaw_set-Yaw)>25))
+//	Yaw_set=Yaw;
+//	else if(brain.spd!=0)
+//	brain.tar_w_set=my_deathzoom(Yaw_set-Yaw,1)*kp_yaw;
+//  else 
+//	brain.tar_w_set=0;
 	
 	if(((brain.tar_w_set!=0&&w_rad!=0)||brain.spd>0)&&(brain.way==1||brain.way==3))
-	brain.tar_w=LIMIT(my_deathzoom(brain.tar_w_set-mpu6050_fc.Gyro_deg.z,0.1)*k_z_c,-10,10)*brain.global.value[2];
+	brain.tar_w=LIMIT(my_deathzoom(brain.tar_w_set-mpu6050_fc.Gyro_deg.z,0.1)*k_z_c,-20,20)*brain.global.value[2];
 	else
 	brain.tar_w=0;
 	
@@ -294,13 +336,23 @@ void brain_task(void *pdata)
 	if(Rc_Get_SBUS.update==0&&rc_update==1)
 	brain.rst_all_soft=1;
 	rc_update=Rc_Get_SBUS.update;
-		
+	 if(brain.leg_lun_mode){
+		 brain.spd=0;//brain.tar_w=0;
+	 }
+	 
+	if(brain.trot_gait)
+	brain.sys.desire_time=0.33;
+	else
+	brain.sys.desire_time=0.66; 
+//	brain.spd=test_w[0]; 
+//  brain.tar_w=test_w[1];
 	//test
 	static u8 uart;
-	if(!tinker.connect&&uart)
-		brain.rst_all_soft=1;
+//	if(!tinker.connect&&uart)
+//		brain.rst_all_soft=1;
 	uart=tinker.connect;
 	leg_task1(T);
+	 
 	leg_drive(&leg[1],T);
 	leg_drive(&leg[2],T);
 	leg_drive(&leg[3],T);
@@ -317,19 +369,47 @@ OS_STK  UART_TASK_STK[UART_STK_SIZE];
 u8 UART_UP_LOAD_SEL=4;//<------------------------------UART UPLOAD DATA SEL
 u8 state_v_test=0;
 u8 num_need_to_check;
+float spd_test[4]={110,110,110,110};
+float k_lun_facey=0.05;
+float k_spd_gain_lun[2]={100,100};
 void uart_task(void *pdata)
 {	static u8 cnt[4];	
-  static u8 sd_sel;	
+  static u8 sd_sel;
+	float RC[4]={1500,1500,1500,1500};
+  float vx,vy;	
  	while(1)
 	{			
-		Send_LEG(1);
-		Send_LEG(2);
-		Send_LEG(3);
-		Send_LEG(4);
-		GOL_LINK_TASK();	
-    ReportMotion(brain.global.steady_value*1000,brain.now_acc[Xr]*1000,brain.now_acc[Yr]*1000,
-		brain.global.center_stable_weight*1000,brain.global.end_pos_global[0].z*100,0,
-		center_control_out[Xr],center_control_out[Yr],0);		
+//		Send_LEG(1);
+//		Send_LEG(2);
+//		Send_LEG(3);
+//		Send_LEG(4);
+		  GOL_LINK_TASK();	
+//    ReportMotion(brain.global.steady_value*1000,brain.now_acc[Xr]*1000,brain.now_acc[Yr]*1000,
+//		brain.global.center_stable_weight*1000,brain.global.end_pos_global[0].z*100,0,
+//		center_control_out[Xr],center_control_out[Yr],0);		
+//			if(tinker.face_check<2&&tinker.connect)
+//					RC[1]=(face_control_rad-1500)*k_lun_facey+1500;
+		  RC[0]=Rc_Get_PWM.PITCH;
+		  RC[1]=Rc_Get_PWM.ROLL;
+		  RC[3]=Rc_Get_PWM.YAW;
+			float spdy=my_deathzoom((RC[0]-1500)*k_rc_spd*4,0.1);//cm
+			float spdx=my_deathzoom((RC[1]-1500)*k_rc_spd*4,0.1);//cm
+			float w_rad=my_deathzoom((RC[3]-1500)*0.001*20,1);//rad.cm
+			float spd=LIMIT(sqrt(pow(spdx,2)+pow(spdy,2)),0,2)*brain.sys.desire_time_init/brain.sys.desire_time;
+      float yaw;
+			if(spd>0){
+			 yaw=fast_atan2(spdx,spdy)*57.3;
+			}
+    if(brain.leg_lun_mode){
+		vx=sin(yaw/57.3)*spd;
+		vy=-cos(yaw/57.3)*spd;}
+		else
+		vx=vy=0;	
+		spd_test[3]=(vy)*k_spd_gain_lun[0]+sin(yaw/57.3)*fabs(vx)*k_spd_gain_lun[1];
+		spd_test[2]=-(vy)*k_spd_gain_lun[0]-sin(yaw/57.3)*fabs(vx)*k_spd_gain_lun[1];
+		spd_test[0]=(vy)*k_spd_gain_lun[0]+sin(yaw/57.3)*fabs(vx)*k_spd_gain_lun[1];
+		spd_test[1]=(vy)*k_spd_gain_lun[0]+sin(yaw/57.3)*fabs(vx)*k_spd_gain_lun[1];
+		Send_Speed(spd_test);
 		delay_ms(20);  
 	}
 }	

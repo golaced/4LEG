@@ -27,11 +27,10 @@ float k_size=0.0068;
 float k_force=3.333;//超限区域大小增益
 float force_rate=2;//超限权值减小步长
 float size_k;
-float limit_deng=11.1111;//蹬腿速度控制限制
+float limit_deng=16;//17.8;//蹬腿速度控制限制
 float k_acc_control[2]={0,0};//{-0.1,-0.07};
 float k_spd_control[2]={0.25,0.15};
 float force_stop_range[2]={4.8,6};
-float std_switch=1.68;
 int flag_acc[2]={-1,-1};
 float k_acc1=1;
 
@@ -49,7 +48,7 @@ float k_off=0.2;
 float k_trig1=2.68;//2;
 float k_rad=1.68;//跨脚旋转增益
 float k_trig=2;
-
+float k_spd=5;
 float min_steady_value_stable=0.18;
 float max_dis_cog=5.7;
 //---------------------------------------------------------------------------------------
@@ -66,8 +65,8 @@ void state_clear(void)
 		}
 	}
 	
-	 if(brain.global.area_of_leg[0]<brain.global.area_of_leg[1]*0.45)
-		 brain.rst_all_soft=1;
+//	 if(brain.global.area_of_leg[0]<brain.global.area_of_leg[1]*0.45)
+//		 brain.rst_all_soft=1;
 	 if(check_leg_near_init(brain.sys.in_rst_check))
 		 brain.rst_all_soft=0;
 }	
@@ -243,7 +242,6 @@ void center_control_global(float dt)
     float k_c1=0,b_c1=0;
     float gx=brain.global.leg_ground_center[Xr];
     float gy=brain.global.leg_ground_center[Yr];
-    float k_spd=1;
     float tar_x,tar_y;
     char brain_ground_leg_num=brain.ground_leg_num;
     char leg_ground[5];
@@ -285,6 +283,7 @@ void center_control_global(float dt)
     spd_use=brain.spd*k_spd*brain.global.center_stable_weight;
     #else
     spd_use=brain.spd*k_spd*brain.global.value[0]*brain.global.value[3];
+		//spd_use=brain.spd*k_spd;//*brain.global.center_stable_weight;
     #endif
     //resize
     float gx_use,gy_use;
@@ -1075,8 +1074,8 @@ if(trig_use_now_pos){
 tempx=leg->sys.init_end_pos.x*k_trig1+tar_x+RANDOM+off_x*cos(off_yaw*ANGLE_TO_RADIAN)*en_off_trig;
 tempy=leg->sys.init_end_pos.y*k_trig1+tar_y+RANDOM+off_y*sin(off_yaw*ANGLE_TO_RADIAN)*en_off_trig;
 }else{
-tempx=leg->pos_now[2].x+tar_x+RANDOM;
-tempy=leg->pos_now[2].y+tar_y+RANDOM;
+tempx=leg->sys.init_end_pos.x*k_trig1+RANDOM;//leg->pos_now[2].x+tar_x+RANDOM;
+tempy=leg->sys.init_end_pos.y*k_trig1+RANDOM;//leg->pos_now[2].y+tar_y+RANDOM;
 }
 tempz=brain.tar_h*h_k2;
 

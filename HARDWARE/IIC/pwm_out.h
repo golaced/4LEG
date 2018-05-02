@@ -14,7 +14,7 @@ void EN_SHOOT(u8 on);
 void Set_DJ_PWM(void);
 extern int dj_out[12];
 void SetPwm_AUX(float pit,float rol);
-
+extern int dj_pan[2];
 typedef struct 
 { u16 pwm_tem[2];
 	int flag[2];

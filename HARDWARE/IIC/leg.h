@@ -7,7 +7,6 @@
 
 #define MINI_ROBOT 0
 #define TEST_MODE1 0
-#define BODY_MOVE_WHEN_LEG_UP 1
 #define BODY_CONTROL_USE_GLOBAL 1
 #define DENG_LIMIT_TEST 0
 #define USE_LEG_TRIG_DELAY 1
@@ -148,7 +147,7 @@ typedef struct
 }BRAIN_GLOBAL;
 
 typedef struct 
-{ u8 control_mode,power_all,rst_all,rst_all_soft,tabu;
+{ u8 control_mode,power_all,rst_all,rst_all_soft,tabu,leg_lun_mode;//leg_lun_mode-->1 轮子 0-->腿
 	int fall,trot_gait;
 	float steady_value,min_st[3];
 	u8 force_stop,loss_center,ground_leg_num,can_move_leg;	
@@ -191,7 +190,7 @@ void att_control(float dt);
 void fall_treat(float dt,float *out);
 void fall_treat1(float dt,float *out);
 void fall_treat_tro(float dt,float *out,float *out1);
-
+void center_control_global_tro_new(float dt);
 u8 planner_leg(u8 last_move_id,u8 last_last_move_id);
 void check_leg_need_move_global(BRAIN_STRUCT *in,float spd_body[3],float spd_tar[3],float w_tar,float dt);
 void center_control_global(float dt);//中心控制PID  GLOBAL

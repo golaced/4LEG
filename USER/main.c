@@ -35,6 +35,7 @@ char Lisence[]=//数学库授权码
 "2630991AF90D1980D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4D80A93504D1CF7A4";
 
 int main(void)
+ 
  { 
 	NVIC_PriorityGroupConfig(NVIC_GROUP);//设置系统中断优先级分组2
 	delay_init(168);  //初始化延时函数
@@ -46,6 +47,7 @@ int main(void)
 	leg_init(&leg[3],3);
 	leg_init(&leg[4],4);	
 	leg_task1(0.02);
+	brain.tar_h=leg[1].sys.init_end_pos.z;
 	leg_drive(&leg[1],0.02);
 	leg_drive(&leg[2],0.02);
 	leg_drive(&leg[3],0.02);
@@ -65,6 +67,7 @@ int main(void)
 	#else
 	Usart1_Init(256000L);			//  FC RC1
 	#endif
+	Usart1_Init(115200);			//  lun driver
 	#if EN_DMA_UART1 
 	MYDMA_Config(DMA2_Stream7,DMA_Channel_4,(u32)&USART1->DR,(u32)SendBuff1,SEND_BUF_SIZE1+2,1);//DMA2,STEAM7,CH4,外设为串口1,存储器为SendBuff,长度为:SEND_BUF_SIZE.
 	#endif
@@ -105,6 +108,7 @@ int main(void)
 //  SPI2_Init1();
 //	Mpu9250_Init();
 	READ_PARM();
+	brain.leg_lun_mode=0,brain.trot_gait=0;
 	//---------------初始化UCOSII--------------------------
 	OSInit();  	 				
 	OSTaskCreate(start_task,(void *)0,(OS_STK *)&START_TASK_STK[START_STK_SIZE-1],START_TASK_PRIO );//创建起始任务

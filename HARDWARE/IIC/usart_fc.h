@@ -336,7 +336,10 @@ void ReportIMU(int16_t yaw,int16_t pitch,int16_t roll,int16_t alt,int16_t tempr,
 typedef struct {
         float pos_end[5][3];
 	      u16 lose_cnt,lose_cnt_rx;
+	      u8 face_check;
+	      u16 fx,fy,fw,fh;
 	      u8 connect;}Tinker;
 
 extern Tinker tinker;//接收到的RC数据,1000~2000
+void Send_Speed(float spd[4]);
 #endif

@@ -153,6 +153,7 @@ u8 PWM_Out_Init(uint16_t hz)//400hz
 4        3d 3x 3t | 4d 4x 4t || 2t  2x  2d | 1t 1x 1d   2   
 */
 int dj_out[12]={1500,1500,1500,1500,1500,1500,1500,1500,1500,1500,1500,1500};
+int dj_pan[2]={1500,1500};
 void Set_DJ_PWM(void)
 { static u8 cnt=2;
 	dj_out[11]=leg[1].sys.PWM_OUT[D_LEG];
